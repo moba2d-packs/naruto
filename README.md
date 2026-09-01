@@ -1,0 +1,139 @@
+# Naruto
+
+A `@moba2d/core` content pack: one champion (Hero) with a full kit,
+one map, its own art path, and the build that publishes it — enough to
+install into the game today and start growing from.
+
+## Run this next
+
+```
+npm install
+npm run verify
+```
+
+`verify` is typecheck + `check-seams` + tests + the published build, in that
+order. It is **this pack's own gate**: `npm install` never runs it for you,
+and core's own `verify` never reaches into a pack it does not own.
+
+Once this pack is a git repository, `npm run hooks:install` points git at
+`scripts/git-hooks/`, and from then on every `git push` runs `verify` first —
+`git push --no-verify` skips it once, on purpose.
+
+## Play it before you publish it
+
+You do not need a copy of core. Serve your own build and install it into a
+game that is already running somewhere:
+
+```
+npm run build
+npm run serve      # -> http://localhost:5174/manifest.json
+```
+
+Paste that URL into the game's **Packs → Thêm bằng URL**. From then on
+`npm run build` is the whole loop — core notices the new build and offers you
+a reload, because a pack served from `localhost` is never pinned or cached.
+
+Safari blocks `http://localhost` from an `https://` page; use Chrome or
+Firefox, or put a tunnel in front of the port. `docs/PACK_AUTHORING.md` in
+`@moba2d/core` has the long form.
+
+## Publish it
+
+`npm run build` writes `dist/`, and `dist/manifest.json` is the whole pack
+behind one URL. `.github/workflows/publish.yml` does that on every push to
+`main` and puts the result on GitHub Pages — turn Pages on once, by hand, at
+**Settings → Pages → Source: GitHub Actions**, or every run fails at the
+deploy step.
+
+Players then install from:
+
+```
+https://<owner>.github.io/<repo>/manifest.json
+```
+
+pasted into the game's **Tìm pack** field. Any static host that serves
+`access-control-allow-origin: *` and a JavaScript MIME type for `.js` works
+the same way; Pages does both.
+
+## Where things live
+
+- `pack.ts` — the whole pack's declaration, in two halves. `data` is inert
+  (roster, map, display strings) and must be readable without an engine;
+  `code` hands this pack its `api` and then a loader per spell.
+- `spells/` — one file per ability, four to a champion, each an ordinary
+  class: `export default class Hero_Q extends api.Spell { ... }`.
+  Read `Hero_Q.ts` before writing a second one.
+- `spells/index.ts` — the barrel. Adding a spell means adding one line here
+  and one id to the champion's kit; everything else is generated.
+- `AGENTS.md` — **read this before changing anything.** Recipes for adding,
+  editing and removing an ability, a champion or a piece of art, each as a
+  literal sequence of commands, plus the traps that cost real time and are
+  invisible from the file you are editing. Written for a person or an agent
+  with no prior context.
+- `packApi.ts` — where the engine arrives. Its header is the one page worth
+  reading twice: it says why a pack cannot `import { Spell }` at all, and
+  which three callers set the api before any spell module evaluates.
+- `assets/` — this pack's art. Drop a file in, run `npm run assets:generate`,
+  and its key exists as a type. Ships one placeholder tile
+  (`assets/champ_hero.png`) so the art path works before you have drawn
+  anything; replace it.
+- `tests/` — one per ability, plus `packInstallable` (core's own validator
+  says yes to this pack) and `build` (what `dist/` actually emitted).
+  **`npm run check-seams` scans `./spells`, and that is not an oversight**:
+  the pack-core boundary is checked across the whole package either way — the
+  run reports "scanned N file(s) of @moba2d/content-naruto" — while the
+  per-tree rules it adds for `./tests` are about production code. `mana-spend`
+  bans touching `stats.mana` outside `Spell.spendMana()`, which is exactly
+  what a fixture building a champion has to do. Pointing it at `./tests` buys
+  nothing and costs a debt file.
+- `generated/` — gitignored, rebuilt by `prepare` after every install:
+  `assetManifest.ts` (every file under `assets/`, keyed and typed),
+  `spellCatalog.ts` (every spell's name, cooldown and mana as plain values,
+  read off the class at build time) and `spellModules.ts` (the lazy
+  `id -> import()` map). This is why the data half restates no number and
+  imports no spell. **Never edit a file in here** — the next generate
+  overwrites it, and `verify` fails when the two disagree.
+- `tests/` — one test per ability, driven through `pressSpell`, never
+  through a lifecycle hook like `onSpellCast()` directly: a hook-calling
+  test cannot see activation, cooldown, resource cost or targeting
+  rejection, and stays green against an ability that does not work at all.
+  `packInstallable.test.ts` is the other kind — it runs core's own
+  validator over this pack, so a change that would make the pack refuse to
+  install fails here instead of in a player's browser.
+- `map.ts` / `geometry.ts` — the world this pack ships. `geometry.ts` is
+  fetched lazily, so a pregame picker never downloads the walls and lanes
+  just to list this map's name.
+- `catalog.config.mjs` — this pack's layout, as the catalogue generator
+  needs it. `apiSetter` is the line that matters: it is how the generator
+  hands this pack its engine before loading the barrel.
+- `runtime-entry.ts` / `vite.config.ts` / `scripts/write-manifest.mjs` —
+  the published build. Each carries its own header; `vite.config.ts`'s
+  four settings are load-bearing and every one of them is a failure that
+  has actually happened.
+
+## Add a champion
+
+By hand, in `pack.ts`, using Hero as the model — `moba2d-pack-add
+champion` is not implemented and says so rather than pretending. Then fill
+its four slots:
+
+```
+moba2d-pack-add spell <Name> --champion <NewChampion> --slot Q
+```
+
+which writes the spell file and its test, exports it from `spells/index.ts`
+and adds its id to that champion's kit. There is no `spellDisplay` entry to
+write: `npm run catalog:generate` reads the name, description, icon,
+cooldown and mana off the class itself.
+A **playable** champion needs a portrait and exactly four abilities — core
+refuses to install anything else, and `tests/packInstallable.test.ts` is
+what tells you before a player would.
+
+## Next steps
+
+- Make the four abilities different from each other. They ship as the same
+  bolt four times on purpose: the shape is in place, the content is yours.
+- Write real `description`s and artwork. Core's own `docs/VFX_STANDARD.md`
+  is the whole bar in one page: a real windup, damage scaled to a ~100
+  health pool, and as few layers as it takes to say what the ability does.
+- Replace `geometry.ts` with a map worth playing on.

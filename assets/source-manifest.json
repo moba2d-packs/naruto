@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "note": "Naruto art. Naruto and all related characters and artwork are the property of Masashi Kishimoto, Shueisha and their licensors; this pack is an unofficial, non-commercial fan project and claims no ownership of them. See README.md.",
+  "sources": [
+    {
+      "contentHash": "0da218c96f4eed953c7ddc74bf4705f1cfcabf5a8fb4e907c0be3e934c222086",
+      "fetchedAt": "2026-09-01T12:12:16.915Z",
+      "localAssetKey": "champ_deidara",
+      "localPath": "assets/images/champions/deidara.png",
+      "sourceHash": "788bdd6ffedc1444a82ccbde48189ad51e291c8d813805280f98662951fa985f",
+      "sourceUrl": "https://static.wikia.nocookie.net/naruto/images/4/4a/Deidara_-_Akatsuki.png"
+    },
+    {
+      "contentHash": "b1150a00da9efbe53b95e97cc2e030bdb194a9d886b61a70accf07a3d173f4bb",
+      "fetchedAt": "2026-09-01T12:12:14.623Z",
+      "localAssetKey": "champ_gaara",
+      "localPath": "assets/images/champions/gaara.png",
+      "sourceHash": "f11d4a1b5e964afa172000939e3596dd9d1d2fa200e94af4c63533259c8c09a1",
+      "sourceUrl": "https://static.wikia.nocookie.net/naruto/images/2/20/Gaara_in_Part_I.png"
+    },
+    {
+      "contentHash": "1ebdc5cafb73fa8f9cbf4ea718c280c246c53b0dc3e8ce948c486b5fdd1cde2c",
+      "fetchedAt": "2026-09-01T12:12:15.599Z",
+      "localAssetKey": "champ_haku",
+      "localPath": "assets/images/champions/haku.png",
+      "sourceHash": "f4e5ab6f76c4877182a9fc3897694e65a92dc3fbad454e6186ab73c019482f1d",
+      "sourceUrl": "https://static.wikia.nocookie.net/naruto/images/9/90/Haku.png"
+    },
+    {
+      "contentHash": "f36114d3574b31cb9f6bd5721c07cff04870ba75e5f5b4e2464004d1746c3262",
+      "fetchedAt": "2026-09-01T12:12:16.149Z",
+      "localAssetKey": "champ_itachi",
+      "localPath": "assets/images/champions/itachi.png",
+      "sourceHash": "6b4f215a630a98558dd14a288fb84c5e29df189dfdc9613443e01f513452357e",
+      "sourceUrl": "https://static.wikia.nocookie.net/naruto/images/e/ec/Itachi_Akatsuki_Mobile.png"
+    },
+    {
+      "contentHash": "6e8b0f143163d46279f90d51473f7a472ec391e4eb30ff5ae7e5317954e8a7bc",
+      "fetchedAt": "2026-09-01T12:12:13.227Z",
+      "localAssetKey": "champ_kakashi",
+      "localPath": "assets/images/champions/kakashi.png",
+      "sourceHash": "18d5a7eb1ced955ca6e6e1ae1c046f4d15243f8bc0dca67bf52fea29227d91a0",
+      "sourceUrl": "https://static.wikia.nocookie.net/naruto/images/2/27/Kakashi_Hatake.png"
+    },
+    {
+      "contentHash": "93d041f352d8e27c7b008c345d7d807a9ad06406eb1fe49c17b02f9e372f3db5",
+      "fetchedAt": "2026-09-01T12:12:12.357Z",
+      "localAssetKey": "champ_naruto",
+      "localPath": "assets/images/champions/naruto.png",
+      "sourceHash": "2a8b290c2751fe2d2ccbbe4e49855bbe8c737ed888a4cad399c78fa857b05333",
+      "sourceUrl": "https://static.wikia.nocookie.net/naruto/images/7/7d/Naruto_Part_II.png"
+    },
+    {
+      "contentHash": "9fdee9abdb7dadc06ccf6b0545bbcea41fd90c6cf8d0d276a3e15b0d8836b6a9",
+      "fetchedAt": "2026-09-01T12:12:14.044Z",
+      "localAssetKey": "champ_neji",
+      "localPath": "assets/images/champions/neji.png",
+      "sourceHash": "642ddacefffe26772c108935b38eb4fbfe1e9c39a679babb6bd0aa0cca5b58af",
+      "sourceUrl": "https://static.wikia.nocookie.net/naruto/images/7/7e/Neji_Part_I.png"
+    },
+    {
+      "contentHash": "b97e67c553ee73ffada0e9e6aedde2d3ae95a5fa439cba54792c96eece9b996b",
+      "fetchedAt": "2026-09-01T12:12:13.570Z",
+      "localAssetKey": "champ_sakura",
+      "localPath": "assets/images/champions/sakura.png",
+      "sourceHash": "44b119154f4d18b8f936aaa0c5f23820be8a37e2198b1593b5ce2b41ca65f128",
+      "sourceUrl": "https://static.wikia.nocookie.net/naruto/images/6/64/Sakura_Part_1.png"
+    },
+    {
+      "contentHash": "7fda41ad0b78f8ff53ea0dbb4ce4eab35d43fcb640435c91f8d5e23b831bcdf2",
+      "fetchedAt": "2026-09-01T12:12:12.942Z",
+      "localAssetKey": "champ_sasuke",
+      "localPath": "assets/images/champions/sasuke.png",
+      "sourceHash": "06f2559509682e5e2a3ce11ee116f75e23ef4f813cfbe9631723c9361116d86b",
+      "sourceUrl": "https://static.wikia.nocookie.net/naruto/images/1/13/Sasuke_Part_2.png"
+    },
+    {
+      "contentHash": "ad0132905b566a05ab1ca73762aea8a69f9f9c26de0b6e4bb22bab8a0c9b9b68",
+      "fetchedAt": "2026-09-01T12:12:14.314Z",
+      "localAssetKey": "champ_shikamaru",
+      "localPath": "assets/images/champions/shikamaru.png",
+      "sourceHash": "73d33109fecb218ba7b564caffd219910ee5bfabd0588901b12e42472a92e0b5",
+      "sourceUrl": "https://static.wikia.nocookie.net/naruto/images/4/44/Shikamaru_Part_I.png"
+    },
+    {
+      "contentHash": "10ed80419758081a1fdbc62b850616a855a906eecd460fe26f6f020cd717d0c7",
+      "fetchedAt": "2026-09-01T12:12:14.960Z",
+      "localAssetKey": "champ_temari",
+      "localPath": "assets/images/champions/temari.png",
+      "sourceHash": "34fe326f16b980c1009ad0a45708ff95aa013140095c5bbe633a5e50ebace0ee",
+      "sourceUrl": "https://static.wikia.nocookie.net/naruto/images/b/bb/Temari_newshot.png"
+    },
+    {
+      "contentHash": "78dc2593eab8eeacddfe275b1a5dcbfb65890cc889ab0631669ab0cb1beb24c1",
+      "fetchedAt": "2026-09-01T12:12:15.274Z",
+      "localAssetKey": "champ_zabuza",
+      "localPath": "assets/images/champions/zabuza.png",
+      "sourceHash": "0868c4cb6a6a40b8595c2bd58e043c3c83530be091b7abbf2faa9e53785e6740",
+      "sourceUrl": "https://static.wikia.nocookie.net/naruto/images/3/37/Zabuza_Momochi.png"
+    }
+  ]
+}

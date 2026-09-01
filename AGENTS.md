@@ -1,0 +1,240 @@
+# Working on this pack
+
+Recipes for changing `@moba2d/content-naruto`. Written to be followed
+literally — by a person or by an agent — without reading the engine first.
+
+`README.md` says what each file is. This says what to do.
+
+The long form of everything here is `docs/PACK_AUTHORING.md` in the `@moba2d/core`
+repository. This file was scaffolded from that repository's `scripts/templates/pack/AGENTS.md.tmpl`;
+keep pack-specific notes in their own section at the bottom, so the generic half
+stays diffable against the template.
+
+**One rule above all the others:** run `npm run verify` before you say you are
+done. It is `assets:check`, `catalog:check`, `typecheck`, `check-unused`,
+`check-seams`, the build, and the tests. Every trap below is something it
+catches; none of them are things you will notice by looking.
+
+---
+
+## Add an ability
+
+```bash
+npx moba2d-pack-add spell Firebolt --champion Hero --slot W
+```
+
+Writes `spells/Hero_W.ts` and `tests/Hero_W.test.ts`, and adds the export to
+`spells/index.ts`. **That barrel line is the whole registration** — the
+catalogue generator reads the barrel to write `generated/spellCatalog.ts` (the
+name, cooldown and mana core's HUD reads) and `generated/spellModules.ts` (the
+lazy `id -> import()` map the game loads from). One export reaches all three.
+
+Then, by hand:
+
+1. Put the id in the champion's kit in `pack.ts` — `spells: ['Hero_Q', …]`.
+   A **playable** champion needs exactly four, in `Q W E R` order.
+2. Write the ability. Start from the generated file; it extends
+   `api.MissileSpellObject` and shows the shape.
+3. `npm run verify`.
+
+## Change what an ability does
+
+Edit `spells/<Champion>_<Slot>.ts` and its test together. Nothing else — the
+numbers a player sees come off the class at build time, so `pack.ts` restates
+none of them and neither does any doc.
+
+**Export tuning values as constants** so the test imports them:
+
+```ts
+export const FIREBOLT_DAMAGE = 22;
+```
+
+Retuning damage must not mean editing a test.
+
+## Remove an ability
+
+1. Delete `spells/<Champion>_<Slot>.ts` and its test.
+2. Delete its line from `spells/index.ts`.
+3. Delete its id from the champion's `spells` array in `pack.ts`.
+4. `npm run verify` — `catalog:check` fails if you missed step 2, and
+   `packInstallable` fails if a playable champion is left with three abilities.
+
+## Add a champion
+
+No generator for this one yet. By hand:
+
+1. Four abilities, as above.
+2. A portrait: drop `assets/champ_<name>.png` in and run
+   `npm run assets:generate`. The key is the path under `assets/` without the
+   extension, so that file is `champ_<name>` — and stays `champ_<name>` when
+   the build re-encodes it to WebP.
+3. A row in `pack.ts`'s `champions`, with `playable: true`, the `image` key
+   from step 2, an `attack` profile, and the four ids.
+
+Core refuses to install a playable champion with no portrait or without
+exactly four abilities, and says which one is wrong.
+
+## Remove a champion
+
+Delete its four spell files and tests, its four lines from `spells/index.ts`,
+its row from `pack.ts`, and its art from `assets/`. Then
+`npm run assets:generate && npm run verify`.
+
+## Add an item
+
+An item's `passive` and `active` are **ordinary spells**, from the same barrel a
+champion's abilities come from. That is the whole mechanism; the rest is what
+keeps one from also behaving like an ability.
+
+1. Write `spells/Item_<Name>.ts` and its test, and export it from
+   `spells/index.ts` — same as any spell. `manaCost = 0`, and a passive has
+   `coolDown = 0` too.
+2. The icon: art under `assets/`, then `npm run assets:generate`.
+3. A row in `pack.ts`'s item entries: `id`, `name`, `icon`, `cost`, an optional
+   `stats` (allow-listed keys only — see `ItemStatKey`), optional `buildsFrom`,
+   and `passive`/`active` naming the local spell ids.
+4. `npm run verify`.
+
+**`cost` is the total, written once.** What a player pays when the parts are
+already in the bag is `cost` minus the parts, worked out by core's
+`ItemShop.priceFor`. A separate combine cost is the same fact in two places, and
+they drift on the first retune. Core refuses a total under the sum of its parts.
+
+## Add art
+
+Drop the file under `assets/` and run `npm run assets:generate`. Its key now
+exists as a type, so `api.asset('champ_hero')` is checked and a typo is a
+compile error rather than a blank square in a match.
+
+Use **this pack's own keys**, never one of core's. `check-seams` enforces it:
+reusing a key that happens to exist in core's art is a pack that draws the
+engine's pictures.
+
+## Publish
+
+```bash
+git push
+```
+
+`.github/workflows/publish.yml` builds and deploys to GitHub Pages on every
+push to the default branch. Players install from
+`https://<owner>.github.io/<repo>/manifest.json`.
+
+Nothing to bump by hand. `scripts/write-manifest.mjs` derives `buildId` from
+the file list, core hangs it off the entry URL, and a player whose installed
+copy is older is offered the update.
+
+---
+
+## Traps
+
+Each of these has cost real time, and none is visible from the file you are
+editing.
+
+**Never `import { Spell } from '@moba2d/core'`.** Not once, not in a test.
+The pack builds with core marked `external` and publishes its own `pack.js`,
+which a browser `import()`s from another origin — a surviving value import is
+a bare specifier nothing resolves. The engine *arrives* instead, through
+`packApi.ts`: `export default class Firebolt extends api.Spell {}`. `import
+type` is fine; the compiler erases it.
+
+**`generated/` is written, not authored.** Editing a file in there is undone
+by the next `assets:generate` or `catalog:generate`, both of which `prepare`
+runs after every install, and `verify` fails when the two disagree.
+
+**A `UNIT` spell must declare `targetingRequest: { targetTeam: 'ENEMY' }`.**
+Omit it and targeting defaults to `'ANY'`, which includes the caster — with
+the cursor on empty ground the nearest-target fallback resolves *her*, and the
+spell dashes to and damages its own caster. Four abilities shipped that way in
+the largest pack there is before anyone noticed.
+
+**Spend mana through `spendMana()` and read range through `Reach`.** Touching
+`stats.mana` directly opts out of the match rules that make URF work;
+`check-seams` bans the name from `spells/`.
+
+**Art keys strip the extension.** `assets/champ_hero.png` and
+`assets/champ_hero.webp` are the same key, which is what lets the build
+re-encode art without touching a line of code — and also means two files with
+the same stem are a duplicate-key error.
+
+**Ship art as files, not as data URIs.** `vite.config.ts` sets
+`assetsInlineLimit: 0` on purpose: `pack.js` is downloaded before the menu can
+draw, and inlined art puts every champion's portrait in it to play a match
+that needs four.
+
+**Label your damage.** `takeDamage(amount, this.owner, 'MAGIC', 'Tên Chiêu')`
+— the third argument is the damage type (`'PHYSICAL' | 'MAGIC' | 'TRUE'`), the
+fourth the player-facing source label. Core's death-recap modal groups what
+killed a player by that label; damage dealt without one shows up as
+"Không rõ". A test spying on `takeDamage` should match the trailing arguments
+with `expect.any(String)` (or `.slice(0, 2)` the call), not restate them.
+
+**A re-applied Slow must `RENEW_EXISTING`.** `Slow`'s default add type stacks
+(ten deep), so a zone or aura that re-applies its slow every tick turns "40%
+slow" into a standstill. The aura pattern is one slow whose clock is rewound:
+
+```ts
+const slow = new Slow(400, this.owner, enemy);
+slow.percent = 0.4;
+slow.buffAddType = api.enums.BuffAddType.RENEW_EXISTING;
+enemy.addBuff(slow);
+```
+
+**Never put an item's spell id in a champion's `spells: [...]`.** That would be
+one spell wearing two prices — an ability a champion casts for free and an item
+the shop charges for.
+
+**An item's spell must stay out of `spellDisplay`.** That map is what a loadout
+screen offers as a *choosable ability*, so an item's active left in it gets
+handed to a player who never bought the item. Skip anything named `Item_*` by
+prefix in `displayData()`; do not replace the check with a list — the next item
+is the one that gets left off it.
+
+**A pack with items has to declare a `coreRange` floor.** `items` did not exist
+in `ContentPackData` before core 1.3, `buildsFrom` before 1.4, and
+`Buff.hudVisible`/`Buff.sourceSpell` before 1.5. An older core does not fail on
+any of them — it *ignores* what it does not know, and installs a shop whose
+passives never come off when sold. `pack.ts` and `scripts/write-manifest.mjs`
+state that floor separately and must move together.
+
+**Use `Dash.onDashUpdate`, never `dashBuff.onUpdate = …`.** `Dash` puts the
+movement itself in `Dash.prototype.onUpdate`, so an instance assignment replaces
+the frame instead of hooking it and the champion plays the spell's logic standing
+still. It reads exactly like a callback, which is why three abilities shipped
+with it unnoticed — each still dealt its damage to whatever was next to the
+caster. `check-seams` scans for it.
+
+**A bookkeeping buff hides itself.** An item passive or an internal state
+tracker sets `buff.hudVisible = false`, or every purchase adds a row to the
+player's buff bar. `duration = 0` means permanent and draws no countdown;
+a permanent buff with a nonzero duration draws a negative one.
+
+**`interrupts:` — only `SpellForm.CHANNELED` breaks on the caster's own
+movement.** `AIMED`, `HELD` and `TETHERED` all survive moving and Flash and
+break only on death, stun or silence — that is what keeps cast-then-Flash
+combos playable. Reserve `CHANNELED` for a true channel (a Recall-like),
+because it also breaks on displacement.
+
+**"Player is not available in this test context" is usually not the error.**
+Vitest's failure printer walks the test game object and trips its throwing
+`player` getter while serialising an ordinary assertion diff. The real
+failure is the assertion above it — read the whole message before touching
+the fixture.
+
+**A gitignored lockfile still pins.** `package-lock.json` is untracked but
+real on disk: `npm install` resolves `@moba2d/core`'s git dependency to
+whatever commit the *local* lockfile recorded, however old. To actually pick
+up core's current `#main`, run `npm update @moba2d/core`. CI never has the
+lockfile, so it resolves fresh every run — the drift only ever shows up
+locally.
+
+**`npm install` (and any `bun install`) stomps a dev link.** While this pack
+is linked to a local core checkout (`npm run pack:link` from core), an install
+here silently replaces the symlink with the registry copy and every new-API
+line stops compiling. `scripts/check-core-link.mjs` (first step of `verify`,
+warn-only on `postinstall`) is what tells you; `npm run pack:link` from core
+is the repair.
+
+**Install the git hooks once per clone:** `npm run hooks:install`. The
+pre-push hook runs `npm run verify`; `git push --no-verify` or
+`MOBA2D_SKIP_VERIFY=1 git push` skips it once, deliberately.
