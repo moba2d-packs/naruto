@@ -3,6 +3,7 @@ import { api } from '../packApi';
 import Naruto_Q2 from './Naruto_Q2';
 import Naruto_W2 from './Naruto_W2';
 import Naruto_E2 from './Naruto_E2';
+import { KuramaAura } from './Naruto_R_Aura';
 
 /**
  * Kurama Mode — the first transforming ultimate in the engine.
@@ -21,6 +22,19 @@ import Naruto_E2 from './Naruto_E2';
  *
  * `onActivate`/`onDeactivate` rather than `onCreate`/destructor, because those
  * are the two the engine guarantees are paired — see `Buff`'s own lifecycle.
+ *
+ * ## The enemy has to be able to see it
+ *
+ * A transformed champion that looks untransformed is a fifteen-second window
+ * nobody else can read: no reason to back off, no way to know when it ends,
+ * and the ultimate lands on them as damage with no cause on screen. So the
+ * form says so twice, in the two places a player actually looks — the avatar
+ * (portrait, scoreboard, death recap) and the body itself (`KuramaAura`).
+ *
+ * The avatar is a plain field, so swapping it is the whole mechanism; it is
+ * put back on deactivate rather than reassigned from the champion's roster
+ * entry, because a champion may have arrived here through a hand-built kit
+ * and never had a roster entry to read back.
  *
  * ## Why the drain lives on the spell and not on the buff
  *
@@ -50,7 +64,10 @@ export const KURAMA_STANCE = 'kurama';
 
 export class KuramaMode extends api.buffs.Buff {
   name = 'Chế Độ Kurama';
-  image = api.asset('champ_naruto');
+  image = api.asset('spell_naruto_r');
+
+  /** Whatever face he wore before the form, so it can be given back exactly. */
+  private woreBefore: Champion['avatar'] | null = null;
 
   onActivate(): void {
     const naruto = this.targetUnit as Champion;
@@ -61,6 +78,16 @@ export class KuramaMode extends api.buffs.Buff {
     ]);
     naruto.stats.maxHealth.baseBonus += R_HEALTH_BONUS;
     naruto.stats.size.baseBonus += R_SIZE_BONUS;
+
+    this.woreBefore = naruto.avatar;
+    naruto.avatar = api.asset('champ_naruto_kurama');
+
+    // The cloak is its own object rather than something the buff paints:
+    // `Champion.draw()` is skipped for a culled or fogged caster, and the
+    // viewer who most needs to see the form is the one across the wall.
+    const cloak = new KuramaAura(naruto);
+    cloak.attachTo(naruto, this);
+    naruto.game.objectManager.addObject(cloak);
   }
 
   onDeactivate(): void {
@@ -68,6 +95,9 @@ export class KuramaMode extends api.buffs.Buff {
     naruto.exitStance();
     naruto.stats.maxHealth.baseBonus -= R_HEALTH_BONUS;
     naruto.stats.size.baseBonus -= R_SIZE_BONUS;
+    // The cloak is watching this buff, so it drops itself — nothing to undo
+    // here but the face.
+    if (this.woreBefore !== null) naruto.avatar = this.woreBefore;
     // The pool shrank under whatever is standing in it, so anyone above the
     // new ceiling is brought down to it. Without this a champion walks out of
     // the form reading 130/85.

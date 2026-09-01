@@ -1,5 +1,6 @@
 import type { AttackableUnit } from '@moba2d/core/content/types';
 import { api } from '../packApi';
+import { impactBurst } from '../spellVfx';
 
 const Dash = api.buffs.Dash;
 
@@ -14,7 +15,7 @@ const Dash = api.buffs.Dash;
  */
 export const W2_DAMAGE = 20;
 export const W2_RANGE = 760;
-export const W2_SPEED = 24;
+export const W2_SPEED = 16;
 export const W2_PULL_SPEED = 20;
 export const W2_PULL_DURATION_MS = 900;
 export const W2_COOLDOWN_MS = 10_000;
@@ -26,8 +27,19 @@ export class Naruto_W2_Object extends api.MissileSpellObject {
   damage = W2_DAMAGE;
   maxHitCount = 1;
 
+  private burst = api.helpers.PredefinedParticleSystems.randomMovingParticlesDecreaseSize(
+    'rgba(255, 210, 120, 0.9)',
+    0.5
+  );
+
+  onAdded(): void {
+    super.onAdded();
+    this.useParticles(this.burst);
+  }
+
   onHit(target: AttackableUnit): void {
     target.takeDamage(this.damage, this.owner);
+    impactBurst(this.burst, target.position, 16, 30, 12);
 
     // Grounding blocks a unit dashing under its own power; a displacement
     // someone else applies still has to ask, because `CanDash` is also what
@@ -47,15 +59,28 @@ export class Naruto_W2_Object extends api.MissileSpellObject {
     const tip = this.position;
     const root = this.owner.position;
     push();
-    stroke(255, 190, 60, 210);
-    strokeWeight(9);
+    // Three strokes of falling width: a limb with depth, not a wire. The
+    // outermost is the widest and dimmest so the bright core reads as the
+    // focal line.
+    stroke(210, 120, 30, 120);
+    strokeWeight(14);
     line(root.x, root.y, tip.x, tip.y);
-    stroke(255, 240, 190, 230);
+    stroke(255, 185, 60, 215);
+    strokeWeight(8);
+    line(root.x, root.y, tip.x, tip.y);
+    stroke(255, 245, 200, 235);
     strokeWeight(3);
     line(root.x, root.y, tip.x, tip.y);
+
+    // The hand, with a rim so it holds its silhouette over grass and stone
+    // alike — the size floor rule for anything the player has to find.
     noStroke();
-    fill(255, 210, 110, 235);
-    circle(tip.x, tip.y, this.size);
+    fill(255, 205, 105, 240);
+    circle(tip.x, tip.y, this.size * 1.5);
+    stroke(120, 60, 10, 200);
+    strokeWeight(2);
+    noFill();
+    circle(tip.x, tip.y, this.size * 1.5);
     pop();
   }
 }

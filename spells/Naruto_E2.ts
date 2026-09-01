@@ -1,5 +1,6 @@
 import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
+import { chakraTrail, impactBurst } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 
@@ -13,7 +14,7 @@ const QRectangle = api.utils.Quadtree.Rectangle;
  */
 export const E2_DAMAGE = 55;
 export const E2_RANGE = 900;
-export const E2_SPEED = 13;
+export const E2_SPEED = 9;
 export const E2_SIZE = 64;
 export const E2_COOLDOWN_MS = 18_000;
 export const E2_CHAKRA = 90;
@@ -27,11 +28,22 @@ export class Naruto_E2_Object extends api.MissileSpellObject {
   // default" edit from silently making this a single-target shot.
   maxHitCount = Infinity;
 
+  trailSystem = chakraTrail(this.owner, 'rgba(150, 90, 220, 0.5)', 26);
+
+  private burst = api.helpers.PredefinedParticleSystems.randomMovingParticlesDecreaseSize(
+    'rgba(200, 150, 255, 0.9)',
+    0.35
+  );
   private pulse = 0;
+
+  onAdded(): void {
+    super.onAdded();
+    this.useParticles(this.burst);
+  }
 
   update(): void {
     super.update();
-    this.pulse += 0.18;
+    this.pulse += 0.14;
   }
 
   getDisplayBoundingBox(): Rectangle {
@@ -47,6 +59,9 @@ export class Naruto_E2_Object extends api.MissileSpellObject {
 
   onHit(target: AttackableUnit): void {
     target.takeDamage(this.damage, this.owner);
+    // It pierces, so every body on the line gets its own mark — this is the
+    // only way a player reads how many the shot actually caught.
+    impactBurst(this.burst, target.position, 20, 34, 14);
   }
 
   draw(): void {

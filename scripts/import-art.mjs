@@ -71,6 +71,16 @@ export const ROSTER = [
   // Akatsuki
   { slug: 'Itachi Akatsuki Mobile.png', local: 'itachi' },
   { slug: 'Deidara - Akatsuki.png', local: 'deidara' },
+
+  // Transformed portraits. A champion's avatar is a plain field, so a stance
+  // can swap it — and it has to: an enemy needs to read "he is in the form"
+  // off the body and the scoreboard, not off a buff icon they are not
+  // looking at. One extra row here per transforming champion.
+  // `zoom` because this one is a full-body render 2700x3600: the generic
+  // rule below takes a square off the top, which on a standing figure is
+  // still the whole figure and leaves the head a dozen pixels tall. 0.55
+  // takes a narrower slice so the avatar reads as a face.
+  { slug: "Naruto's Kurama Mode.png", local: 'naruto_kurama', zoom: 0.55 },
 ];
 
 const sha256 = buffer => createHash('sha256').update(buffer).digest('hex');
@@ -122,8 +132,22 @@ async function resolveWikiUrls(titles) {
  * Deidara is 769x1666 and Itachi 368x854, and both only read as faces when
  * taken from the top.
  */
-const square = async buffer => {
+const square = async (buffer, zoom) => {
   const { width = 1, height = 1 } = await sharp(buffer).metadata();
+
+  // `zoom` cuts a narrower square off the top before the fit runs, for the
+  // full-body renders where "the top square" is still a whole standing
+  // person. Centred horizontally because that is where a posed figure's head
+  // is; taken from the very top because that is where a head is vertically.
+  if (zoom && zoom > 0 && zoom < 1) {
+    const side = Math.round(Math.min(width, height) * zoom);
+    return sharp(buffer)
+      .extract({ left: Math.round((width - side) / 2), top: 0, width: side, height: side })
+      .resize(PORTRAIT, PORTRAIT, { fit: 'cover', position: 'centre' })
+      .png({ compressionLevel: 9 })
+      .toBuffer();
+  }
+
   const position = height > width ? 'top' : 'centre';
   return sharp(buffer)
     .resize(PORTRAIT, PORTRAIT, { fit: 'cover', position })
@@ -198,7 +222,7 @@ async function main() {
   for (const entry of ROSTER) {
     const sourceUrl = urls.get(entry.slug);
     const raw = await download(sourceUrl);
-    const png = await square(raw);
+    const png = await square(raw, entry.zoom);
     const localPath = `assets/images/champions/${entry.local}.png`;
     writeFileSync(join(root, localPath), png);
     records.push({

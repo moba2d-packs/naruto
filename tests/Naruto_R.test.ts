@@ -17,6 +17,7 @@ import Naruto_R, {
   R_DURATION_MS,
   R_HEALTH_BONUS,
 } from '../spells/Naruto_R';
+import { KuramaAura } from '../spells/Naruto_R_Aura';
 import Naruto_Q from '../spells/Naruto_Q';
 import Naruto_W from '../spells/Naruto_W';
 import Naruto_E from '../spells/Naruto_E';
@@ -131,6 +132,55 @@ describe('Kurama Mode', () => {
 
     expect(unit.isDead).toBe(true);
     expect(unit.stance).toBe(null);
+  });
+
+  it('changes the face so the form is legible off the portrait', () => {
+    // A transformed champion that looks untransformed is a fifteen-second
+    // window the enemy cannot read — reported from a real match as "bật R lên
+    // avatar không đổi".
+    const unit = naruto();
+    indexObjects(game, [unit]);
+    const before = unit.avatar;
+
+    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    expect(unit.avatar).not.toBe(before);
+
+    for (let elapsed = 0; elapsed <= R_DURATION_MS; elapsed += 1_000) {
+      unit.stats.mana.baseValue = 100;
+      advance(unit, 1_000);
+    }
+    expect(unit.avatar).toBe(before);
+  });
+
+  it('puts a cloak in the world, and takes it away with the form', () => {
+    // In the world and not on the body: `Champion.draw()` is skipped for a
+    // culled or fogged caster, and the viewer who most needs to see the form
+    // is the one across the wall.
+    const unit = naruto();
+    indexObjects(game, [unit]);
+
+    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    // Both lists: a unit added this tick sits in `_objectToBeAdd` until the
+    // manager flushes, which is the same distinction `HostSession.stillQueued`
+    // already has to make.
+    // Annotated rather than inferred: `KuramaAura` extends `api.SpellObject`,
+    // whose type comes off the runtime api object, so a `o is KuramaAura`
+    // predicate does not narrow an `unknown[]` here.
+    const cloaks = (): KuramaAura[] =>
+      [
+        ...(game.objectManager.objects as unknown[]),
+        ...((game.objectManager as { _objectToBeAdd?: unknown[] })._objectToBeAdd ?? []),
+      ].filter(o => o instanceof KuramaAura) as KuramaAura[];
+    expect(cloaks()).toHaveLength(1);
+
+    for (let elapsed = 0; elapsed <= R_DURATION_MS; elapsed += 1_000) {
+      unit.stats.mana.baseValue = 100;
+      advance(unit, 1_000);
+    }
+    // The cloak watches the buff, so it marks itself gone rather than waiting
+    // for anyone to remember to remove it.
+    for (const cloak of cloaks()) cloak.update();
+    expect(cloaks().every(cloak => cloak.toRemove)).toBe(true);
   });
 
   it('raises the health ceiling and lowers it again without killing him', () => {
