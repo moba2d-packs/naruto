@@ -60,27 +60,59 @@ export class SageAura extends api.SpellObject {
     const breath = 1 + Math.sin(this.ageMs / 620) * 0.035;
 
     push();
-    noStroke();
-    fill(214, 158, 42, 34);
-    circle(body.x, body.y, reach * 2.15 * breath);
+    rectMode(CORNER);
 
-    // One steady ring on the ground. Thin, because the standard is explicit
-    // that a worn state is a stroke and never a fill — the body has to stay
-    // visible through it.
+    // Ground glow first, under everything — a wash the marks can sit on.
+    noStroke();
+    fill(206, 138, 30, 40);
+    circle(body.x, body.y, reach * 2.2 * breath);
+
+    // A ring with a dark rim under a bright line. `docs/VFX_STANDARD.md` is
+    // explicit that colour alone is not enough — a dark rim under a light
+    // shape is what makes a silhouette hold, and here it is holding against
+    // an orange portrait, which is the exact case that failed: amber marks on
+    // an amber body were reported as invisible.
     noFill();
-    stroke(236, 196, 96, 150 * settled);
-    strokeWeight(2);
+    stroke(46, 26, 8, 190 * settled);
+    strokeWeight(5.5);
+    circle(body.x, body.y, reach * 2 * breath);
+    stroke(255, 214, 120, 235 * settled);
+    strokeWeight(2.5);
     circle(body.x, body.y, reach * 2 * breath);
 
-    // The two pigment marks. Placed rather than scattered, because the thing
-    // a player is being asked to recognise is a *face*, and a ring of
-    // particles is what every other buff in every game already looks like.
-    noStroke();
-    fill(226, 132, 46, 210 * settled);
-    const lift = reach * 0.34;
-    const spread = reach * 0.36;
-    ellipse(body.x - spread, body.y - lift, reach * 0.34, reach * 0.19);
-    ellipse(body.x + spread, body.y - lift, reach * 0.34, reach * 0.19);
+    /**
+     * The toad eyes, and they sit **above** the body rather than on it.
+     *
+     * Painting a face onto a top-down sprite is fighting the medium: there is
+     * no facing to put eyes on, and whatever is painted lands on the busiest,
+     * most colour-matched part of the picture. Held clear of the silhouette
+     * they are always on plain ground, always the same size, and always the
+     * same two shapes.
+     *
+     * Sized past the 40-unit floor the standard sets for anything a player
+     * has to *find*. The first cut drew them at roughly fifteen, which is
+     * grit.
+     */
+    const eyeLift = reach * 1.05;
+    const eyeSpread = reach * 0.62;
+    const eyeW = reach * 0.62;
+    const eyeH = reach * 0.42;
+    for (const side of [-1, 1]) {
+      const ex = body.x + side * eyeSpread;
+      const ey = body.y - eyeLift;
+      // Dark backing plate, drawn wider than the eye, so the whole mark reads
+      // as one object over grass, stone or an orange coat alike.
+      noStroke();
+      fill(38, 20, 6, 215 * settled);
+      ellipse(ex, ey, eyeW * 1.32, eyeH * 1.34);
+      // The sclera: warm and bright, the focal value of the whole effect.
+      fill(255, 196, 84, 245 * settled);
+      ellipse(ex, ey, eyeW, eyeH);
+      // A toad's pupil is a horizontal bar, and that bar is the single most
+      // recognisable thing about Sage Mode. Black, so it holds at any zoom.
+      fill(24, 14, 6, 245 * settled);
+      rect(ex - eyeW * 0.42, ey - eyeH * 0.13, eyeW * 0.84, eyeH * 0.26, eyeH * 0.1);
+    }
     pop();
   }
 }

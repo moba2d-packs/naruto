@@ -1,4 +1,10 @@
-import type { AttackableUnit, Champion, DamageType } from '@moba2d/core/content/types';
+import type {
+  AttackableUnit,
+  CastContext,
+  CastSpec,
+  Champion,
+  DamageType,
+} from '@moba2d/core/content/types';
 import { api } from '../packApi';
 import { Naruto_W_Smoke } from './Naruto_W_Smoke';
 
@@ -106,21 +112,25 @@ export class Naruto_W_Clone extends api.units.Pet {
   /**
    * A clone does not fall over; it goes out the way it came in.
    *
-   * Guarded on `isDead` because `die` is reachable on a corpse — core's own
-   * note says so — and a second puff at the same spot would tell an enemy
-   * they had hit something twice.
+   * `onExpire` is core's own seam for exactly this — its comment says "for
+   * subclasses with a parting gift" — and using it instead of `die` is the
+   * whole fix. `die` is only the *killed* path; core funnels four endings
+   * through `expire`: killed, timed out, summoner died, summoner removed. A
+   * clone that simply ran out its nine seconds was blinking out of existence
+   * with nothing, which is what was reported. `Pet`'s own note had already
+   * said it — "all three owe the pet its parting effect" — and this class was
+   * hooked to one of the three.
+   *
+   * No latch needed: `expire` opens with `if (this.toRemove) return`, so a
+   * killed clone reaching it through `die` and then again through `update`
+   * only arrives here once. Two puffs on one spot would tell an enemy they
+   * had hit something twice.
    */
-  // The payload type is core's and is not on the pack-facing barrel, so it
-  // is taken off the method being overridden rather than restated here — a
-  // restatement is a second copy that drifts the day core adds a field.
-  die(deathData: Parameters<InstanceType<typeof api.units.Pet>['die']>[0]): void {
-    if (!this.isDead) {
-      const puff = new Naruto_W_Smoke(this.ownerUnit ?? this);
-      puff.position.set(this.position.x, this.position.y);
-      puff.radius = 58;
-      this.game.objectManager.addObject(puff);
-    }
-    super.die(deathData);
+  onExpire(): void {
+    const puff = new Naruto_W_Smoke(this.ownerUnit ?? this);
+    puff.position.set(this.position.x, this.position.y);
+    puff.radius = 58;
+    this.game.objectManager.addObject(puff);
   }
 }
 
@@ -131,13 +141,61 @@ export default class Naruto_W extends api.Spell {
     'Biến vào làn khói và hiện ra thành <span class="buff">ba bản giống hệt nhau</span>. ' +
     'Phân thân mang đúng thanh máu của Naruto, đánh <span class="damage magic">55%</span> ' +
     'sát thương đòn thường và tồn tại <span class="time">9 giây</span>, nhưng chịu sát thương ' +
-    'gấp <b>3</b> lần.';
+    'gấp <b>3</b> lần. <b>Bấm lại</b> để ra lệnh cho phân thân tới vị trí con trỏ.';
   coolDown = W_COOLDOWN_MS;
   manaCost = W_CHAKRA;
-  targetingMode = 'SELF' as const;
 
-  onSpellCast(): void {
+  /** The clones this cast put out, so a recast can find them again. */
+  private squad: Naruto_W_Clone[] = [];
+
+  get castSpec(): Readonly<CastSpec> {
+    return {
+      // A second press has to *reach* this spell, and a plain press cannot:
+      // the ability is on its eighteen-second cooldown a frame after it
+      // starts, so the command press would simply be refused. `RECAST` opens
+      // a window the runtime routes those presses through.
+      activation: 'RECAST',
+      // `POINT`, so the recast arrives carrying a cursor. The first press
+      // ignores it — the clones spawn around him wherever he aimed.
+      targeting: 'POINT',
+      castTimeMs: 0,
+      // The window is the clones' own life. `recasts` is deliberately far
+      // more than anyone will use: the runtime ends an activation on the
+      // *last* recast, and commanding a squad is not something a player
+      // should have a budget for. What actually closes this is
+      // `maxDurationMs`, when the last clone is gone anyway.
+      active: { maxDurationMs: W_LIFETIME_MS, recasts: 99 },
+      resource: { commitAt: 'start', refundOn: [] },
+      // At `start`, so the cooldown runs *under* the clones rather than
+      // beginning when they expire — nine seconds of decoys followed by
+      // eighteen of nothing would be a twenty-seven second ability.
+      cooldown: { startAt: 'start', durationMs: W_COOLDOWN_MS },
+      // They are out of his hands the moment the smoke clears. A stun on
+      // Naruto does not un-summon three bodies standing across the lane.
+      interrupts: api.enums.SpellForm.INDEPENDENT,
+    };
+  }
+
+  /**
+   * Send them somewhere — the Annie's-Tibbers press.
+   *
+   * `commandTo` is core's own seam for this and it does the part that is easy
+   * to get wrong: while an order is outstanding the pet's own 250ms target
+   * scan is skipped, so an autonomous clone standing near an enemy cannot
+   * overwrite the order before the player sees it take.
+   *
+   * Dead and expired clones are dropped from the squad here rather than
+   * watched every frame — this is the only moment anyone asks.
+   */
+  onRecast(context: CastContext): void {
+    this.squad = this.squad.filter(clone => !clone.toRemove && !clone.isDead);
+    const spot = createVector(context.cursorWorld.x, context.cursorWorld.y);
+    for (const clone of this.squad) clone.commandTo(spot);
+  }
+
+  onActivate(): void {
     const naruto = this.owner as Champion;
+    this.squad = [];
 
     const puff = new Naruto_W_Smoke(naruto);
     puff.position.set(naruto.position.x, naruto.position.y);
@@ -159,7 +217,9 @@ export default class Naruto_W extends api.Spell {
       const spot = naruto.position
         .copy()
         .add(Math.cos(angle) * W_SPAWN_OFFSET, Math.sin(angle) * W_SPAWN_OFFSET);
-      this.game.objectManager.addObject(new Naruto_W_Clone(naruto, spot));
+      const clone = new Naruto_W_Clone(naruto, spot);
+      this.squad.push(clone);
+      this.game.objectManager.addObject(clone);
     }
   }
 }

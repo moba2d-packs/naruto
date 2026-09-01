@@ -10,7 +10,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTestApi, createGame, stubGameGlobals, type TestGame } from '@moba2d/core/testing';
 import { pressSpell } from '@moba2d/core/testing/spell';
-import Naruto_W, { Naruto_W_Clone, W_CLONES, W_CLONE_DAMAGE_TAKEN } from '../spells/Naruto_W';
+import Naruto_W, {
+  Naruto_W_Clone,
+  W_CLONES,
+  W_CLONE_DAMAGE_TAKEN,
+  W_LIFETIME_MS,
+} from '../spells/Naruto_W';
 import { Naruto_W_Smoke } from '../spells/Naruto_W_Smoke';
 import { champion, indexObjects } from './_units';
 
@@ -128,6 +133,57 @@ describe('Kage Bunshin', () => {
     clone.takeDamage(20, caster);
 
     expect(clone.isDead).toBe(false);
+  });
+
+  it('sends the clones to the cursor on a second press', () => {
+    // Annie's Tibbers press. `commandTo` is core's own seam and it does the
+    // part that is easy to miss: while an order stands the pet's 250ms
+    // target scan is skipped, so a clone standing near an enemy cannot
+    // overwrite the order before the player sees it take.
+    const caster = naruto();
+    indexObjects(game, [caster]);
+    pressSpell(caster.spells[0]);
+    const clone = inWorld(Naruto_W_Clone)[0];
+    expect(clone.underOrders).toBe(false);
+
+    pressSpell(caster.spells[0], { at: { x: 640, y: 480 } });
+
+    expect(clone.underOrders).toBe(true);
+  });
+
+  it('smokes out when it simply runs out of time', () => {
+    // The bug this covers: only the *killed* path had a puff, so a clone that
+    // lived its nine seconds blinked out of existence. Core funnels four
+    // endings through `expire` and its own note says all of them owe the pet
+    // its parting effect.
+    const caster = naruto();
+    indexObjects(game, [caster]);
+    pressSpell(caster.spells[0]);
+    const clone = inWorld(Naruto_W_Clone)[0];
+    const before = inWorld(Naruto_W_Smoke).length;
+
+    vi.stubGlobal('deltaTime', W_LIFETIME_MS + 100);
+    clone.update();
+
+    expect(clone.toRemove).toBe(true);
+    expect(inWorld(Naruto_W_Smoke).length).toBeGreaterThan(before);
+  });
+
+  it('puffs once, however many ways it ends at the same moment', () => {
+    // `expire` is reachable twice — a killed clone arrives through `die` and
+    // then again through `update` — and two puffs on one spot tell an enemy
+    // they hit something twice.
+    const caster = naruto();
+    indexObjects(game, [caster]);
+    pressSpell(caster.spells[0]);
+    const clone = inWorld(Naruto_W_Clone)[0];
+    const before = inWorld(Naruto_W_Smoke).length;
+
+    clone.takeDamage(9_999, caster);
+    vi.stubGlobal('deltaTime', 16);
+    clone.update();
+
+    expect(inWorld(Naruto_W_Smoke).length).toBe(before + 1);
   });
 
   it('goes out in smoke rather than falling over', () => {
