@@ -24,10 +24,17 @@ import {
   Sasuke_W_Blaze,
 } from '../spells/Sasuke_W_Blaze';
 import Sasuke_E, { E_REVEAL_RADIUS } from '../spells/Sasuke_E';
-import Sasuke_R, { R_SHIELD, SUSANOO_STANCE } from '../spells/Sasuke_R';
+import Sasuke_R, { R_CHAKRA_PER_SECOND, R_SHIELD, SUSANOO_STANCE } from '../spells/Sasuke_R';
 import { basicAttackStub, champion, indexObjects, unit } from './_units';
 
 const SLOT = buildTestApi().enums.SpellSlot;
+/**
+ * The engine's real pool. `Stats.ts` defaults mana to 500 and
+ * `ChampionDefenceTuning` has no mana field, so this is what every champion
+ * in every pack actually has — and Susanoo's upkeep is only honest against
+ * that number.
+ */
+const REAL_MANA = 500;
 let game: TestGame;
 
 const sasuke = () => {
@@ -261,6 +268,40 @@ describe('Susanoo', () => {
 
     caster.takeDamage(40, caster);
     advance(caster, 16);
+
+    expect(caster.stance).toBe(SUSANOO_STANCE);
+  });
+
+  it('bills chakra a second at a time, and never per frame', () => {
+    // The upkeep is what replaced a ninety-five-second cooldown, so it is the
+    // only thing standing between a ten-second cooldown and a shell that is
+    // up more often than it is down. A drain billed per frame would be sixty
+    // times the tooltip; one billed never would be no limiter at all.
+    const caster = sasuke();
+    caster.stats.mana.baseValue = REAL_MANA;
+    caster.stats.maxMana.baseValue = REAL_MANA;
+    indexObjects(game, [caster]);
+    pressSpell(caster.spells[SLOT.R]);
+    caster.stats.mana.baseValue = REAL_MANA;
+
+    for (let frame = 0; frame < 30; frame++) advance(caster, 16);
+    expect(caster.stats.mana.value).toBe(REAL_MANA);
+
+    advance(caster, 1_000);
+    expect(caster.stats.mana.value).toBe(REAL_MANA - R_CHAKRA_PER_SECOND);
+  });
+
+  it('does not take the shell away for an empty pool', () => {
+    // The same rule Kurama Mode already keeps, for the same reported reason:
+    // an ability that stops for something the player cannot see reads as
+    // broken even when the arithmetic is right. The two endings stay the ones
+    // they can watch — the shell breaking, and their own second press.
+    const caster = sasuke();
+    indexObjects(game, [caster]);
+    pressSpell(caster.spells[SLOT.R]);
+    caster.stats.mana.baseValue = 0;
+
+    for (let elapsed = 0; elapsed < 5_000; elapsed += 1_000) advance(caster, 1_000);
 
     expect(caster.stance).toBe(SUSANOO_STANCE);
   });
