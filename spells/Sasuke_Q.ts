@@ -40,6 +40,18 @@ export const Q_CHAKRA = 55;
 export const Q_STOP_GAP = 70;
 
 export default class Sasuke_Q extends api.Spell {
+  /**
+   * `Dash` is told, never inferred — core's `inferRoles` refuses to guess it
+   * on purpose, because a wrong guess there makes a bot flee *with a
+   * gap-closer* and run at the thing chasing it. Chidori is a gap-closer that
+   * also stuns, so the mask says all three.
+   */
+  static aiRoles =
+    api.enums.SpellRole.Damage |
+    api.enums.SpellRole.Dash |
+    api.enums.SpellRole.Cc |
+    api.enums.SpellRole.Burst;
+
   name = 'Chidori';
   image = api.asset('spell_sasuke_q');
   description =

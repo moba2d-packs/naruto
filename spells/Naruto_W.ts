@@ -134,6 +134,13 @@ export class Naruto_W_Clone extends api.units.Pet {
 }
 
 export default class Naruto_W extends api.Spell {
+  /**
+   * `Summon` is told, not inferred: a `SELF` cast reads as `Buff | Shield`,
+   * which is neither true here nor useful — the ability puts bodies in the
+   * world, and a bot should value it as that.
+   */
+  static aiRoles = api.enums.SpellRole.Summon | api.enums.SpellRole.Buff;
+
   name = 'Kage Bunshin';
   image = api.asset('spell_naruto_w');
   description =

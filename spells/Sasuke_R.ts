@@ -106,6 +106,20 @@ export class SusanooForm extends api.buffs.Buff {
 }
 
 export default class Sasuke_R extends api.Spell {
+  /**
+   * **Told, not inferred.** `inferRoles` reads a `SELF` cast as
+   * `Buff | Shield` and nothing else, which scored this ultimate at 4 against
+   * an ordinary Q's 14 — so a bot holding either transform picked Q every
+   * time Q was up and effectively never pressed R. Measured with the bot's
+   * own scorer, not guessed, and it is exactly what `Spell.aiRoles` exists
+   * for: core's inference is deliberately conservative and says so.
+   *
+   * `Shield` is genuinely true here — the form *is* a shield pool — and
+   * `Burst` is what makes a bot spend it entering a fight rather than
+   * hoarding it until it dies holding it.
+   */
+  static aiRoles = api.enums.SpellRole.Buff | api.enums.SpellRole.Shield | api.enums.SpellRole.Burst;
+
   name = 'Susanoo';
   image = api.asset('spell_sasuke_r');
   description =
