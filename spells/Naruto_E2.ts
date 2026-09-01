@@ -1,6 +1,6 @@
 import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
-import { chakraTrail, impactBurst } from '../spellVfx';
+import { RANGE_BAND, chakraTrail, impactBurst } from '../spellVfx';
 import { Naruto_E2_Detonation } from './Naruto_E2_Detonation';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
@@ -14,7 +14,7 @@ const QRectangle = api.utils.Quadtree.Rectangle;
  * stopping at the first minion would be the one thing nobody would believe.
  */
 export const E2_DAMAGE = 55;
-export const E2_RANGE = 900;
+export const E2_RANGE = RANGE_BAND.ULTIMATE_LINE;
 export const E2_SPEED = 9;
 export const E2_SIZE = 64;
 export const E2_COOLDOWN_MS = 18_000;

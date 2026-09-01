@@ -1,0 +1,61 @@
+/**
+ * Ranges stay inside the band core actually documents.
+ *
+ * `docs/VFX_STANDARD.md` says it plainly — *"skillshots 350–500"*, scaled to
+ * this canvas rather than to a PC game's wiki numbers — and this pack shipped
+ * its first kit at 520/640/760/900 anyway. What that reads as in a match is a
+ * melee bruiser who never has to approach anyone, which is not the champion.
+ * Reported as "sao tầm của mấy spell naruto xa dữ vậy".
+ *
+ * The ceiling here is 650 rather than 500 because the band has justified
+ * exceptions and they are named in `RANGE_BAND`: a grab stretches because
+ * reaching *is* the ability, and the heaviest ultimate line earns the top of
+ * it. Anything past 650 is not an exception, it is drift.
+ */
+import { describe, expect, it } from 'vitest';
+import { spellCatalog } from '../generated/spellCatalog';
+import { RANGE_BAND } from '../spellVfx';
+import Naruto_Q, { Q_RANGE } from '../spells/Naruto_Q';
+import { Q2_RANGE } from '../spells/Naruto_Q2';
+import { W2_RANGE } from '../spells/Naruto_W2';
+import { E2_RANGE } from '../spells/Naruto_E2';
+
+/** The widest anything in this pack may reach. See the header. */
+const CEILING = RANGE_BAND.ULTIMATE_LINE;
+
+describe('spell ranges', () => {
+  it('keeps every aimed ability inside the band', () => {
+    const overshot = Object.entries({ Q_RANGE, Q2_RANGE, W2_RANGE, E2_RANGE }).filter(
+      ([, range]) => range > CEILING
+    );
+    expect(overshot).toEqual([]);
+  });
+
+  it('states the band in one place, so a retune cannot drift per file', () => {
+    // Each of the four reads a named slot rather than carrying its own
+    // number. That is what makes the ceiling above enforceable at all.
+    expect(Q_RANGE).toBe(RANGE_BAND.ABILITY);
+    expect(Q2_RANGE).toBe(RANGE_BAND.UPGRADED);
+    expect(W2_RANGE).toBe(RANGE_BAND.GRAB);
+    expect(E2_RANGE).toBe(RANGE_BAND.ULTIMATE_LINE);
+  });
+
+  it('orders the band the way the abilities are meant to feel', () => {
+    // A form upgrade must out-reach the ability it replaces, or entering the
+    // form is a downgrade nobody can see.
+    expect(RANGE_BAND.UPGRADED).toBeGreaterThan(RANGE_BAND.ABILITY);
+    expect(RANGE_BAND.GRAB).toBeGreaterThan(RANGE_BAND.UPGRADED);
+    expect(RANGE_BAND.ULTIMATE_LINE).toBeGreaterThan(RANGE_BAND.GRAB);
+  });
+
+  it('has the ability declare the range the HUD ring draws', () => {
+    // `Spell.range` is what `drawPreview` measures. A constant the module
+    // exports but the class does not read is a number that lies to the ring.
+    const owner = { game: undefined } as never;
+    expect(new Naruto_Q(owner).range).toBe(Q_RANGE);
+  });
+
+  it('has something to check', () => {
+    expect(Object.keys(spellCatalog).length).toBeGreaterThan(0);
+  });
+});

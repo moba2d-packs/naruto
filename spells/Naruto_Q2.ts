@@ -1,6 +1,6 @@
 import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
-import { chakraTrail, impactBurst, clamp01, snapOut } from '../spellVfx';
+import { RANGE_BAND, chakraTrail, clamp01, impactBurst, snapOut } from '../spellVfx';
 import { Naruto_Q2_Scorch } from './Naruto_Q2_Scorch';
 
 const Circle = api.utils.Quadtree.Circle;
@@ -17,7 +17,7 @@ const QRectangle = api.utils.Quadtree.Rectangle;
 export const Q2_DAMAGE = 34;
 export const Q2_SPLASH_DAMAGE = 22;
 export const Q2_SPLASH_RADIUS = 150;
-export const Q2_RANGE = 640;
+export const Q2_RANGE = RANGE_BAND.UPGRADED;
 export const Q2_SPEED = 10;
 export const Q2_COOLDOWN_MS = 8_000;
 export const Q2_CHAKRA = 45;
@@ -61,6 +61,9 @@ export class Naruto_Q2_Object extends api.MissileSpellObject {
     });
   }
 
+  /** Latched so contact and arrival cannot both pay for one throw. */
+  private spent = false;
+
   onHit(target: AttackableUnit): void {
     target.takeDamage(this.damage, this.owner);
     this.blastAgeMs = 0;
@@ -69,12 +72,30 @@ export class Naruto_Q2_Object extends api.MissileSpellObject {
   }
 
   /**
+   * A throw that reaches its range still bursts.
+   *
+   * Without this the sphere simply stopped existing at maximum range — the
+   * player aimed at that spot for a reason, and got a damage number for
+   * nobody and an empty floor. Same gap Rasengan had, found the same way: in
+   * a match, by throwing one at nothing.
+   */
+  onRemoved(): void {
+    super.onRemoved?.();
+    if (this.spent) return;
+    this.detonate(null);
+  }
+
+  /**
    * `struck` is passed in rather than read back off the missile: unlike a
    * beam, `MissileSpellObject` keeps no record of who it hit, and the direct
    * target must not also be caught by the splash — a centre hit would be
    * worth 56 while a graze was worth 22, which is not what the tooltip says.
    */
-  private detonate(struck: AttackableUnit): void {
+  private detonate(struck: AttackableUnit | null): void {
+    if (this.spent) return;
+    this.spent = true;
+    this.blastAgeMs = 0;
+
     // The blast's own reading, left on the floor after the missile is gone.
     // Without it the ability ends the frame it lands and the only evidence of
     // how wide it reached is a damage number.

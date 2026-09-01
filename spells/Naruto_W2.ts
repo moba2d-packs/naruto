@@ -1,6 +1,6 @@
 import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
-import { clamp01, impactBurst, snapOut, windIn } from '../spellVfx';
+import { RANGE_BAND, clamp01, impactBurst, snapOut, windIn } from '../spellVfx';
 
 const Dash = api.buffs.Dash;
 const QRectangle = api.utils.Quadtree.Rectangle;
@@ -34,7 +34,7 @@ const QRectangle = api.utils.Quadtree.Rectangle;
  * that reeling is the dissipation phase as well.
  */
 export const W2_DAMAGE = 20;
-export const W2_RANGE = 760;
+export const W2_RANGE = RANGE_BAND.GRAB;
 export const W2_SPEED = 16;
 export const W2_PULL_SPEED = 20;
 export const W2_PULL_DURATION_MS = 900;

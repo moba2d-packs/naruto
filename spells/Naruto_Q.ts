@@ -1,6 +1,6 @@
 import type { AttackableUnit, CastContext, CastSpec, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
-import { chakraTrail, clamp01 } from '../spellVfx';
+import { RANGE_BAND, chakraTrail, clamp01 } from '../spellVfx';
 import { Naruto_Q_Charge } from './Naruto_Q_Charge';
 import { Naruto_Q_Vortex } from './Naruto_Q_Vortex';
 
@@ -41,7 +41,7 @@ export const Q_MAX_RADIUS = 46;
 export const Q_MIN_VORTEX = 95;
 export const Q_MAX_VORTEX = 165;
 export const Q_CHARGE_MS = 1_100;
-export const Q_RANGE = 520;
+export const Q_RANGE = RANGE_BAND.ABILITY;
 export const Q_SPEED = 11;
 export const Q_COOLDOWN_MS = 8_000;
 export const Q_CHAKRA = 45;

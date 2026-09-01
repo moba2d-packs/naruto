@@ -51,6 +51,32 @@ describe('Bijuu Rasengan', () => {
     expect(inWorld(Naruto_Q2_Scorch)).toHaveLength(1);
   });
 
+  it('bursts when it reaches its range, having hit nobody', () => {
+    // Found by throwing one at an empty lane: it simply stopped existing.
+    // The player aimed at that spot for a reason, and got no answer.
+    const caster = champion(game, 0, 'blue');
+    indexObjects(game, [caster]);
+
+    const shot = new Naruto_Q2_Object(caster);
+    shot.position.set(400, 0);
+    shot.onRemoved();
+
+    expect(inWorld(Naruto_Q2_Scorch)).toHaveLength(1);
+  });
+
+  it('bursts once even if contact and removal both fire', () => {
+    const caster = champion(game, 0, 'blue');
+    const victim = unit(game, 200, 'red');
+    indexObjects(game, [caster, victim]);
+
+    const shot = new Naruto_Q2_Object(caster);
+    shot.position.set(200, 0);
+    shot.onHit(victim);
+    shot.onRemoved();
+
+    expect(inWorld(Naruto_Q2_Scorch)).toHaveLength(1);
+  });
+
   it('holds the mark long enough to read, then clears it', () => {
     const caster = champion(game, 0, 'blue');
     indexObjects(game, [caster]);

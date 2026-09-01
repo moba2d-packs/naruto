@@ -15,6 +15,28 @@ import { api } from './packApi';
  * drawing code is how a kit drifts into four unrelated buttons.
  */
 
+/**
+ * The range band this pack tunes against, and why it is written down.
+ *
+ * Core's `docs/VFX_STANDARD.md` states it — *"skillshots 350–500"*, scaled to
+ * the canvas rather than to a PC game's wiki values — and this pack shipped
+ * its first kit at 520/640/760/900 anyway. In a match that reads as a
+ * champion who never has to approach anybody, which is not what a melee
+ * bruiser is; reported simply as "sao tầm xa dữ vậy".
+ *
+ * Measured against the packs that already exist: the Dota pack's ordinary
+ * skillshots sit at 380–520 and its ultimates at 300–650, and the reference
+ * pack's Q is 420. So an ordinary ability here belongs near 430, a
+ * form-upgraded one near 500, a grab may stretch to ~560 because reaching is
+ * the whole ability, and only the heaviest ultimate line earns 650.
+ */
+export const RANGE_BAND = Object.freeze({
+  ABILITY: 430,
+  UPGRADED: 500,
+  GRAB: 560,
+  ULTIMATE_LINE: 650,
+});
+
 /** A missile's trail. Length and fade scale with the missile, not with taste. */
 export const chakraTrail = (
   owner: { game: unknown; position: p5.Vector; teamId: string },
