@@ -24,7 +24,7 @@ export const W_SPLASH_RADIUS = 95;
 export const W_RANGE = RANGE_BAND.ABILITY;
 export const W_SPEED = 9;
 export const W_SIZE = 68;
-export const W_COOLDOWN_MS = 13_000;
+export const W_COOLDOWN_MS = 9_000;
 export const W_CHAKRA = 60;
 
 export class Sasuke_W_Object extends api.MissileSpellObject {

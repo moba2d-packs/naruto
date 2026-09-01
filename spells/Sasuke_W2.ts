@@ -29,7 +29,7 @@ export const W2_DURATION_MS = 4_000;
 export const W2_HEAL_CUT = 0.6;
 export const W2_RANGE = RANGE_BAND.UPGRADED;
 export const W2_SPEED = 15;
-export const W2_COOLDOWN_MS = 12_000;
+export const W2_COOLDOWN_MS = 9_000;
 export const W2_CHAKRA = 60;
 
 /** The fire itself, riding the victim. */

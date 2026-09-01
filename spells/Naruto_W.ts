@@ -37,12 +37,12 @@ import { Naruto_W_Smoke } from './Naruto_W_Smoke';
  *    by committing, which is the cost the ability is selling.
  */
 export const W_CLONES = 2;
-export const W_LIFETIME_MS = 9_000;
+export const W_LIFETIME_MS = 6_000;
 export const W_CLONE_DAMAGE_TAKEN = 3;
 export const W_CLONE_ATTACK_SHARE = 0.55;
 export const W_SPAWN_OFFSET = 96;
 export const W_VANISH_MS = 550;
-export const W_COOLDOWN_MS = 18_000;
+export const W_COOLDOWN_MS = 12_000;
 export const W_CHAKRA = 60;
 
 export class Naruto_W_Clone extends api.units.Pet {
@@ -135,18 +135,30 @@ export class Naruto_W_Clone extends api.units.Pet {
 
 export default class Naruto_W extends api.Spell {
   /**
-   * `Summon` is told, not inferred: a `SELF` cast reads as `Buff | Shield`,
-   * which is neither true here nor useful — the ability puts bodies in the
-   * world, and a bot should value it as that.
+   * Told, not inferred — and `Summon` alone is not the telling.
+   *
+   * `SpellRole.Summon` exists in the enum and `BotBrain.scoreSpell` has **no
+   * term for it**: every other role adds or subtracts a number, that one adds
+   * nothing. Tagging this ability `Summon | Buff` therefore scored it 5, when
+   * the inference it replaced (`POINT`, no declared range → `Damage | Zone |
+   * Burst`) had scored it 10 with a target and 24 against a wounded one. The
+   * tag made the ability rarer, which is the opposite of what tagging it was
+   * for — found by scoring the whole roster rather than by watching a match,
+   * which is the entire reason `tests/botRoles.test.ts` now sweeps.
+   *
+   * `Damage` is the honest half: the clones attack, so the ability does put
+   * damage on the board even though the cast itself deals none. `Summon`
+   * stays for what it says about the ability, not for what it scores.
    */
-  static aiRoles = api.enums.SpellRole.Summon | api.enums.SpellRole.Buff;
+  static aiRoles =
+    api.enums.SpellRole.Summon | api.enums.SpellRole.Damage | api.enums.SpellRole.Buff;
 
   name = 'Kage Bunshin';
   image = api.asset('spell_naruto_w');
   description =
     'Biến vào làn khói và hiện ra thành <span class="buff">ba bản giống hệt nhau</span>. ' +
     'Phân thân mang đúng thanh máu của Naruto, đánh <span class="damage magic">55%</span> ' +
-    'sát thương đòn thường và tồn tại <span class="time">9 giây</span>, nhưng chịu sát thương ' +
+    `sát thương đòn thường và tồn tại <span class="time">${W_LIFETIME_MS / 1_000} giây</span>, nhưng chịu sát thương ` +
     'gấp <b>3</b> lần. <b>Bấm lại</b> để ra lệnh cho phân thân tới vị trí con trỏ.';
   coolDown = W_COOLDOWN_MS;
   manaCost = W_CHAKRA;
@@ -157,7 +169,7 @@ export default class Naruto_W extends api.Spell {
   get castSpec(): Readonly<CastSpec> {
     return {
       // A second press has to *reach* this spell, and a plain press cannot:
-      // the ability is on its eighteen-second cooldown a frame after it
+      // the ability is on its twelve-second cooldown a frame after it
       // starts, so the command press would simply be refused. `RECAST` opens
       // a window the runtime routes those presses through.
       activation: 'RECAST',

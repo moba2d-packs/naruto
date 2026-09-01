@@ -34,7 +34,7 @@ export const Q_SHOCK_RADIUS = 120;
 export const Q_RANGE = RANGE_BAND.ABILITY;
 export const Q_DASH_SPEED = 22;
 export const Q_STUN_MS = 700;
-export const Q_COOLDOWN_MS = 9_500;
+export const Q_COOLDOWN_MS = 9_000;
 export const Q_CHAKRA = 55;
 /** How near the target he stops. His body, plus theirs, plus a little. */
 export const Q_STOP_GAP = 70;

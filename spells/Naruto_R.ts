@@ -83,7 +83,7 @@ export const R_HEALTH_BONUS = 45;
 export const R_HEAL_ON_ENTER = 45;
 export const R_SPEED_PERCENT = 0.2;
 export const R_SIZE_BONUS = 14;
-export const R_COOLDOWN_MS = 90_000;
+export const R_COOLDOWN_MS = 10_000;
 export const R_CHAKRA = 100;
 
 /** The pack's own id for the form. Core stores it and never interprets it. */
@@ -161,11 +161,11 @@ export default class Naruto_R extends api.Spell {
   // bar is the only resource a player can see, and naming the mechanic after
   // something the UI never shows is how a tooltip stops being checkable.
   description =
-    'Khoác áo chakra Cửu Vĩ trong <span class="time">15 giây</span>: ' +
+    `Khoác áo chakra Cửu Vĩ trong <span class="time">${R_DURATION_MS / 1_000} giây</span>: ` +
     '<span class="buff">+45 máu tối đa</span>, <span class="buff">+20% tốc chạy</span>, ' +
     'và Q/W/E đổi thành <b>Bijuu Rasengan</b>, <b>Kurama Arms</b>, <b>Bijuudama</b>. ' +
     'Hồi ngay <span class="heal">45</span> máu khi bật, và ngốn ' +
-    '<span class="buff">22 năng lượng mỗi giây</span>. ' +
+    `<span class="buff">${R_CHAKRA_PER_SECOND} năng lượng mỗi giây</span>. ` +
     '<b>Bấm lại để tắt sớm</b> — hồi chiêu chỉ bắt đầu tính khi form kết thúc.';
   coolDown = R_COOLDOWN_MS;
   manaCost = R_CHAKRA;

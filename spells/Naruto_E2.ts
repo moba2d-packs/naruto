@@ -17,7 +17,7 @@ export const E2_DAMAGE = 55;
 export const E2_RANGE = RANGE_BAND.ULTIMATE_LINE;
 export const E2_SPEED = 9;
 export const E2_SIZE = 64;
-export const E2_COOLDOWN_MS = 18_000;
+export const E2_COOLDOWN_MS = 9_000;
 export const E2_CHAKRA = 90;
 
 export class Naruto_E2_Object extends api.MissileSpellObject {

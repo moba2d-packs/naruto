@@ -16,11 +16,11 @@ import { SharinganEye } from './Sasuke_E_Eye';
  * standing and is also faster than them is choosing a target, which is what
  * the character does.
  */
-export const E_DURATION_MS = 6_000;
+export const E_DURATION_MS = 5_000;
 export const E_REVEAL_RADIUS = 760;
 export const E_ATTACK_SPEED = 0.4;
 export const E_SPEED_PERCENT = 0.2;
-export const E_COOLDOWN_MS = 20_000;
+export const E_COOLDOWN_MS = 10_000;
 export const E_CHAKRA = 50;
 
 export class SharinganSight extends api.buffs.Buff {
@@ -42,10 +42,18 @@ export class SharinganSight extends api.buffs.Buff {
 }
 
 export default class Sasuke_E extends api.Spell {
+  /**
+   * `Buff` alone — see `Naruto_E` for the arithmetic. A costed `SELF` cast
+   * infers `Buff | Shield`, which scores 0 in a fight and 20 while fleeing,
+   * so the bot pressed its own vision-and-speed steroid only when it had
+   * already decided to leave.
+   */
+  static aiRoles = api.enums.SpellRole.Buff;
+
   name = 'Sharingan';
   image = api.asset('spell_sasuke_e');
   description =
-    'Mở Sharingan trong <span class="time">6 giây</span>: <span class="buff">lộ mọi tướng địch</span> ' +
+    `Mở Sharingan trong <span class="time">${E_DURATION_MS / 1_000} giây</span>: <span class="buff">lộ mọi tướng địch</span> ` +
     'trong vùng rộng, <span class="buff">+0.4 tốc đánh</span> và <span class="buff">+20% tốc chạy</span>.';
   coolDown = E_COOLDOWN_MS;
   manaCost = E_CHAKRA;

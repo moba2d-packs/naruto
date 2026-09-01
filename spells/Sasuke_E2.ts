@@ -25,7 +25,7 @@ export const E2_MAX_DAMAGE = 75;
 export const E2_RANGE = RANGE_BAND.ULTIMATE_LINE;
 export const E2_SPEED = 26;
 export const E2_CHARGE_MS = 900;
-export const E2_COOLDOWN_MS = 16_000;
+export const E2_COOLDOWN_MS = 10_000;
 export const E2_CHAKRA = 85;
 
 export const drawnDamage = (ratio: number): number =>

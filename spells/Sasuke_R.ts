@@ -36,7 +36,29 @@ export const R_SHIELD = 260;
 export const R_DURATION_MS = 18_000;
 export const R_SIZE_BONUS = 22;
 export const R_SLOW_PERCENT = 0.12;
-export const R_COOLDOWN_MS = 95_000;
+export const R_COOLDOWN_MS = 10_000;
+/**
+ * Chakra burned per second the shell stands, on top of the entry cost.
+ *
+ * The cooldown used to be the limiter — ninety-five seconds of it — and that
+ * is not a limiter this game has anywhere else: the reference pack's 67
+ * ultimates run 3–10s and not one exceeds ten. Bringing this one into that
+ * band leaves 10s of downtime against an 18s form, which on the clock alone
+ * would be a shell that is up more often than it is down.
+ *
+ * So the clock stops being the gate and the pool becomes it, exactly as
+ * Kurama Mode already works. A full form costs `100 + 18 x 20 = 460` against
+ * a 500 pool, and `Stats.manaRegen` is 0.1 *per frame* — 6/s — so the 352 net
+ * takes about a minute to earn back. Real uptime lands near a fifth of the
+ * match, and it is a number the player can watch on the bar rather than a
+ * countdown they can only wait out.
+ *
+ * As in Kurama Mode, an empty pool does **not** end the form: `spendMana`
+ * bills nothing and answers false, and the shell keeps standing. The two
+ * endings stay the ones a player can see — the shell breaking, and their own
+ * second press.
+ */
+export const R_CHAKRA_PER_SECOND = 20;
 export const R_CHAKRA = 100;
 
 export const SUSANOO_STANCE = 'susanoo';
@@ -114,24 +136,33 @@ export default class Sasuke_R extends api.Spell {
    * own scorer, not guessed, and it is exactly what `Spell.aiRoles` exists
    * for: core's inference is deliberately conservative and says so.
    *
-   * `Shield` is genuinely true here — the form *is* a shield pool — and
-   * `Burst` is what makes a bot spend it entering a fight rather than
-   * hoarding it until it dies holding it.
+   * `Shield` is *true* here — the form is a shield pool — and it is still
+   * left off, because in `scoreSpell` that flag does not mean "this protects
+   * me", it means "press this when I am nearly dead": +20 below half health,
+   * −5 above. Tagging it made the shell's best moment the one where Sasuke is
+   * already losing, which is the same panic-button shape the untagged version
+   * had. Susanoo is how this champion *starts* a fight.
+   *
+   * `Burst` is what makes a bot spend it entering one rather than hoarding it
+   * until it dies holding it.
    */
-  static aiRoles = api.enums.SpellRole.Buff | api.enums.SpellRole.Shield | api.enums.SpellRole.Burst;
+  static aiRoles = api.enums.SpellRole.Buff | api.enums.SpellRole.Burst;
 
   name = 'Susanoo';
   image = api.asset('spell_sasuke_r');
   description =
     'Dựng bộ giáp Susanoo: <span class="buff">khiên 260</span>, to ra và chậm hơn <b>12%</b>. ' +
     "Q/W/E đổi thành <b>Yasaka Magatama</b>, <b>Amaterasu</b>, <b>Indra's Arrow</b>. " +
-    'Giáp <b>vỡ là tan</b>, hoặc <b>bấm lại để hạ xuống</b>. Tối đa ' +
-    '<span class="time">18 giây</span>.';
+    `Giáp <b>vỡ là tan</b>, hoặc <b>bấm lại để hạ xuống</b>, và ngốn ` +
+    `<span class="buff">${R_CHAKRA_PER_SECOND} năng lượng mỗi giây</span>. Tối đa ` +
+    `<span class="time">${R_DURATION_MS / 1_000} giây</span>.`;
   manaCost = R_CHAKRA;
   coolDown = R_COOLDOWN_MS;
   targetingMode = 'SELF' as const;
 
   private form: SusanooForm | null = null;
+  /** Carries the sub-second remainder, so the upkeep bills once per second. */
+  private drainedMs = 0;
 
   get castSpec(): Readonly<CastSpec> {
     return {
@@ -166,10 +197,22 @@ export default class Sasuke_R extends api.Spell {
     if (!form) return;
     if (form.toRemove) {
       this.form = null;
+      this.drainedMs = 0;
       return;
     }
     const shell = form.shell;
-    if (shell && (shell.toRemove || shell.shieldAmount <= 0)) this.endForm();
+    if (shell && (shell.toRemove || shell.shieldAmount <= 0)) {
+      this.endForm();
+      return;
+    }
+
+    // A second at a time, never per frame: billing `R_CHAKRA_PER_SECOND` on
+    // every tick would be sixty times what the tooltip says.
+    this.drainedMs += deltaTime;
+    const seconds = Math.floor(this.drainedMs / 1_000);
+    if (seconds <= 0) return;
+    this.drainedMs -= seconds * 1_000;
+    this.spendMana(seconds * R_CHAKRA_PER_SECOND);
   }
 
   onRecast(): void {
@@ -188,6 +231,7 @@ export default class Sasuke_R extends api.Spell {
   private endForm(): void {
     const form = this.form;
     this.form = null;
+    this.drainedMs = 0;
     if (form && !form.toRemove) form.deactivateBuff();
   }
 }
