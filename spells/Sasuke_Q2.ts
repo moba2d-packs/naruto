@@ -14,7 +14,7 @@ const QRectangle = api.utils.Quadtree.Rectangle;
  * ability: a target dead ahead eats one blade, a group eats all three, and
  * the player is choosing between the two every time they aim.
  */
-export const Q2_DAMAGE = 26;
+export const Q2_DAMAGE = 28;
 export const Q2_RANGE = RANGE_BAND.UPGRADED;
 export const Q2_SPEED = 13;
 export const Q2_SPREAD = 0.28;
@@ -25,7 +25,14 @@ export class Sasuke_Q2_Object extends api.MissileSpellObject {
   speed = Q2_SPEED;
   size = 34;
   damage = Q2_DAMAGE;
-  maxHitCount = 1;
+  /**
+   * Each blade pierces. Three single-target shots was the version that could
+   * not clear anything: a wave stands three abreast and a comma that stopped
+   * on the first body reached one minion per blade. Piercing is also what
+   * makes the spread a *choice* — one target eats one blade, a line eats all
+   * three of them all the way down.
+   */
+  maxHitCount = Infinity;
 
   private spin = 0;
   private burst = api.helpers.PredefinedParticleSystems.randomMovingParticlesDecreaseSize(
@@ -90,8 +97,8 @@ export default class Sasuke_Q2 extends api.Spell {
   name = 'Yasaka Magatama';
   image = api.asset('spell_sasuke_q2');
   description =
-    'Phóng <b>ba</b> lưỡi chakra hình dấu phẩy theo hình chữ thập, mỗi lưỡi gây ' +
-    '<span class="damage magic">26</span> sát thương cho kẻ địch đầu tiên nó chạm.';
+    'Phóng <b>ba</b> lưỡi chakra hình dấu phẩy theo hình chữ thập, mỗi lưỡi ' +
+    '<span class="buff">xuyên qua</span> và gây <span class="damage magic">28</span> sát thương.';
   coolDown = Q2_COOLDOWN_MS;
   manaCost = Q2_CHAKRA;
   targetingMode = 'DIRECTION' as const;

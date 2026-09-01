@@ -6,10 +6,10 @@ const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
 
 export const BLAZE_GROW_MS = 200;
-export const BLAZE_BURN_MS = 2_600;
+export const BLAZE_BURN_MS = 2_400;
 export const BLAZE_FADE_MS = 700;
-export const BLAZE_TICK_MS = 500;
-export const BLAZE_TICK_DAMAGE = 7;
+export const BLAZE_TICK_MS = 400;
+export const BLAZE_TICK_DAMAGE = 10;
 
 /**
  * The ground a Great Fireball leaves behind it.
@@ -30,7 +30,7 @@ export const BLAZE_TICK_DAMAGE = 7;
  * is the kind of bug that only shows up on somebody else's phone.
  */
 export class Sasuke_W_Blaze extends api.SpellObject {
-  radius = 110;
+  radius = 150;
 
   private ageMs = 0;
   private sinceTickMs = 0;

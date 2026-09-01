@@ -17,10 +17,13 @@ import { Sasuke_W_Blaze } from './Sasuke_W_Blaze';
  * on the way through is small, and the area denial afterwards is what a
  * player is buying.
  */
-export const W_DAMAGE = 18;
+export const W_DAMAGE = 26;
+/** Splash around the ball itself. A wave is not a single file. */
+export const W_SPLASH = 16;
+export const W_SPLASH_RADIUS = 95;
 export const W_RANGE = RANGE_BAND.ABILITY;
 export const W_SPEED = 9;
-export const W_SIZE = 54;
+export const W_SIZE = 68;
 export const W_COOLDOWN_MS = 13_000;
 export const W_CHAKRA = 60;
 
@@ -52,6 +55,24 @@ export class Sasuke_W_Object extends api.MissileSpellObject {
   onHit(target: AttackableUnit): void {
     target.takeDamage(this.damage, this.owner);
     impactBurst(this.burst, target.position, 12, 26, 12);
+
+    // Splash around whatever it touched. A fireball this size passing a body
+    // and singeing nothing beside it is the version that could not clear a
+    // wave: minions walk three abreast, and a strict line hits one of them.
+    const near = this.game.objectManager.queryObjects({
+      area: new api.utils.Quadtree.Circle({
+        x: target.position.x,
+        y: target.position.y,
+        r: W_SPLASH_RADIUS,
+      }),
+      filters: [api.combat.PredefinedFilters.canTakeDamageFromTeam(this.owner.teamId)],
+    }) as AttackableUnit[];
+    for (const other of near) {
+      // The one it actually hit already paid full price; the pierce list
+      // stops the rest being splashed once per body it passes.
+      if (other === target || this.hitTargets.includes(other)) continue;
+      other.takeDamage(W_SPLASH, this.owner);
+    }
   }
 
   /** Wherever it stopped, it set the ground alight. */
@@ -92,8 +113,9 @@ export default class Sasuke_W extends api.Spell {
   image = api.asset('spell_sasuke_w');
   description =
     'Phun một quả cầu lửa <span class="buff">xuyên qua</span> mọi kẻ địch trên đường, gây ' +
-    '<span class="damage magic">18</span> sát thương. Nơi nó dừng lại bốc cháy trong ' +
-    '<span class="time">2.6 giây</span>, thiêu <span class="damage magic">7</span> mỗi nửa giây.';
+    '<span class="damage magic">26</span> sát thương và <span class="damage magic">16</span> ' +
+    'cho kẻ địch xung quanh. Nơi nó dừng lại bốc cháy trong <span class="time">2.4 giây</span>, ' +
+    'thiêu <span class="damage magic">10</span> mỗi 0.4 giây.';
   coolDown = W_COOLDOWN_MS;
   manaCost = W_CHAKRA;
   targetingMode = 'DIRECTION' as const;

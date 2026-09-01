@@ -1,6 +1,7 @@
 import type { AttackableUnit } from '@moba2d/core/content/types';
 import { api } from '../packApi';
 import { RANGE_BAND, impactBurst } from '../spellVfx';
+import { Sasuke_Q_Bolt } from './Sasuke_Q_Bolt';
 
 const Dash = api.buffs.Dash;
 
@@ -18,11 +19,22 @@ const Dash = api.buffs.Dash;
  * is what an assassin's opener should be — he is now standing next to the
  * person he just hit, and so is everyone they were standing with.
  */
-export const Q_DAMAGE = 32;
+export const Q_DAMAGE = 34;
+/**
+ * The discharge everyone *else* standing there takes.
+ *
+ * Small, and deliberately not on the struck target — they already paid full
+ * price, and stacking both would put a single ability well past the 15–35
+ * band core sets for one. What it buys is that Chidori is no longer a button
+ * that does nothing when he lands in a group, which is where an assassin
+ * lands.
+ */
+export const Q_SHOCK = 15;
+export const Q_SHOCK_RADIUS = 120;
 export const Q_RANGE = RANGE_BAND.ABILITY;
 export const Q_DASH_SPEED = 22;
 export const Q_STUN_MS = 700;
-export const Q_COOLDOWN_MS = 11_000;
+export const Q_COOLDOWN_MS = 9_500;
 export const Q_CHAKRA = 55;
 /** How near the target he stops. His body, plus theirs, plus a little. */
 export const Q_STOP_GAP = 70;
@@ -31,9 +43,10 @@ export default class Sasuke_Q extends api.Spell {
   name = 'Chidori';
   image = api.asset('spell_sasuke_q');
   description =
-    'Lao tới trong luồng sét, gây <span class="damage magic">32</span> sát thương cho kẻ địch ' +
-    'đầu tiên chạm phải và <span class="buff">choáng</span> ' +
-    '<span class="time">0.7 giây</span>. Sasuke dừng lại ngay tại mục tiêu.';
+    'Lao tới trong luồng sét, gây <span class="damage magic">34</span> sát thương cho kẻ địch ' +
+    'đầu tiên chạm phải và <span class="buff">choáng</span> <span class="time">0.7 giây</span>. ' +
+    'Sét phóng ra gây <span class="damage magic">15</span> cho kẻ địch xung quanh. ' +
+    'Sasuke dừng lại ngay tại mục tiêu.';
   coolDown = Q_COOLDOWN_MS;
   manaCost = Q_CHAKRA;
   targetingMode = 'DIRECTION' as const;
@@ -106,6 +119,26 @@ export default class Sasuke_Q extends api.Spell {
     );
     impactBurst(sparks, victim.position, 18, 34, 13);
     this.game.objectManager.addObject(sparks);
+
+    // The discharge itself — the ability's only picture of the moment it
+    // actually does something. Before this the whole visual was the dash's
+    // trail, so the hit, the stun and the stop all happened invisibly.
+    const bolt = new Sasuke_Q_Bolt(this.owner);
+    bolt.position.set(victim.position.x, victim.position.y);
+    bolt.radius = Q_SHOCK_RADIUS;
+    this.game.objectManager.addObject(bolt);
+
+    const around = this.game.objectManager.queryObjects({
+      area: new api.utils.Quadtree.Circle({
+        x: victim.position.x,
+        y: victim.position.y,
+        r: Q_SHOCK_RADIUS,
+      }),
+      filters: [api.combat.PredefinedFilters.canTakeDamageFromTeam(this.owner.teamId)],
+    }) as AttackableUnit[];
+    for (const other of around) {
+      if (other !== victim) other.takeDamage(Q_SHOCK, this.owner);
+    }
 
     // He plants. Ending the dash here is what makes the ability a commitment
     // rather than a way through a fight.

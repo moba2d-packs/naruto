@@ -20,8 +20,8 @@ const QRectangle = api.utils.Quadtree.Rectangle;
  * this one is a fast line that ends in nothing. One rewards placing the far
  * end, the other rewards lining bodies up.
  */
-export const E2_MIN_DAMAGE = 36;
-export const E2_MAX_DAMAGE = 62;
+export const E2_MIN_DAMAGE = 45;
+export const E2_MAX_DAMAGE = 75;
 export const E2_RANGE = RANGE_BAND.ULTIMATE_LINE;
 export const E2_SPEED = 26;
 export const E2_CHARGE_MS = 900;
@@ -163,7 +163,7 @@ export default class Sasuke_E2 extends api.Spell {
   image = api.asset('spell_sasuke_e2');
   description =
     'Giương cung Susanoo. Thả ra bắn một mũi tên sét <span class="buff">xuyên qua</span> mọi ' +
-    'kẻ địch trên đường, gây <span class="damage magic">36–62</span> sát thương tuỳ thời gian giương.';
+    'kẻ địch trên đường, gây <span class="damage magic">45–75</span> sát thương tuỳ thời gian giương.';
   manaCost = E2_CHAKRA;
   coolDown = E2_COOLDOWN_MS;
   range = E2_RANGE;

@@ -21,7 +21,9 @@ const QRectangle = api.utils.Quadtree.Rectangle;
  * `docs/VFX_STANDARD.md`'s colour section — black *is* the identity here, and
  * the rim is what keeps it from vanishing into dark terrain.
  */
-export const W2_DAMAGE = 8;
+export const W2_DAMAGE = 11;
+/** How far the fire jumps to whoever is standing with the first victim. */
+export const W2_SPREAD_RADIUS = 165;
 export const W2_TICK_MS = 500;
 export const W2_DURATION_MS = 4_000;
 export const W2_HEAL_CUT = 0.6;
@@ -50,18 +52,40 @@ export class Sasuke_W2_Object extends api.MissileSpellObject {
   }
 
   onHit(target: AttackableUnit): void {
-    const fire = new Amaterasu(W2_DURATION_MS, this.owner, target);
+    this.ignite(target);
+
+    // It spreads. Amaterasu's whole reputation is that it burns whatever it
+    // touches and does not stop, and a single-target burn was the version of
+    // that which could not clear a wave or punish a group — the one ability
+    // on this roster whose *name* promises an area and delivered a dot on one
+    // body.
+    const near = this.game.objectManager.queryObjects({
+      area: new api.utils.Quadtree.Circle({
+        x: target.position.x,
+        y: target.position.y,
+        r: W2_SPREAD_RADIUS,
+      }),
+      filters: [api.combat.PredefinedFilters.canTakeDamageFromTeam(this.owner.teamId)],
+    }) as AttackableUnit[];
+    for (const other of near) {
+      if (other !== target) this.ignite(other);
+    }
+  }
+
+  /** One body catching fire: the burn, the heal-cut, and the flames on them. */
+  private ignite(victim: AttackableUnit): void {
+    const fire = new Amaterasu(W2_DURATION_MS, this.owner, victim);
     fire.damagePerTick = W2_DAMAGE;
     fire.tickInterval = W2_TICK_MS;
-    target.addBuff(fire);
+    victim.addBuff(fire);
 
-    const cut = new api.buffs.HealCut(W2_DURATION_MS, this.owner, target);
+    const cut = new api.buffs.HealCut(W2_DURATION_MS, this.owner, victim);
     cut.healCut = W2_HEAL_CUT;
     cut.image = api.asset('spell_sasuke_w2');
-    target.addBuff(cut);
+    victim.addBuff(cut);
 
     const flame = new AmaterasuFlame(this.owner);
-    flame.attachTo(target, fire);
+    flame.attachTo(victim, fire);
     this.game.objectManager.addObject(flame);
   }
 
@@ -143,9 +167,9 @@ export default class Sasuke_W2 extends api.Spell {
   name = 'Amaterasu';
   image = api.asset('spell_sasuke_w2');
   description =
-    'Đốt kẻ địch đầu tiên trúng bằng lửa đen: <span class="damage magic">8</span> mỗi nửa giây ' +
-    'trong <span class="time">4 giây</span>, và <span class="buff">giảm 60% hiệu quả hồi máu</span> ' +
-    'lên mục tiêu.';
+    'Đốt kẻ địch đầu tiên trúng bằng lửa đen, <span class="buff">lan sang mọi kẻ địch ' +
+    'đứng gần</span>: <span class="damage magic">11</span> mỗi nửa giây trong ' +
+    '<span class="time">4 giây</span>, và <span class="buff">giảm 60% hiệu quả hồi máu</span>.';
   coolDown = W2_COOLDOWN_MS;
   manaCost = W2_CHAKRA;
   targetingMode = 'DIRECTION' as const;

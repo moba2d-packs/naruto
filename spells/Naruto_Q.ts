@@ -35,7 +35,16 @@ const QRectangle = api.utils.Quadtree.Rectangle;
  * written about, and it is what this ability used to do.
  */
 export const Q_MIN_DAMAGE = 18;
-export const Q_MAX_DAMAGE = 44;
+/**
+ * A fully-charged Rasengan is priced like an ultimate, not like a press.
+ *
+ * Core's band — abilities 15–35 — is about a button you tap. This one costs a
+ * second of standing still holding a visible, growing tell, and 44 was one
+ * point short of removing a 45-health caster minion, which is a breakpoint a
+ * player *feels* without ever being told it exists: the wave visibly does not
+ * die and the ability reads as weak. 48 crosses it on purpose.
+ */
+export const Q_MAX_DAMAGE = 48;
 export const Q_MIN_RADIUS = 26;
 export const Q_MAX_RADIUS = 46;
 export const Q_MIN_VORTEX = 95;
@@ -144,7 +153,7 @@ export default class Naruto_Q extends api.Spell {
   image = api.asset('spell_naruto_q');
   description =
     'Giữ để tụ chakra bên tay. Thả ra ném quả cầu đi, nổ thành xoáy gây ' +
-    '<span class="damage magic">18–44</span> sát thương và ' +
+    '<span class="damage magic">18–48</span> sát thương và ' +
     '<span class="buff">làm chậm 40%</span> trong <span class="time">1.4 giây</span>. ' +
     'Tụ càng lâu, quả cầu và vùng nổ càng lớn.';
   manaCost = Q_CHAKRA;
