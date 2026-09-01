@@ -1,6 +1,5 @@
 import type {
   AttackableUnit,
-  CastContext,
   CastSpec,
   Champion,
   DamageType,
@@ -187,9 +186,13 @@ export default class Naruto_W extends api.Spell {
    * Dead and expired clones are dropped from the squad here rather than
    * watched every frame — this is the only moment anyone asks.
    */
-  onRecast(context: CastContext): void {
+  onRecast(): void {
     this.squad = this.squad.filter(clone => !clone.toRemove && !clone.isDead);
-    const spot = createVector(context.cursorWorld.x, context.cursorWorld.y);
+    // `this.aimPoint`, **not** the context argument. `onRecast` is handed the
+    // context of the *opening* press — `docs/ADDING_SPELLS.md` says so — so
+    // reading its cursor sends the squad back to wherever the ability was
+    // first cast, every single time, however the player is aiming now.
+    const spot = this.aimPoint.copy();
     for (const clone of this.squad) clone.commandTo(spot);
   }
 

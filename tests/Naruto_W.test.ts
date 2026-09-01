@@ -151,6 +151,23 @@ describe('Kage Bunshin', () => {
     expect(clone.underOrders).toBe(true);
   });
 
+  it('aims each command at the live cursor, not the opening press', () => {
+    // `onRecast` is handed the context of the *first* press — the engine's own
+    // docs say so — so a spell that reads its cursor sends the squad back to
+    // wherever the ability was originally cast, forever. `this.aimPoint` is
+    // what tracks the pointer.
+    const caster = naruto();
+    indexObjects(game, [caster]);
+    pressSpell(caster.spells[0], { at: { x: 100, y: 0 } });
+    const clone = inWorld(Naruto_W_Clone)[0];
+
+    pressSpell(caster.spells[0], { at: { x: 700, y: 0 } });
+    const first = clone.destination.copy();
+    pressSpell(caster.spells[0], { at: { x: -700, y: 0 } });
+
+    expect(clone.destination.x).not.toBe(first.x);
+  });
+
   it('smokes out when it simply runs out of time', () => {
     // The bug this covers: only the *killed* path had a puff, so a clone that
     // lived its nine seconds blinked out of existence. Core funnels four

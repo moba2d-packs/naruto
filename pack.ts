@@ -107,6 +107,17 @@ export const data: ContentPackData = {
         // moba2d-pack-add spell: new slot ids go above this line
       ],
     },
+    {
+      id: 'sasuke',
+      name: 'Sasuke Uchiha',
+      image: 'champ_sasuke',
+      playable: true,
+      // A melee assassin: hits harder than Naruto and takes it worse, and
+      // every ability is about arriving on one person rather than holding a
+      // fight open.
+      attack: { damage: 17, attacksPerSecond: 1.0, range: 130 },
+      spells: ['Sasuke_Q', 'Sasuke_W', 'Sasuke_E', 'Sasuke_R'],
+    },
   ],
   spellDisplay: displayData(),
   maps: [map],

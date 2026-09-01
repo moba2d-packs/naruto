@@ -47,6 +47,14 @@ export const PLACEHOLDERS = [
   { id: 'naruto_q2', label: 'BR', tint: ['#8c2a12', '#ff9a4d'] },
   { id: 'naruto_w2', label: 'KA', tint: ['#9a6b12', '#ffd479'] },
   { id: 'naruto_e2', label: 'BD', tint: ['#3b1461', '#c79bff'] },
+
+  { id: 'sasuke_q', label: 'CH', tint: ['#1d4f8c', '#93d0ff'] },
+  { id: 'sasuke_w', label: 'GK', tint: ['#a33a12', '#ffab6b'] },
+  { id: 'sasuke_e', label: 'SH', tint: ['#8c1220', '#ff8a94'] },
+  { id: 'sasuke_r', label: 'SU', tint: ['#4a2585', '#c9a4ff'] },
+  { id: 'sasuke_q2', label: 'YM', tint: ['#5a2a9c', '#d3b0ff'] },
+  { id: 'sasuke_w2', label: 'AM', tint: ['#1a1420', '#7a6a86'] },
+  { id: 'sasuke_e2', label: 'IA', tint: ['#3a2f8c', '#a8b6ff'] },
 ];
 
 /**
