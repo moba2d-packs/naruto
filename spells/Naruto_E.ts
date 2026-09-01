@@ -36,8 +36,9 @@ export default class Naruto_E extends api.Spell {
   name = 'Sennin Mōdo';
   image = api.asset('spell_naruto_e');
   description =
-    'Thu nạp năng lượng tự nhiên trong 9 giây: <b>+0.45</b> tốc đánh, <b>+60</b> tầm đánh ' +
-    'và <b>+25%</b> tốc chạy.';
+    'Thu nạp năng lượng tự nhiên trong <span class="time">9 giây</span>: ' +
+    '<span class="buff">+0.45 tốc đánh</span>, <span class="buff">+60 tầm đánh</span> ' +
+    'và <span class="buff">+25% tốc chạy</span>.';
   coolDown = E_COOLDOWN_MS;
   manaCost = E_CHAKRA;
   targetingMode = 'SELF' as const;

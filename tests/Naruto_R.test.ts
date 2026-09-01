@@ -18,6 +18,9 @@ import Naruto_R, {
   R_HEALTH_BONUS,
 } from '../spells/Naruto_R';
 import { KuramaAura } from '../spells/Naruto_R_Aura';
+import Naruto_Q2 from '../spells/Naruto_Q2';
+import Naruto_W2 from '../spells/Naruto_W2';
+import Naruto_E2 from '../spells/Naruto_E2';
 import Naruto_Q from '../spells/Naruto_Q';
 import Naruto_W from '../spells/Naruto_W';
 import Naruto_E from '../spells/Naruto_E';
@@ -26,6 +29,14 @@ import { champion, indexObjects } from './_units';
 let game: TestGame;
 
 /** Naruto with his real base kit in slots 0-2 and the ultimate in slot 3. */
+/**
+ * The engine's real pool, not the 100 `_units.ts` sets for damage tests.
+ * `Stats.ts` defaults mana to 500 and `ChampionDefenceTuning` has no mana
+ * field, so 500 is what every champion in every pack actually has — and the
+ * upkeep below is only honest against that number.
+ */
+const REAL_MANA = 500;
+
 const naruto = () => {
   const unit = champion(game, 0, 'blue');
   unit.replaceSpells([
@@ -34,6 +45,8 @@ const naruto = () => {
     new Naruto_E(unit),
     new Naruto_R(unit),
   ]);
+  unit.stats.mana.baseValue = REAL_MANA;
+  unit.stats.maxMana.baseValue = REAL_MANA;
   return unit;
 };
 
@@ -84,7 +97,7 @@ describe('Kurama Mode', () => {
     // Chakra is topped up each step so this test measures the *clock* and not
     // the drain — the two endings are separate tests on purpose.
     for (let elapsed = 0; elapsed <= R_DURATION_MS; elapsed += 1_000) {
-      unit.stats.mana.baseValue = 100;
+      unit.stats.mana.baseValue = REAL_MANA;
       advance(unit, 1_000);
     }
 
@@ -92,11 +105,11 @@ describe('Kurama Mode', () => {
     expect(unit.spells).toEqual(base);
   });
 
-  it('ends the form when the chakra runs out, before the clock does', () => {
+  it('ends the form when the pool runs out, before the clock does', () => {
     const unit = naruto();
     indexObjects(game, [unit]);
     pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
-    // The cast already billed `R_CHAKRA`; leave barely two seconds of drain.
+    // The cast already billed `R_CHAKRA`; leave barely two seconds of upkeep.
     unit.stats.mana.baseValue = R_CHAKRA_PER_SECOND * 2;
 
     for (let elapsed = 0; elapsed < 4_000; elapsed += 1_000) advance(unit, 1_000);
@@ -104,19 +117,59 @@ describe('Kurama Mode', () => {
     expect(unit.stance).toBe(null);
   });
 
+  it('reaches the full duration on the real pool if he casts nothing', () => {
+    // Half of what the retune is for. The first cut charged 6/s against a
+    // 500 pool, so running dry was arithmetically impossible and the form
+    // always ended on the timer — the tooltip promised an ending that could
+    // not happen. This end has to stay reachable too.
+    const unit = naruto();
+    indexObjects(game, [unit]);
+    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+
+    for (let elapsed = 0; elapsed < R_DURATION_MS - 1_000; elapsed += 1_000) {
+      advance(unit, 1_000);
+    }
+
+    expect(unit.stance).toBe(KURAMA_STANCE);
+    expect(unit.stats.mana.value).toBeGreaterThan(0);
+  });
+
+  it('runs the pool dry early when he actually uses the form', () => {
+    // The other half, and the sentence the tooltip now makes: casting inside
+    // the form shortens it. Q2 + W2 + E2 on top of the upkeep is more than
+    // what is left after the ultimate's own cost.
+    const unit = naruto();
+    indexObjects(game, [unit]);
+    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    expect(unit.stance).toBe(KURAMA_STANCE);
+
+    const formCosts =
+      new Naruto_Q2(unit).manaCost + new Naruto_W2(unit).manaCost + new Naruto_E2(unit).manaCost;
+    unit.stats.mana.baseValue -= formCosts;
+
+    let elapsed = 0;
+    while (elapsed < R_DURATION_MS && unit.stance !== null) {
+      advance(unit, 1_000);
+      elapsed += 1_000;
+    }
+
+    expect(unit.stance).toBe(null);
+    expect(elapsed).toBeLessThan(R_DURATION_MS);
+  });
+
   it('drains chakra a second at a time rather than every frame', () => {
     const unit = naruto();
     indexObjects(game, [unit]);
     pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
-    unit.stats.mana.baseValue = 100;
+    unit.stats.mana.baseValue = REAL_MANA;
 
     // Half a second of frames must cost nothing at all: a drain that billed
     // per frame would be sixty times the tooltip.
     for (let frame = 0; frame < 30; frame++) advance(unit, 16);
-    expect(unit.stats.mana.value).toBe(100);
+    expect(unit.stats.mana.value).toBe(REAL_MANA);
 
     advance(unit, 1_000);
-    expect(unit.stats.mana.value).toBe(100 - R_CHAKRA_PER_SECOND);
+    expect(unit.stats.mana.value).toBe(REAL_MANA - R_CHAKRA_PER_SECOND);
   });
 
   it('does not leave a dead champion transformed', () => {
@@ -146,7 +199,7 @@ describe('Kurama Mode', () => {
     expect(unit.avatar).not.toBe(before);
 
     for (let elapsed = 0; elapsed <= R_DURATION_MS; elapsed += 1_000) {
-      unit.stats.mana.baseValue = 100;
+      unit.stats.mana.baseValue = REAL_MANA;
       advance(unit, 1_000);
     }
     expect(unit.avatar).toBe(before);
@@ -174,7 +227,7 @@ describe('Kurama Mode', () => {
     expect(cloaks()).toHaveLength(1);
 
     for (let elapsed = 0; elapsed <= R_DURATION_MS; elapsed += 1_000) {
-      unit.stats.mana.baseValue = 100;
+      unit.stats.mana.baseValue = REAL_MANA;
       advance(unit, 1_000);
     }
     // The cloak watches the buff, so it marks itself gone rather than waiting
@@ -196,7 +249,7 @@ describe('Kurama Mode', () => {
     // can hold.
     unit.stats.health.baseValue = unit.stats.maxHealth.value;
     for (let elapsed = 0; elapsed <= R_DURATION_MS; elapsed += 1_000) {
-      unit.stats.mana.baseValue = 100;
+      unit.stats.mana.baseValue = REAL_MANA;
       advance(unit, 1_000);
     }
 

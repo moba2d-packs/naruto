@@ -99,8 +99,9 @@ export default class Naruto_Q extends api.Spell {
   name = 'Rasengan';
   image = api.asset('spell_naruto_q');
   description =
-    'Nghiền một khối chakra xoáy vào mục tiêu đầu tiên, gây <span class="damage">26</span> ' +
-    'sát thương và làm chậm <b>35%</b> trong 1.2 giây.';
+    'Nghiền một khối chakra xoáy vào mục tiêu đầu tiên, gây ' +
+    '<span class="damage magic">26</span> sát thương và ' +
+    '<span class="buff">làm chậm 35%</span> trong <span class="time">1.2 giây</span>.';
   coolDown = Q_COOLDOWN_MS;
   manaCost = Q_CHAKRA;
   targetingMode = 'DIRECTION' as const;

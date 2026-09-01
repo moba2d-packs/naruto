@@ -87,8 +87,8 @@ export default class Naruto_E2 extends api.Spell {
   name = 'Bijuudama';
   image = api.asset('spell_naruto_e2');
   description =
-    'Nén một quả cầu vĩ thú rồi bắn thẳng, <b>xuyên qua</b> mọi kẻ địch trên đường và gây ' +
-    '<span class="damage">55</span> sát thương.';
+    'Nén một quả cầu vĩ thú rồi bắn thẳng, <span class="buff">xuyên qua</span> mọi kẻ địch ' +
+    'trên đường và gây <span class="damage magic">55</span> sát thương.';
   coolDown = E2_COOLDOWN_MS;
   manaCost = E2_CHAKRA;
   targetingMode = 'DIRECTION' as const;

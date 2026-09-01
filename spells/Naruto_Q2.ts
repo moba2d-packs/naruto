@@ -134,8 +134,8 @@ export default class Naruto_Q2 extends api.Spell {
   name = 'Bijuu Rasengan';
   image = api.asset('spell_naruto_q2');
   description =
-    'Ném khối chakra vĩ thú, gây <span class="damage">34</span> sát thương lên mục tiêu trúng ' +
-    'và <span class="damage">22</span> cho kẻ địch xung quanh.';
+    'Ném khối chakra vĩ thú, gây <span class="damage magic">34</span> sát thương lên mục ' +
+    'tiêu trúng và <span class="damage magic">22</span> cho kẻ địch xung quanh.';
   coolDown = Q2_COOLDOWN_MS;
   manaCost = Q2_CHAKRA;
   targetingMode = 'DIRECTION' as const;

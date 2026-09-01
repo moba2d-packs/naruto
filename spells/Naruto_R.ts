@@ -36,6 +36,23 @@ import { KuramaAura } from './Naruto_R_Aura';
  * entry, because a champion may have arrived here through a hand-built kit
  * and never had a roster entry to read back.
  *
+ * ## The upkeep has to be able to actually end it
+ *
+ * The first cut charged 6 a second. A champion's pool is 500 —
+ * `Stats.ts`'s own default, and `ChampionDefenceTuning` carries no mana
+ * field, so no pack can lower it — which makes fifteen seconds of that
+ * ninety, on top of a hundred to cast. The pool cannot run out, so the form
+ * *always* ended on the timer and the tooltip's "run dry and it ends" was a
+ * promise nothing could keep. Reported from a real match as the form cutting
+ * out "khi mana vẫn còn nhiều": the clause was noise, so the ending looked
+ * arbitrary.
+ *
+ * At 22 a second the two endings are both reachable and the ability becomes a
+ * real decision. Do nothing and 15s of upkeep is 330 of the 400 left after
+ * casting — the timer wins with room to spare. Actually *use* the form (45 +
+ * 40 + 90) and the pool gives out first. "Casting inside the form shortens
+ * it" is now something the numbers do rather than something the text claims.
+ *
  * ## Why the drain lives on the spell and not on the buff
  *
  * `Spell.spendMana` is the only sanctioned way to bill a caster, and it is
@@ -52,7 +69,7 @@ import { KuramaAura } from './Naruto_R_Aura';
  * spend everything and it does not.
  */
 export const R_DURATION_MS = 15_000;
-export const R_CHAKRA_PER_SECOND = 6;
+export const R_CHAKRA_PER_SECOND = 22;
 export const R_HEALTH_BONUS = 45;
 export const R_SPEED_PERCENT = 0.2;
 export const R_SIZE_BONUS = 14;
@@ -109,10 +126,15 @@ export class KuramaMode extends api.buffs.Buff {
 export default class Naruto_R extends api.Spell {
   name = 'Kurama Mode';
   image = api.asset('spell_naruto_r');
+  // "Năng lượng", not "chakra": there is no chakra bar on screen. The blue
+  // bar is the only resource a player can see, and naming the mechanic after
+  // something the UI never shows is how a tooltip stops being checkable.
   description =
-    'Khoác áo chakra Cửu Vĩ trong 15 giây: <b>+45</b> máu, <b>+20%</b> tốc chạy, và ' +
-    'Q/W/E đổi thành <b>Bijuu Rasengan</b>, <b>Kurama Arms</b>, <b>Bijuudama</b>. ' +
-    'Tiêu hao <b>6</b> chakra mỗi giây; hết chakra là tan.';
+    'Khoác áo chakra Cửu Vĩ trong <span class="time">15 giây</span>: ' +
+    '<span class="buff">+45 máu tối đa</span>, <span class="buff">+20% tốc chạy</span>, ' +
+    'và Q/W/E đổi thành <b>Bijuu Rasengan</b>, <b>Kurama Arms</b>, <b>Bijuudama</b>. ' +
+    'Ngốn <span class="buff">22 năng lượng mỗi giây</span> — dùng chiêu trong lúc biến ' +
+    'hình sẽ khiến nó tắt sớm.';
   coolDown = R_COOLDOWN_MS;
   manaCost = R_CHAKRA;
   targetingMode = 'SELF' as const;
