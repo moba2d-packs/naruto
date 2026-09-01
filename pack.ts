@@ -81,7 +81,7 @@ export const data: ContentPackData = {
   // pack is built on both: Naruto and Sasuke transform, and the map's
   // elemental groves are zones. Anything older installs and then fails in a
   // match, which is the failure this floor exists to turn into a refusal.
-  manifest: { id: 'naruto', version: '1.0.0', coreRange: '>=1.20.0' },
+  manifest: { id: 'naruto', version: '1.0.0', coreRange: '>=1.21.0' },
   champions: [
     {
       id: 'naruto',

@@ -37,3 +37,19 @@ export function champion(game: TestGame, x: number, teamId: string, y = 0): Cham
 }
 
 export { indexObjects };
+
+/**
+ * A stand-in for the basic attack that core puts in slot 0 of every kit.
+ *
+ * Tests build their own `spells` arrays, and one that starts at Q is not the
+ * array the game has — see `SpellSlot`. Leaving it out is what let a stance
+ * bug through review and into a match.
+ */
+export function basicAttackStub(owner: Champion) {
+  const Spell = buildTestApi().Spell;
+  class BasicAttackStub extends Spell {
+    name = 'Đánh thường';
+    targetingMode = 'DIRECTION' as const;
+  }
+  return new BasicAttackStub(owner);
+}

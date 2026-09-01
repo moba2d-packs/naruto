@@ -98,11 +98,14 @@ export class KuramaMode extends api.buffs.Buff {
 
   onActivate(): void {
     const naruto = this.targetUnit as Champion;
-    naruto.enterStance(KURAMA_STANCE, [
-      new Naruto_Q2(naruto),
-      new Naruto_W2(naruto),
-      new Naruto_E2(naruto),
-    ]);
+    // Keyed by slot, never positional: `Champion.spells` is
+    // `[attack, Q, W, E, R]`, so filling "the first three" replaces the basic
+    // attack and shifts the kit one place left. That shipped once.
+    naruto.enterStance(KURAMA_STANCE, {
+      [api.enums.SpellSlot.Q]: new Naruto_Q2(naruto),
+      [api.enums.SpellSlot.W]: new Naruto_W2(naruto),
+      [api.enums.SpellSlot.E]: new Naruto_E2(naruto),
+    });
     naruto.stats.maxHealth.baseBonus += R_HEALTH_BONUS;
     naruto.stats.size.baseBonus += R_SIZE_BONUS;
 

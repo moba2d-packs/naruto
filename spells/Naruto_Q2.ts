@@ -1,6 +1,7 @@
 import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
 import { chakraTrail, impactBurst, clamp01, snapOut } from '../spellVfx';
+import { Naruto_Q2_Scorch } from './Naruto_Q2_Scorch';
 
 const Circle = api.utils.Quadtree.Circle;
 const QRectangle = api.utils.Quadtree.Rectangle;
@@ -74,6 +75,14 @@ export class Naruto_Q2_Object extends api.MissileSpellObject {
    * worth 56 while a graze was worth 22, which is not what the tooltip says.
    */
   private detonate(struck: AttackableUnit): void {
+    // The blast's own reading, left on the floor after the missile is gone.
+    // Without it the ability ends the frame it lands and the only evidence of
+    // how wide it reached is a damage number.
+    const scorch = new Naruto_Q2_Scorch(this.owner);
+    scorch.position.set(this.position.x, this.position.y);
+    scorch.radius = Q2_SPLASH_RADIUS;
+    this.game.objectManager.addObject(scorch);
+
     const caught = this.game.objectManager.queryObjects({
       area: new Circle({
         x: this.position.x,

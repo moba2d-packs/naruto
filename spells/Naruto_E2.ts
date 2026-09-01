@@ -1,6 +1,7 @@
 import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
 import { chakraTrail, impactBurst } from '../spellVfx';
+import { Naruto_E2_Detonation } from './Naruto_E2_Detonation';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 
@@ -57,12 +58,33 @@ export class Naruto_E2_Object extends api.MissileSpellObject {
     });
   }
 
+  /** Everyone the sphere pierced, so the crater does not charge them twice. */
+  private pierced: AttackableUnit[] = [];
+
   onHit(target: AttackableUnit): void {
     target.takeDamage(this.damage, this.owner);
+    this.pierced.push(target);
     // It pierces, so every body on the line gets its own mark — this is the
     // only way a player reads how many the shot actually caught.
     impactBurst(this.burst, target.position, 20, 34, 14);
   }
+
+  /**
+   * The shot lands rather than expiring. Reached on arrival and on every
+   * other removal, so a sphere that is taken out of the world some other way
+   * still ends where it stopped instead of blinking out.
+   */
+  onRemoved(): void {
+    super.onRemoved?.();
+    if (this.landed) return;
+    this.landed = true;
+    const boom = new Naruto_E2_Detonation(this.owner);
+    boom.position.set(this.position.x, this.position.y);
+    boom.spare = this.pierced;
+    this.game.objectManager.addObject(boom);
+  }
+
+  private landed = false;
 
   draw(): void {
     const orb = this.position;
@@ -88,7 +110,9 @@ export default class Naruto_E2 extends api.Spell {
   image = api.asset('spell_naruto_e2');
   description =
     'Nén một quả cầu vĩ thú rồi bắn thẳng, <span class="buff">xuyên qua</span> mọi kẻ địch ' +
-    'trên đường và gây <span class="damage magic">55</span> sát thương.';
+    'trên đường và gây <span class="damage magic">55</span> sát thương. Tới cuối đường quả ' +
+    'cầu <b>phát nổ</b>, gây thêm <span class="damage magic">30</span> cho kẻ địch xung quanh ' +
+    'chưa trúng đòn xuyên.';
   coolDown = E2_COOLDOWN_MS;
   manaCost = E2_CHAKRA;
   targetingMode = 'DIRECTION' as const;

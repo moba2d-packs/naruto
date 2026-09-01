@@ -9,6 +9,7 @@
  * champion who dies mid-form does not respawn still transformed.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { buildTestApi } from '@moba2d/core/testing';
 import { createGame, stubGameGlobals, type TestGame } from '@moba2d/core/testing';
 import { pressSpell } from '@moba2d/core/testing/spell';
 import Naruto_R, {
@@ -21,7 +22,10 @@ import { KuramaAura } from '../spells/Naruto_R_Aura';
 import Naruto_Q from '../spells/Naruto_Q';
 import Naruto_W from '../spells/Naruto_W';
 import Naruto_E from '../spells/Naruto_E';
-import { champion, indexObjects } from './_units';
+import { basicAttackStub, champion, indexObjects } from './_units';
+
+/** Core's own slot table — never a hand-counted index. */
+const SLOT = buildTestApi().enums.SpellSlot;
 
 let game: TestGame;
 
@@ -34,9 +38,17 @@ let game: TestGame;
  */
 const REAL_MANA = 500;
 
+/**
+ * Laid out the way a real kit is: `[attack, Q, W, E, R]`.
+ *
+ * This suite used to build a bare four without the basic attack, which is
+ * exactly the shape that hid the slot bug — a stance filling "the first
+ * three" looked right here and replaced attack/Q/W in an actual match.
+ */
 const naruto = () => {
   const unit = champion(game, 0, 'blue');
   unit.replaceSpells([
+    basicAttackStub(unit),
     new Naruto_Q(unit),
     new Naruto_W(unit),
     new Naruto_E(unit),
@@ -70,26 +82,27 @@ afterEach(() => {
 describe('Kurama Mode', () => {
   it('swaps Q, W and E for the Kurama abilities and leaves R alone', () => {
     const unit = naruto();
-    const ultimate = unit.spells[3];
+    const ultimate = unit.spells[SLOT.R];
     indexObjects(game, [unit]);
 
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    pressSpell(unit.spells[SLOT.R], { at: { x: 0, y: 0 } });
 
     expect(unit.stance).toBe(KURAMA_STANCE);
     expect(unit.spells.map(spell => spell.name)).toEqual([
+      'Đánh thường',
       'Bijuu Rasengan',
       'Kurama Arms',
       'Bijuudama',
       'Kurama Mode',
     ]);
-    expect(unit.spells[3]).toBe(ultimate);
+    expect(unit.spells[SLOT.R]).toBe(ultimate);
   });
 
   it('gives the base kit back when the form runs out', () => {
     const unit = naruto();
     const base = [...unit.spells];
     indexObjects(game, [unit]);
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    pressSpell(unit.spells[SLOT.R], { at: { x: 0, y: 0 } });
 
     // Chakra is topped up each step so this test measures the *clock* and not
     // the drain — the two endings are separate tests on purpose.
@@ -111,7 +124,7 @@ describe('Kurama Mode', () => {
     // take the form away.
     const unit = naruto();
     indexObjects(game, [unit]);
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    pressSpell(unit.spells[SLOT.R], { at: { x: 0, y: 0 } });
     unit.stats.mana.baseValue = 0;
 
     for (let elapsed = 0; elapsed < 5_000; elapsed += 1_000) advance(unit, 1_000);
@@ -126,11 +139,11 @@ describe('Kurama Mode', () => {
     const unit = naruto();
     const base = [...unit.spells];
     indexObjects(game, [unit]);
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    pressSpell(unit.spells[SLOT.R], { at: { x: 0, y: 0 } });
     expect(unit.stance).toBe(KURAMA_STANCE);
 
     advance(unit, 2_000);
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    pressSpell(unit.spells[SLOT.R], { at: { x: 0, y: 0 } });
 
     expect(unit.stance).toBe(null);
     expect(unit.spells).toEqual(base);
@@ -143,7 +156,7 @@ describe('Kurama Mode', () => {
     indexObjects(game, [unit]);
     unit.stats.health.baseValue = 40;
 
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    pressSpell(unit.spells[SLOT.R], { at: { x: 0, y: 0 } });
 
     expect(unit.stats.health.baseValue).toBeGreaterThan(40);
   });
@@ -155,7 +168,7 @@ describe('Kurama Mode', () => {
     // not happen. This end has to stay reachable too.
     const unit = naruto();
     indexObjects(game, [unit]);
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    pressSpell(unit.spells[SLOT.R], { at: { x: 0, y: 0 } });
 
     for (let elapsed = 0; elapsed < R_DURATION_MS - 1_000; elapsed += 1_000) {
       advance(unit, 1_000);
@@ -168,7 +181,7 @@ describe('Kurama Mode', () => {
   it('drains chakra a second at a time rather than every frame', () => {
     const unit = naruto();
     indexObjects(game, [unit]);
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    pressSpell(unit.spells[SLOT.R], { at: { x: 0, y: 0 } });
     unit.stats.mana.baseValue = REAL_MANA;
 
     // Half a second of frames must cost nothing at all: a drain that billed
@@ -186,7 +199,7 @@ describe('Kurama Mode', () => {
     // but nothing proves it until something asks.
     const unit = naruto();
     indexObjects(game, [unit]);
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    pressSpell(unit.spells[SLOT.R], { at: { x: 0, y: 0 } });
     expect(unit.stance).toBe(KURAMA_STANCE);
 
     unit.takeDamage(9_999, unit);
@@ -203,7 +216,7 @@ describe('Kurama Mode', () => {
     indexObjects(game, [unit]);
     const before = unit.avatar;
 
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    pressSpell(unit.spells[SLOT.R], { at: { x: 0, y: 0 } });
     expect(unit.avatar).not.toBe(before);
 
     for (let elapsed = 0; elapsed <= R_DURATION_MS; elapsed += 1_000) {
@@ -220,7 +233,7 @@ describe('Kurama Mode', () => {
     const unit = naruto();
     indexObjects(game, [unit]);
 
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    pressSpell(unit.spells[SLOT.R], { at: { x: 0, y: 0 } });
     // Both lists: a unit added this tick sits in `_objectToBeAdd` until the
     // manager flushes, which is the same distinction `HostSession.stillQueued`
     // already has to make.
@@ -249,7 +262,7 @@ describe('Kurama Mode', () => {
     indexObjects(game, [unit]);
     const ceiling = unit.stats.maxHealth.value;
 
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    pressSpell(unit.spells[SLOT.R], { at: { x: 0, y: 0 } });
     expect(unit.stats.maxHealth.value).toBe(ceiling + R_HEALTH_BONUS);
 
     // Standing at the raised ceiling when the form ends is the case that
