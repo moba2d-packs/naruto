@@ -1,4 +1,6 @@
+import type { Champion } from '@moba2d/core/content/types';
 import { api } from '../packApi';
+import { SageAura } from './Naruto_E_Aura';
 
 /**
  * Sennin Mōdo — natural energy gathered into a standing buff.
@@ -17,12 +19,19 @@ export const E_CHAKRA = 70;
 
 export class SageMode extends api.buffs.Buff {
   name = 'Chế Độ Tiên';
-  image = api.asset('champ_naruto');
+  image = api.asset('spell_naruto_e');
 
   onActivate(): void {
-    const unit = this.targetUnit;
+    const unit = this.targetUnit as Champion;
     unit.stats.attackSpeed.baseBonus += E_ATTACK_SPEED;
     unit.stats.attackRange.baseBonus += E_RANGE_BONUS;
+
+    // Its own object, not something the buff paints: `Champion.draw()` is
+    // skipped for a culled or fogged caster, and the player who most needs to
+    // see the marks is the one deciding whether to walk into him.
+    const marks = new SageAura(unit);
+    marks.attachTo(unit, this);
+    unit.game.objectManager.addObject(marks);
   }
 
   onDeactivate(): void {

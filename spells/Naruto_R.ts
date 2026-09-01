@@ -1,4 +1,4 @@
-import type { Champion } from '@moba2d/core/content/types';
+import type { CastSpec, Champion } from '@moba2d/core/content/types';
 import { api } from '../packApi';
 import Naruto_Q2 from './Naruto_Q2';
 import Naruto_W2 from './Naruto_W2';
@@ -71,6 +71,16 @@ import { KuramaAura } from './Naruto_R_Aura';
 export const R_DURATION_MS = 15_000;
 export const R_CHAKRA_PER_SECOND = 22;
 export const R_HEALTH_BONUS = 45;
+/**
+ * Health handed over on the way in, on top of the raised ceiling.
+ *
+ * The ceiling alone was the first cut and it read as broken: the bar got
+ * *longer* while the filled part stayed where it was, so transforming looked
+ * like it had taken health away. Reported as "chỉ thấy đang tăng máu tối đa +
+ * to hơn, mà máu vẫn thấp thì kỳ". A form that makes you bigger has to make
+ * you feel bigger on the frame it starts.
+ */
+export const R_HEAL_ON_ENTER = 45;
 export const R_SPEED_PERCENT = 0.2;
 export const R_SIZE_BONUS = 14;
 export const R_COOLDOWN_MS = 90_000;
@@ -95,6 +105,11 @@ export class KuramaMode extends api.buffs.Buff {
     ]);
     naruto.stats.maxHealth.baseBonus += R_HEALTH_BONUS;
     naruto.stats.size.baseBonus += R_SIZE_BONUS;
+
+    // Fill the new room, capped at the new ceiling. Through `takeHeal` rather
+    // than by writing the pool, so shielding, heal-cut and the floating green
+    // number all behave the way they do for every other heal in the game.
+    naruto.takeHeal?.(R_HEAL_ON_ENTER, naruto);
 
     this.woreBefore = naruto.avatar;
     naruto.avatar = api.asset('champ_naruto_kurama');
@@ -133,11 +148,32 @@ export default class Naruto_R extends api.Spell {
     'Khoác áo chakra Cửu Vĩ trong <span class="time">15 giây</span>: ' +
     '<span class="buff">+45 máu tối đa</span>, <span class="buff">+20% tốc chạy</span>, ' +
     'và Q/W/E đổi thành <b>Bijuu Rasengan</b>, <b>Kurama Arms</b>, <b>Bijuudama</b>. ' +
-    'Ngốn <span class="buff">22 năng lượng mỗi giây</span> — dùng chiêu trong lúc biến ' +
-    'hình sẽ khiến nó tắt sớm.';
+    'Hồi ngay <span class="heal">45</span> máu khi bật, và ngốn ' +
+    '<span class="buff">22 năng lượng mỗi giây</span>. ' +
+    '<b>Bấm lại để tắt sớm</b> — hồi chiêu chỉ bắt đầu tính khi form kết thúc.';
   coolDown = R_COOLDOWN_MS;
   manaCost = R_CHAKRA;
-  targetingMode = 'SELF' as const;
+  get castSpec(): Readonly<CastSpec> {
+    return {
+      // The runtime's own recast window is what makes a second press reach
+      // this spell at all: with a plain press the ability is on its 90s
+      // cooldown a frame after it starts, and the toggle-off press is simply
+      // refused.
+      activation: 'RECAST',
+      targeting: 'SELF',
+      castTimeMs: 0,
+      active: { maxDurationMs: R_DURATION_MS, recasts: 1 },
+      resource: { commitAt: 'start', refundOn: [] },
+      // At `end`, so the ninety seconds start when the form does — not when
+      // it began. Leaving early therefore genuinely costs less time as well
+      // as less mana.
+      cooldown: { startAt: 'end', durationMs: R_COOLDOWN_MS },
+      // A transform is not something a stun should take off you. Only death
+      // reaches an INDEPENDENT activation, which is the honest description of
+      // a chakra cloak already wrapped around him.
+      interrupts: api.enums.SpellForm.INDEPENDENT,
+    };
+  }
 
   /** The live form, so `onUpdate` knows whether to bill and what to end. */
   private form: KuramaMode | null = null;
@@ -145,8 +181,13 @@ export default class Naruto_R extends api.Spell {
   /** Carried across frames so a partial second is not rounded away each one. */
   private drainedMs = 0;
 
-  onSpellCast(): void {
-    const form = new KuramaMode(R_DURATION_MS, this.owner, this.owner);
+  /**
+   * The runtime owns the clock, so the buff is permanent (`duration: 0`) and
+   * ends only when this spell says so — on the recast, on the cap, or on
+   * death. Two clocks for one form is two clocks that can disagree.
+   */
+  onActivate(): void {
+    const form = new KuramaMode(0, this.owner, this.owner);
     this.form = form;
     this.drainedMs = 0;
     this.owner.addBuff(form);
@@ -155,12 +196,44 @@ export default class Naruto_R extends api.Spell {
     this.owner.addBuff(rush);
   }
 
+  /** The second press. `completeActivation` follows it, so `onComplete` tidies. */
+  onRecast(): void {
+    this.endForm();
+  }
+
+  onComplete(): void {
+    this.endForm();
+  }
+
+  /** Death, and anything else that reaches an INDEPENDENT activation. */
+  onCancel(): void {
+    this.endForm();
+  }
+
+  /** Idempotent: the recast path lands here twice, and cancel can follow. */
+  private endForm(): void {
+    const form = this.form;
+    this.form = null;
+    this.drainedMs = 0;
+    if (form && !form.toRemove) form.deactivateBuff();
+  }
+
+  /**
+   * The upkeep, and **it never ends the form**.
+   *
+   * There are exactly two ways out — the fifteen-second cap, and the player's
+   * own second press — and that is the whole point. A third ending that fired
+   * on an empty pool is what produced the original report ("R bị ngắt khi mana
+   * vẫn còn nhiều"): an ability that stops for a reason the player cannot see
+   * reads as broken even when the arithmetic is right.
+   *
+   * The upkeep is still a real cost, because it is eating the pool the form's
+   * own abilities are spending from. Running dry means Bijuudama is out of
+   * reach, which the player *can* see, on the bar, before it happens.
+   */
   onUpdate(): void {
     const form = this.form;
     if (!form) return;
-    // The buff ends on its own clock, on death, or on a cleanse; whichever it
-    // was, the drain stops when it does and this is the one place that has to
-    // notice.
     if (form.toRemove) {
       this.form = null;
       this.drainedMs = 0;
@@ -172,12 +245,8 @@ export default class Naruto_R extends api.Spell {
     if (seconds <= 0) return;
     this.drainedMs -= seconds * 1_000;
 
-    // `spendMana` bills nothing and answers false when the pool is short, so
-    // the empty case cannot half-charge.
-    if (!this.spendMana(seconds * R_CHAKRA_PER_SECOND)) {
-      form.deactivateBuff();
-      this.form = null;
-      this.drainedMs = 0;
-    }
+    // Whatever is affordable, and nothing when it is not. `spendMana` bills
+    // nothing and answers false on a short pool, so this cannot half-charge.
+    this.spendMana(seconds * R_CHAKRA_PER_SECOND);
   }
 }

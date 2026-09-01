@@ -11,6 +11,15 @@ export const VORTEX_HOLD_MS = 420;
 export const VORTEX_FADE_MS = 520;
 export const VORTEX_SLOW_PERCENT = 0.4;
 export const VORTEX_SLOW_MS = 1_400;
+/**
+ * World units per frame a caught body is dragged toward the eye, at the rim.
+ *
+ * Small on purpose. This is weight, not a displacement: a player who wants to
+ * leave still leaves, they just leave *late*, and the spiral visibly costs
+ * them the distance. A pull strong enough to hold someone in place would be a
+ * root wearing a different name, which is a much bigger ability than this.
+ */
+export const VORTEX_PULL_PER_FRAME = 0.9;
 
 /**
  * The aftermath of a Rasengan: a spiral of ground-up chakra that keeps
@@ -55,6 +64,11 @@ export class Naruto_Q_Vortex extends api.SpellObject {
   update(): void {
     this.ageMs += deltaTime;
 
+    // The drag runs the whole time the spiral is turning, and stops when it
+    // starts to fade — an effect that is visibly dying must not still be
+    // moving people, or the picture and the physics disagree.
+    if (this.ageMs < VORTEX_GROW_MS + VORTEX_HOLD_MS) this.drag();
+
     // The bite lands once, when the spiral reaches full width — not on spawn.
     // A blast that damages before it has drawn its own radius is a blast the
     // victim could not have read.
@@ -64,6 +78,46 @@ export class Naruto_Q_Vortex extends api.SpellObject {
     }
 
     if (this.ageMs >= this.totalMs) this.toRemove = true;
+  }
+
+  /**
+   * Drags what is inside toward the eye, harder at the rim than at the centre.
+   *
+   * Falling off toward the middle is what stops the pull from jittering a body
+   * that has already arrived: at the eye the step is zero, so a unit settles
+   * instead of oscillating across the centre point every frame.
+   *
+   * `markDisplaced` because this moves a body without its own consent — the
+   * separation pass has to leave it alone for a few frames or it will shove it
+   * straight back out. Written as a direct step rather than a `Dash`: a Dash
+   * takes the victim's movement away entirely, and the whole point here is
+   * that they keep it and are merely slower to escape.
+   */
+  private drag(): void {
+    const caught = this.game.objectManager.queryObjects({
+      area: new Circle({ x: this.position.x, y: this.position.y, r: this.radius }),
+      filters: [api.combat.PredefinedFilters.canTakeDamageFromTeam(this.owner.teamId)],
+    }) as AttackableUnit[];
+
+    for (const unit of caught) {
+      // Scenery, bosses that hold their ground, and anything already being
+      // thrown by someone else. Two rules shoving one body in opposite
+      // directions is worse than not pulling at all.
+      if (unit.isImmovable || unit.isDead) continue;
+
+      const dx = this.position.x - unit.position.x;
+      const dy = this.position.y - unit.position.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance < 1) continue;
+
+      const grip = Math.min(1, distance / this.radius);
+      const step = VORTEX_PULL_PER_FRAME * grip * (deltaTime / 16.67);
+      unit.position.set(
+        unit.position.x + (dx / distance) * step,
+        unit.position.y + (dy / distance) * step
+      );
+      unit.markDisplaced?.();
+    }
   }
 
   private bite(): void {

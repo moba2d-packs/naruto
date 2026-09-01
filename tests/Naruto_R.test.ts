@@ -18,9 +18,6 @@ import Naruto_R, {
   R_HEALTH_BONUS,
 } from '../spells/Naruto_R';
 import { KuramaAura } from '../spells/Naruto_R_Aura';
-import Naruto_Q2 from '../spells/Naruto_Q2';
-import Naruto_W2 from '../spells/Naruto_W2';
-import Naruto_E2 from '../spells/Naruto_E2';
 import Naruto_Q from '../spells/Naruto_Q';
 import Naruto_W from '../spells/Naruto_W';
 import Naruto_E from '../spells/Naruto_E';
@@ -105,16 +102,50 @@ describe('Kurama Mode', () => {
     expect(unit.spells).toEqual(base);
   });
 
-  it('ends the form when the pool runs out, before the clock does', () => {
+  it('never ends the form for lack of mana', () => {
+    // There are exactly two ways out — the cap and the player's own second
+    // press. A third one firing on an empty pool is what produced the
+    // original report ("R bị ngắt khi mana vẫn còn nhiều"): an ability that
+    // stops for a reason nobody can see reads as broken even when the
+    // arithmetic is right. The upkeep still eats the pool; it just cannot
+    // take the form away.
     const unit = naruto();
     indexObjects(game, [unit]);
     pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
-    // The cast already billed `R_CHAKRA`; leave barely two seconds of upkeep.
-    unit.stats.mana.baseValue = R_CHAKRA_PER_SECOND * 2;
+    unit.stats.mana.baseValue = 0;
 
-    for (let elapsed = 0; elapsed < 4_000; elapsed += 1_000) advance(unit, 1_000);
+    for (let elapsed = 0; elapsed < 5_000; elapsed += 1_000) advance(unit, 1_000);
+
+    expect(unit.stance).toBe(KURAMA_STANCE);
+  });
+
+  it('ends early on a second press', () => {
+    // Fifteen seconds of being the biggest thing on screen with a bar over
+    // your head is a commitment; being able to put it down is what turns the
+    // upkeep into a decision rather than a tax.
+    const unit = naruto();
+    const base = [...unit.spells];
+    indexObjects(game, [unit]);
+    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+    expect(unit.stance).toBe(KURAMA_STANCE);
+
+    advance(unit, 2_000);
+    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
 
     expect(unit.stance).toBe(null);
+    expect(unit.spells).toEqual(base);
+  });
+
+  it('fills the room it just made', () => {
+    // The raised ceiling alone read as the form taking health away: the bar
+    // got longer while the filled part stayed exactly where it was.
+    const unit = naruto();
+    indexObjects(game, [unit]);
+    unit.stats.health.baseValue = 40;
+
+    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
+
+    expect(unit.stats.health.baseValue).toBeGreaterThan(40);
   });
 
   it('reaches the full duration on the real pool if he casts nothing', () => {
@@ -132,29 +163,6 @@ describe('Kurama Mode', () => {
 
     expect(unit.stance).toBe(KURAMA_STANCE);
     expect(unit.stats.mana.value).toBeGreaterThan(0);
-  });
-
-  it('runs the pool dry early when he actually uses the form', () => {
-    // The other half, and the sentence the tooltip now makes: casting inside
-    // the form shortens it. Q2 + W2 + E2 on top of the upkeep is more than
-    // what is left after the ultimate's own cost.
-    const unit = naruto();
-    indexObjects(game, [unit]);
-    pressSpell(unit.spells[3], { at: { x: 0, y: 0 } });
-    expect(unit.stance).toBe(KURAMA_STANCE);
-
-    const formCosts =
-      new Naruto_Q2(unit).manaCost + new Naruto_W2(unit).manaCost + new Naruto_E2(unit).manaCost;
-    unit.stats.mana.baseValue -= formCosts;
-
-    let elapsed = 0;
-    while (elapsed < R_DURATION_MS && unit.stance !== null) {
-      advance(unit, 1_000);
-      elapsed += 1_000;
-    }
-
-    expect(unit.stance).toBe(null);
-    expect(elapsed).toBeLessThan(R_DURATION_MS);
   });
 
   it('drains chakra a second at a time rather than every frame', () => {
