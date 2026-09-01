@@ -70,6 +70,7 @@ export class Naruto_E2_Object extends api.MissileSpellObject {
 
 export default class Naruto_E2 extends api.Spell {
   name = 'Bijuudama';
+  image = api.asset('spell_naruto_e2');
   description =
     'Nén một quả cầu vĩ thú rồi bắn thẳng, <b>xuyên qua</b> mọi kẻ địch trên đường và gây ' +
     '<span class="damage">55</span> sát thương.';

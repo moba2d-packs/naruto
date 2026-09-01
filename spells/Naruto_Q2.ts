@@ -94,6 +94,7 @@ export class Naruto_Q2_Object extends api.MissileSpellObject {
 
 export default class Naruto_Q2 extends api.Spell {
   name = 'Bijuu Rasengan';
+  image = api.asset('spell_naruto_q2');
   description =
     'Ném khối chakra vĩ thú, gây <span class="damage">34</span> sát thương lên mục tiêu trúng ' +
     'và <span class="damage">22</span> cho kẻ địch xung quanh.';

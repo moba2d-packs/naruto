@@ -78,6 +78,7 @@ export class KuramaMode extends api.buffs.Buff {
 
 export default class Naruto_R extends api.Spell {
   name = 'Kurama Mode';
+  image = api.asset('spell_naruto_r');
   description =
     'Khoác áo chakra Cửu Vĩ trong 15 giây: <b>+45</b> máu, <b>+20%</b> tốc chạy, và ' +
     'Q/W/E đổi thành <b>Bijuu Rasengan</b>, <b>Kurama Arms</b>, <b>Bijuudama</b>. ' +

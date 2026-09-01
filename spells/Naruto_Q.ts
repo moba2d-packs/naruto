@@ -58,6 +58,7 @@ export class Naruto_Q_Object extends api.MissileSpellObject {
 
 export default class Naruto_Q extends api.Spell {
   name = 'Rasengan';
+  image = api.asset('spell_naruto_q');
   description =
     'Nghiền một khối chakra xoáy vào mục tiêu đầu tiên, gây <span class="damage">26</span> ' +
     'sát thương và làm chậm <b>35%</b> trong 1.2 giây.';

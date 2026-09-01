@@ -21,7 +21,8 @@
     "hooks:install": "git config core.hooksPath scripts/git-hooks",
     "verify": "npm run core:check && npm run art:check && npm run assets:check && npm run catalog:check && npm run typecheck && npm run check-unused && npm run check-seams && npm run build && npm test",
     "art:import": "node scripts/import-art.mjs",
-    "art:check": "node scripts/import-art.mjs --check"
+    "art:check": "node scripts/import-art.mjs --check",
+    "art:placeholders": "node scripts/placeholder-icons.mjs"
   },
   "devDependencies": {
     "@moba2d/core": "github:moba2d-game/core#main",

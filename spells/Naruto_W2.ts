@@ -62,6 +62,7 @@ export class Naruto_W2_Object extends api.MissileSpellObject {
 
 export default class Naruto_W2 extends api.Spell {
   name = 'Kurama Arms';
+  image = api.asset('spell_naruto_w2');
   description =
     'Vươn một cánh tay chakra, gây <span class="damage">20</span> sát thương và <b>kéo</b> ' +
     'mục tiêu trúng đầu tiên về phía mình.';

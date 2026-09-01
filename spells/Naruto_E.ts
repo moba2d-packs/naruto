@@ -34,6 +34,7 @@ export class SageMode extends api.buffs.Buff {
 
 export default class Naruto_E extends api.Spell {
   name = 'Sennin Mōdo';
+  image = api.asset('spell_naruto_e');
   description =
     'Thu nạp năng lượng tự nhiên trong 9 giây: <b>+0.45</b> tốc đánh, <b>+60</b> tầm đánh ' +
     'và <b>+25%</b> tốc chạy.';

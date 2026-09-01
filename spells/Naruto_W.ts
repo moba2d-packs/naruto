@@ -43,6 +43,7 @@ export class Naruto_W_Clone extends api.units.Pet {
 
 export default class Naruto_W extends api.Spell {
   name = 'Kage Bunshin';
+  image = api.asset('spell_naruto_w');
   description =
     'Tạo <b>2</b> phân thân đánh cùng trong 8 giây. Mỗi phân thân gây ' +
     '<span class="damage">9</span> sát thương mỗi đòn và tan ngay khi trúng một đòn.';
