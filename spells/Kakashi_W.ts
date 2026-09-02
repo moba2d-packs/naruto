@@ -131,8 +131,7 @@ export default class Kakashi_W extends api.Spell {
   description =
     'Kakashi <b>rời khỏi thế giới này</b> trong <span class="time">0.7 giây</span>: không thể ' +
     'bị chọn làm mục tiêu và <span class="buff">miễn mọi sát thương</span>, nhưng vẫn đi lại ' +
-    'bình thường. Không gây sát thương — đây là nút để <b>né một chiêu đang bay</b>, bấm theo ' +
-    'nhịp của đối thủ chứ không phải của mình.';
+    'bình thường. Không gây sát thương.';
   coolDown = W_COOLDOWN_MS;
   manaCost = W_CHAKRA;
   targetingMode = 'SELF' as const;

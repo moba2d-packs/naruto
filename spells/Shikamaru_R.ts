@@ -327,8 +327,8 @@ export default class Shikamaru_R extends api.Spell {
     'Bóng của anh toả ra <b>bảy hướng</b> và rẽ nhánh khắp mặt đất trong ' +
     '<span class="time">0.7 giây</span>. Kẻ địch bị một nhánh chạm tới nhận ' +
     '<span class="damage magic">42</span> sát thương và bị <span class="buff">trói chân</span> ' +
-    '<span class="time">1.1 giây</span>, mỗi người một lần. Khác Kagemane: ' +
-    '<b>anh vẫn đi lại được</b> suốt thời gian đó.';
+    '<span class="time">1.1 giây</span>, mỗi người một lần. <b>Anh vẫn đi lại được</b> suốt ' +
+    'thời gian đó.';
   coolDown = R_COOLDOWN_MS;
   manaCost = R_CHAKRA;
   targetingMode = 'SELF' as const;

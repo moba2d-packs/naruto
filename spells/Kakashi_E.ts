@@ -143,8 +143,7 @@ export default class Kakashi_E extends api.Spell {
   description =
     'Kakashi lặn xuống đất và trồi lên <b>sau lưng</b> mục tiêu: ' +
     '<span class="damage magic">20</span> sát thương và <span class="buff">trói chân</span> ' +
-    '<span class="time">1 giây</span> vì bị chôn tới cổ. Anh đổi chỗ, và cái xác bị trói nằm ' +
-    'giữa anh và nơi họ định đi.';
+    '<span class="time">1 giây</span> vì bị chôn tới cổ.';
   coolDown = E_COOLDOWN_MS;
   manaCost = E_CHAKRA;
   range = E_RANGE;

@@ -188,8 +188,8 @@ export default class Kakashi_Q extends api.Spell {
   description =
     'Sét chạy khắp người rồi <b>phóng ra mọi hướng</b> sau <span class="time">0.2 giây</span>: ' +
     '<span class="damage magic">26</span> sát thương và <span class="buff">choáng</span> ' +
-    '<span class="time">0.55 giây</span> mọi kẻ địch đứng quanh. Là chiêu <b>choáng duy nhất</b> ' +
-    'của cả pack — và anh phải đứng giữa họ mới dùng được.';
+    '<span class="time">0.55 giây</span> mọi kẻ địch đứng quanh. Sét nổ ra từ chính anh, nên ' +
+    'phải đứng sát mới trúng.';
   coolDown = Q_COOLDOWN_MS;
   manaCost = Q_CHAKRA;
   targetingMode = 'SELF' as const;

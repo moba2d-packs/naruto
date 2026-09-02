@@ -242,7 +242,7 @@ export default class Temari_Q extends api.Spell {
   description =
     'Một lưỡi gió rộng bay thẳng, <b>xuyên qua tất cả</b> chứ không dừng ở người đầu tiên: ' +
     '<span class="damage magic">24</span> sát thương và <span class="buff">thổi bay</span> mỗi ' +
-    'người trúng ra xa theo hướng gió. Cả một hàng lính lẫn người đứng sau đều dính.';
+    'người trúng ra xa theo hướng gió.';
   coolDown = Q_COOLDOWN_MS;
   manaCost = Q_CHAKRA;
   targetingMode = 'DIRECTION' as const;

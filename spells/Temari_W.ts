@@ -228,8 +228,7 @@ export default class Temari_W extends api.Spell {
   description =
     'Dựng một cột gió xoáy tại điểm chỉ định trong <span class="time">2.2 giây</span>. Kẻ địch ' +
     'bên trong bị <b>kéo vào giữa</b>, <span class="buff">làm chậm 30%</span> và nhận ' +
-    '<span class="damage magic">5</span> mỗi <span class="time">0.4 giây</span>. Là thứ duy ' +
-    'nhất trong pack kéo người <b>lại gần</b> thay vì đẩy ra.';
+    '<span class="damage magic">5</span> mỗi <span class="time">0.4 giây</span>.';
   coolDown = W_COOLDOWN_MS;
   manaCost = W_CHAKRA;
   targetingMode = 'POINT' as const;

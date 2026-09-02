@@ -175,8 +175,7 @@ export default class Temari_E extends api.Spell {
   description =
     'Temari cưỡi một luồng gió lướt đi một đoạn ngắn. Vệt gió còn lại phía sau ' +
     '<span class="buff">làm chậm 40%</span> kẻ địch đứng trong đó suốt ' +
-    '<span class="time">1.6 giây</span>. <b>Không gây sát thương</b> — đây là đường lui, ' +
-    'không phải một đòn đánh.';
+    '<span class="time">1.6 giây</span>. <b>Không gây sát thương</b>.';
   coolDown = E_COOLDOWN_MS;
   manaCost = E_CHAKRA;
   targetingMode = 'DIRECTION' as const;

@@ -242,10 +242,9 @@ export default class Kakashi_R extends api.Spell {
   name = 'Raikiri';
   image = api.asset('spell_kakashi_r');
   description =
-    'Kakashi <b>đứng yên</b> tích sét trong <span class="time">0.9 giây</span> — ai cũng thấy — ' +
-    'rồi lao xuyên qua người đầu tiên trong vệt: <span class="damage true">55 sát thương ' +
-    'chuẩn</span>, giáp và kháng phép đều vô nghĩa. Đây là sát thương chuẩn <b>duy nhất</b> của ' +
-    'pack, và cái giá của nó là gần một giây đứng phơi ra đó.';
+    'Kakashi <b>đứng yên tại chỗ</b> tích sét trong <span class="time">0.9 giây</span>, vệt đánh ' +
+    'hiện rõ dưới đất, rồi lao xuyên qua người đầu tiên trong vệt: <span class="damage true">55 ' +
+    'sát thương chuẩn</span> — giáp và kháng phép không giảm được.';
   coolDown = R_COOLDOWN_MS;
   manaCost = R_CHAKRA;
   targetingMode = 'DIRECTION' as const;

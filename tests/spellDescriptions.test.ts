@@ -29,6 +29,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { spellCatalog } from '../generated/spellCatalog';
+import { data } from '../pack';
 
 const DAMAGE_TYPES = ['physical', 'magic', 'true'];
 
@@ -69,6 +70,48 @@ describe('spell descriptions', () => {
       }
     }
     expect(unknown).toEqual([]);
+  });
+
+  it('never makes a claim about the pack, or about being the only one', () => {
+    // A tooltip says what the ability does. It is not the place to rank the
+    // ability against the rest of the roster, and every such claim is a
+    // sentence that goes quietly false the day somebody adds a champion:
+    // "là chiêu choáng duy nhất của cả pack" was true for about four hours.
+    //
+    // Reported exactly that way: "1 spell thì ko nên nhắc tới pack, chắc gì
+    // sau này nó là chiêu duy nhất có choáng, spell chỉ mô tả chiêu thức".
+    const boasting: string[] = [];
+    for (const [id, entry] of Object.entries(spellCatalog)) {
+      const description = entry.description ?? '';
+      if (/\bpack\b/i.test(description)) boasting.push(`${id}: names the pack`);
+      if (/duy nhất/i.test(description)) boasting.push(`${id}: claims to be the only one`);
+    }
+    expect(boasting).toEqual([]);
+  });
+
+  it('never names a champion other than its own', () => {
+    // The other half of the same rule. Naming the caster is ordinary tooltip
+    // voice ("Kakashi lặn xuống đất"); naming somebody *else* makes the text
+    // depend on a champion that may not be installed, may be renamed, or may
+    // never have been read by this player.
+    const firstNames = (data.champions ?? []).map(champion => champion.name.split(' ')[0]);
+    const trespass: string[] = [];
+    for (const [id, entry] of Object.entries(spellCatalog)) {
+      const mine = id.split('_')[0];
+      for (const name of firstNames) {
+        if (name === mine) continue;
+        if (new RegExp(`\\b${name}\\b`).test(entry.description ?? '')) {
+          trespass.push(`${id}: names ${name}`);
+        }
+      }
+    }
+    expect(trespass).toEqual([]);
+  });
+
+  it('has champions to check the two rules above against', () => {
+    // Both scans above pass vacuously on an empty roster, and one of them
+    // reads `data.champions` to know what a trespass even is.
+    expect((data.champions ?? []).length).toBeGreaterThan(1);
   });
 
   it('colour-codes every description that states a number', () => {
