@@ -227,9 +227,14 @@ describe('Kurama Mode', () => {
   });
 
   it('puts a cloak in the world, and takes it away with the form', () => {
-    // In the world and not on the body: `Champion.draw()` is skipped for a
-    // culled or fogged caster, and the viewer who most needs to see the form
-    // is the one across the wall.
+    // In the world and not on the body, so the cloak keeps drawing while the
+    // champion art is culled — but **not** through fog. This comment used to
+    // say the opposite, that the viewer who most needs to see the form is the
+    // one across the wall, and that was wrong: fog is fog. An aura painting a
+    // hundred pixels across where a champion is hidden is worse than no fog,
+    // because the enemy learns exactly where somebody is standing and not
+    // that it is a champion at all. `attachTo` below is what ties the two
+    // together now — see `GameObject.visionAnchor` in core.
     const unit = naruto();
     indexObjects(game, [unit]);
 
