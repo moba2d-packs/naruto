@@ -67,6 +67,13 @@ export const PLACEHOLDERS = [
   { id: 'sakura_w', label: 'SJ', tint: ['#1f7a52', '#8bf0bd'] },
   { id: 'sakura_e', label: 'CM', tint: ['#166b5c', '#7ef0d4'] },
   { id: 'sakura_r', label: 'OK', tint: ['#a33055', '#ff9dbb'] },
+
+  // Shadow: violet, because a dark shape on a nearly black floor needs a rim
+  // that is cool and is not any other champion's colour here.
+  { id: 'shikamaru_q', label: 'KM', tint: ['#2c1f52', '#a184f0'] },
+  { id: 'shikamaru_w', label: 'KN', tint: ['#241a45', '#8f6ede'] },
+  { id: 'shikamaru_e', label: 'KK', tint: ['#1d1638', '#7a5fd0'] },
+  { id: 'shikamaru_r', label: 'KS', tint: ['#3a2470', '#b79bff'] },
 ];
 
 /**

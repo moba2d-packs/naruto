@@ -49,6 +49,10 @@ import { Sakura_Q_Fissure } from '../spells/Sakura_Q';
 import { Sakura_W_Mend } from '../spells/Sakura_W';
 import { Sakura_E_Scalpel } from '../spells/Sakura_E';
 import { Sakura_R_Crater } from '../spells/Sakura_R_Crater';
+import { Shikamaru_Q_Shadow } from '../spells/Shikamaru_Q';
+import { Shikamaru_W_Snare } from '../spells/Shikamaru_W';
+import { Shikamaru_E_Grasp } from '../spells/Shikamaru_E';
+import { Shikamaru_R_Web } from '../spells/Shikamaru_R';
 
 let game: TestGame;
 
@@ -82,6 +86,8 @@ const LIGHTS = [
   ['the sand patch holds the ground it is lying on', Gaara_Q_Sand, SIGHT.ZONE],
   ['Sabaku Sōsō marks the body it took', Gaara_R_Grip, SIGHT.MARK],
   ['Ōkashō holds the ground it caved in', Sakura_R_Crater, SIGHT.BLAST],
+  ['the shadow hand lights where it closed', Shikamaru_E_Grasp, SIGHT.IMPACT],
+  ['the shadow web holds the ground it covers', Shikamaru_R_Web, SIGHT.ZONE],
 ] as const;
 
 describe('a landed effect lights the ground it landed on', () => {
@@ -131,6 +137,15 @@ describe('what deliberately lights nothing', () => {
     expect(sightOf(Sakura_Q_Fissure as never)).toBe(DARK);
     expect(sightOf(Sakura_E_Scalpel as never)).toBe(DARK);
     expect(sightOf(Sakura_W_Mend as never)).toBe(DARK);
+  });
+
+  it('leaves the hold and the trap dark, which is what they are for', () => {
+    // A 430-unit shadow that lit the fog would be a ward on a nine-second
+    // cooldown — a scouting tool wearing a crowd-control ability's clothes.
+    // The trap is the sharper case: sight there would make it a ward that
+    // also does damage, which is two abilities sold as one.
+    expect(sightOf(Shikamaru_Q_Shadow as never)).toBe(DARK);
+    expect(sightOf(Shikamaru_W_Snare as never)).toBe(DARK);
   });
 
   it('leaves the wave dark, which is the whole bargain of player-made terrain', () => {

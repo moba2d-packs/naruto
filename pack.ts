@@ -148,6 +148,17 @@ export const data: ContentPackData = {
       attack: { damage: 16, attacksPerSecond: 0.85, range: 130 },
       spells: ['Sakura_Q', 'Sakura_W', 'Sakura_E', 'Sakura_R'],
     },
+    {
+      id: 'shikamaru',
+      name: 'Shikamaru Nara',
+      image: 'champ_shikamaru',
+      playable: true,
+      // Ranged, and the softest hitter in the pack by a distance. That is the
+      // champion: his Q deals no damage at all, and the kit wins fights by
+      // deciding where people are standing rather than by removing them.
+      attack: { damage: 13, attacksPerSecond: 0.8, range: 320 },
+      spells: ['Shikamaru_Q', 'Shikamaru_W', 'Shikamaru_E', 'Shikamaru_R'],
+    },
   ],
   spellDisplay: displayData(),
   maps: [map],

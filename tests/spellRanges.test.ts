@@ -26,6 +26,9 @@ import { Q_LENGTH as SAKURA_Q_LENGTH } from '../spells/Sakura_Q';
 import { W_RANGE as SAKURA_W_RANGE } from '../spells/Sakura_W';
 import { E_REACH as SAKURA_E_REACH } from '../spells/Sakura_E';
 import { R_RANGE as SAKURA_R_RANGE } from '../spells/Sakura_R';
+import { Q_REACH as SHIKA_Q_REACH } from '../spells/Shikamaru_Q';
+import { W_RANGE as SHIKA_W_RANGE } from '../spells/Shikamaru_W';
+import { E_RANGE as SHIKA_E_RANGE } from '../spells/Shikamaru_E';
 
 /** The widest anything in this pack may reach. See the header. */
 const CEILING = RANGE_BAND.ULTIMATE_LINE;
@@ -42,6 +45,8 @@ describe('spell ranges', () => {
       GAARA_R_RANGE,
       SAKURA_W_RANGE,
       SAKURA_R_RANGE,
+      SHIKA_Q_REACH,
+      SHIKA_E_RANGE,
     }).filter(
       ([, range]) => range > CEILING
     );
@@ -60,6 +65,11 @@ describe('spell ranges', () => {
     expect(GAARA_R_RANGE).toBe(RANGE_BAND.ULTIMATE_LINE);
     expect(SAKURA_W_RANGE).toBe(RANGE_BAND.ABILITY);
     expect(SAKURA_R_RANGE).toBe(RANGE_BAND.ABILITY);
+    expect(SHIKA_Q_REACH).toBe(RANGE_BAND.ABILITY);
+    expect(SHIKA_E_RANGE).toBe(RANGE_BAND.ABILITY);
+    // A trap is placed, so it takes the placed band — the shortest reach in
+    // the pack, for the reason that slot documents.
+    expect(SHIKA_W_RANGE).toBe(RANGE_BAND.PLACED);
   });
 
   it('keeps a melee swing shorter than anything anybody places', () => {

@@ -1,6 +1,6 @@
 # Naruto
 
-A `@moba2d/core` content pack: four champions, twenty-two abilities, and a
+A `@moba2d/core` content pack: five champions, twenty-six abilities, and a
 build that publishes itself. Naruto and Sasuke transform — the ultimate swaps
 three of their own abilities out for three others — which is what made this
 pack the one that pushed `Champion.enterStance` into core. Gaara and Sakura
@@ -68,6 +68,18 @@ She is the reason `targetTeam: 'ALLY'` has callers in this pack at all. Her
 clear is deliberately the weakest of the four — a punch and a cut remove a
 caster, and a melee minion needs a basic attack on top, which
 `tests/waveclear.test.ts` pins.
+
+**Shikamaru Nara** — ranged, the softest hitter here by a distance, and the
+only champion who wins fights without removing anybody. Everything he does is
+shadow: violet-rimmed and near-black, because a dark shape on this floor is a
+shape nobody can find.
+
+| Slot | Ability | What it is |
+|------|---------|-----------|
+| Q | Kagemane no Jutsu | A hold, and **zero damage**. His shadow pins everyone in a line — and pins him too: the pack's only `SpellForm.CHANNELED`, so one step of his own breaks it. Drains chakra while it runs. |
+| W | Kage Nui | The pack's first **trap**, and it is drawn only for his own team — the concealed-object exception `docs/VFX_STANDARD.md` names. Arms in 0.6s, spent by one body. |
+| E | Kage Kubi Shibari | The pack's only **silence**. A hand comes up out of the floor and closes; aimed at ground, not locked onto a body, so it can be walked out of. |
+| R | Kagemane Shūchū | Seven tendrils that crawl and fork, rooting whoever they reach — and **he may walk** the whole time. That freedom, not the damage, is why the ultimate exists. The strands *hunt*: an earlier version fanned them at even angles and whether it caught anybody came down to the seed. |
 
 ## What is not done yet
 

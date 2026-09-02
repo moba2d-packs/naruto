@@ -1,6 +1,62 @@
 {
-  "championName": "Sakura Haruno",
+  "championName": "Shikamaru Nara",
   "casts": [
+    {
+      "champion": "Shikamaru Nara",
+      "slotName": "Shikamaru",
+      "slot": "Q",
+      "aim": [
+        430,
+        0
+      ],
+      "frames": [
+        90,
+        400,
+        1200
+      ]
+    },
+    {
+      "champion": "Shikamaru Nara",
+      "slotName": "Shikamaru",
+      "slot": "W",
+      "aim": [
+        250,
+        0
+      ],
+      "frames": [
+        300,
+        900,
+        2000
+      ]
+    },
+    {
+      "champion": "Shikamaru Nara",
+      "slotName": "Shikamaru",
+      "slot": "E",
+      "aim": [
+        300,
+        0
+      ],
+      "frames": [
+        200,
+        400,
+        700
+      ]
+    },
+    {
+      "champion": "Shikamaru Nara",
+      "slotName": "Shikamaru",
+      "slot": "R",
+      "aim": [
+        0,
+        0
+      ],
+      "frames": [
+        300,
+        760,
+        2200
+      ]
+    },
     {
       "champion": "Sakura Haruno",
       "slot": "Q",

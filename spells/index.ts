@@ -35,4 +35,8 @@ export { default as Sakura_Q } from './Sakura_Q';
 export { default as Sakura_W } from './Sakura_W';
 export { default as Sakura_E } from './Sakura_E';
 export { default as Sakura_R } from './Sakura_R';
+export { default as Shikamaru_Q } from './Shikamaru_Q';
+export { default as Shikamaru_W } from './Shikamaru_W';
+export { default as Shikamaru_E } from './Shikamaru_E';
+export { default as Shikamaru_R } from './Shikamaru_R';
 // moba2d-pack-add spell: new barrel entries go above this line

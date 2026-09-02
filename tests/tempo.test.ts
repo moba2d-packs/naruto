@@ -34,6 +34,8 @@ import { W_DURATION_MS as SAND_SHIELD_MS, W_COOLDOWN_MS as SAND_SHIELD_CD } from
 import { E_CROSSING_MS as SAND_WAVE_MS, E_COOLDOWN_MS as SAND_WAVE_CD } from '../spells/Gaara_E';
 import { R_COOLDOWN_MS as OKASHO_CD, R_RUBBLE_MS } from '../spells/Sakura_R';
 import { W_MEND_MS, W_COOLDOWN_MS as MEND_CD } from '../spells/Sakura_W';
+import { Q_MAX_MS, Q_COOLDOWN_MS as KAGEMANE_CD } from '../spells/Shikamaru_Q';
+import { W_LIFETIME_MS as SNARE_MS, W_COOLDOWN_MS as SNARE_CD } from '../spells/Shikamaru_W';
 import Naruto_Q from '../spells/Naruto_Q';
 import Sasuke_E2 from '../spells/Sasuke_E2';
 
@@ -59,6 +61,8 @@ describe('a timed effect is shorter than its own cooldown', () => {
     ['Suna Nami', SAND_WAVE_MS, SAND_WAVE_CD],
     ['Ōkashō', R_RUBBLE_MS, OKASHO_CD],
     ['Shōsen Jutsu', W_MEND_MS, MEND_CD],
+    ['Kagemane no Jutsu', Q_MAX_MS, KAGEMANE_CD],
+    ['Kage Nui', SNARE_MS, SNARE_CD],
   ])('%s is down for longer than it is up', (_name, durationMs, coolDownMs) => {
     expect(durationMs).toBeLessThan(coolDownMs / 2 + 1);
   });

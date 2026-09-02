@@ -141,6 +141,28 @@ export const BIJUUDAMA_VIOLET: ChargePalette = {
   core: [245, 235, 255],
 };
 
+/**
+ * Shadow: a near-black body inside a bright rim, and never the body alone.
+ *
+ * The floor of this game is almost black, so a shadow drawn as a dark shape
+ * is a shadow nobody can find — the same trap Sakura's ultimate fell into
+ * twice, once with a black crater and once with a dark drop-shadow. The rim
+ * is not decoration; it is the only reason the shape exists on screen. Violet
+ * because it has to be *cool* (the standard's colour rule: magic does not
+ * dress in the physical amber family) and because nothing else in this pack
+ * is violet at ground level.
+ *
+ * Draw rims for **everything** first and bodies second. Per-shape rim-then-body
+ * paints each rim over the previous body, and a web of them comes out solid
+ * violet — found in `tools/preview-shape.mjs` before a line of it shipped.
+ */
+export const SHADOW = Object.freeze({
+  /** The bright edge that makes it visible at all. */
+  RIM: [161, 132, 240] as readonly [number, number, number],
+  /** The shadow itself. Darker than any floor this game draws. */
+  BODY: [11, 8, 16] as readonly [number, number, number],
+});
+
 /** `rgba(...)` from a palette entry, so a trail and an orb quote one source. */
 export const rgba = (colour: readonly [number, number, number], alpha: number): string =>
   `rgba(${colour[0]}, ${colour[1]}, ${colour[2]}, ${alpha})`;
