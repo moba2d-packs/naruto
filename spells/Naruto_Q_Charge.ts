@@ -1,6 +1,6 @@
 import type { Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
-import { clamp01 } from '../spellVfx';
+import { RASENGAN_BLUE, clamp01, type ChargePalette } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 
@@ -33,6 +33,15 @@ export class Naruto_Q_Charge extends api.SpellObject {
   ratio = 0;
   /** The sphere's radius at full charge — the missile inherits it. */
   maxRadius = 30;
+  /**
+   * What is being ground into shape, in colour.
+   *
+   * Defaults to the Rasengan's blue because this class was written for it —
+   * and every *other* ability that reuses the orb has to say so, or it charges
+   * one colour and throws another. That is what happened: the form's Q and E
+   * both borrowed this orb and both threw something that was not blue.
+   */
+  palette: ChargePalette = RASENGAN_BLUE;
 
   private ageMs = 0;
   private motes: { angle: number; distance: number; speed: number }[] = [];
@@ -103,7 +112,7 @@ export class Naruto_Q_Charge extends api.SpellObject {
 
     // The motes, drawn first so the sphere sits on top of the stream feeding
     // it. Each is a short line pointing inward — direction, not just position.
-    stroke(150, 210, 255, 150 + 80 * charged);
+    stroke(...this.palette.mote, 150 + 80 * charged);
     strokeWeight(2);
     for (const mote of this.motes) {
       const far = radius + this.maxRadius * 2.1 * mote.distance;
@@ -114,16 +123,16 @@ export class Naruto_Q_Charge extends api.SpellObject {
     }
 
     noStroke();
-    fill(90, 165, 255, 60 + 50 * charged);
+    fill(...this.palette.glow, 60 + 50 * charged);
     circle(orb.x, orb.y, radius * 2.5);
-    fill(125, 200, 255, 200);
+    fill(...this.palette.body, 200);
     circle(orb.x, orb.y, radius * 2);
-    fill(238, 250, 255, 235);
+    fill(...this.palette.core, 235);
     circle(orb.x, orb.y, radius * 0.85);
 
     // Counter-turning shells: it is being ground into shape, not floating.
     noFill();
-    stroke(235, 250, 255, 230);
+    stroke(...this.palette.core, 230);
     strokeWeight(2.5);
     arc(orb.x, orb.y, radius * 1.7, radius * 1.7, spin, spin + 2.3);
     arc(orb.x, orb.y, radius * 1.15, radius * 1.15, -spin * 1.5, -spin * 1.5 + 1.9);

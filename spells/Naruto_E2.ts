@@ -5,7 +5,14 @@ import type {
   Rectangle,
 } from '@moba2d/core/content/types';
 import { api } from '../packApi';
-import { RANGE_BAND, chakraTrail, clamp01, impactBurst } from '../spellVfx';
+import {
+  BIJUUDAMA_VIOLET,
+  RANGE_BAND,
+  chakraTrail,
+  clamp01,
+  impactBurst,
+  rgba,
+} from '../spellVfx';
 import { Naruto_Q_Charge } from './Naruto_Q_Charge';
 import { BOOM_DAMAGE, Naruto_E2_Detonation } from './Naruto_E2_Detonation';
 
@@ -60,10 +67,10 @@ export class Naruto_E2_Object extends api.MissileSpellObject {
   // default" edit from silently making this a single-target shot.
   maxHitCount = Infinity;
 
-  trailSystem = chakraTrail(this.owner, 'rgba(150, 90, 220, 0.5)', 26);
+  trailSystem = chakraTrail(this.owner, rgba(BIJUUDAMA_VIOLET.glow, 0.5), 26);
 
   private burst = api.helpers.PredefinedParticleSystems.randomMovingParticlesDecreaseSize(
-    'rgba(200, 150, 255, 0.9)',
+    rgba(BIJUUDAMA_VIOLET.mote, 0.9),
     0.35
   );
   private pulse = 0;
@@ -173,6 +180,7 @@ export default class Naruto_E2 extends api.Spell {
     // Bigger than either Rasengan's: this is the tailed beast's own bomb, and
     // the thing being compressed should read as the thing that comes out.
     forming.maxRadius = 40;
+    forming.palette = BIJUUDAMA_VIOLET;
     forming.attachTo(this.owner);
     this.forming = forming;
     this.game.objectManager.addObject(forming);

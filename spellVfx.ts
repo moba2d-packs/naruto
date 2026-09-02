@@ -69,6 +69,69 @@ export const SIGHT = Object.freeze({
   MARK: 200,
 });
 
+/**
+ * One ability's chakra, as four related colours.
+ *
+ * Charging and throwing are the same chakra at two moments, so they cannot be
+ * two palettes. They were: `Naruto_Q_Charge` was written for the Rasengan and
+ * then reused for the form's two abilities without being told what it was
+ * holding, so a player charged a blue sphere and threw an orange one. Reported
+ * exactly that way — "expect màu phải trùng lúc charge và lúc release".
+ *
+ * A `ChargePalette` is what a spell hands *both* halves, so the two cannot
+ * disagree: `chargeTint` paints the orb and `rgba(palette.glow, …)` paints the
+ * trail, from the same four numbers.
+ *
+ * The charge ring is deliberately **not** in here. It is the one mark on the
+ * sphere that is information rather than chakra — how full the hold is — and
+ * it stays the same gold on every ability so a player reads it without
+ * relearning it per champion.
+ */
+export interface ChargePalette {
+  /** The motes streaming inward. Brightest of the four. */
+  mote: readonly [number, number, number];
+  /** The outer glow, and the trail the thrown object leaves. */
+  glow: readonly [number, number, number];
+  /** The body of the sphere. */
+  body: readonly [number, number, number];
+  /** The hot centre, and the counter-turning shells. Nearly white. */
+  core: readonly [number, number, number];
+}
+
+/**
+ * The three chakras this pack charges, and the only place their numbers live.
+ *
+ * Named here rather than in each spell so the family reads as a family: the
+ * form's abilities are recognisably the base ability's chakra pushed further,
+ * which is the whole visual argument for entering the form.
+ */
+export const RASENGAN_BLUE: ChargePalette = {
+  mote: [150, 210, 255],
+  glow: [120, 190, 255],
+  body: [125, 200, 255],
+  core: [238, 250, 255],
+};
+
+/** Kurama's chakra: the same sphere, burning. */
+export const BIJUU_ORANGE: ChargePalette = {
+  mote: [255, 190, 110],
+  glow: [255, 150, 60],
+  body: [255, 175, 90],
+  core: [255, 246, 225],
+};
+
+/** A tailed-beast bomb, which is the heaviest thing either champion throws. */
+export const BIJUUDAMA_VIOLET: ChargePalette = {
+  mote: [200, 150, 255],
+  glow: [150, 90, 220],
+  body: [175, 120, 240],
+  core: [245, 235, 255],
+};
+
+/** `rgba(...)` from a palette entry, so a trail and an orb quote one source. */
+export const rgba = (colour: readonly [number, number, number], alpha: number): string =>
+  `rgba(${colour[0]}, ${colour[1]}, ${colour[2]}, ${alpha})`;
+
 /** A missile's trail. Length and fade scale with the missile, not with taste. */
 export const chakraTrail = (
   owner: { game: unknown; position: p5.Vector; teamId: string },

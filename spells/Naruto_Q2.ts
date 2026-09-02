@@ -5,7 +5,15 @@ import type {
   Rectangle,
 } from '@moba2d/core/content/types';
 import { api } from '../packApi';
-import { RANGE_BAND, chakraTrail, clamp01, impactBurst, snapOut } from '../spellVfx';
+import {
+  BIJUU_ORANGE,
+  RANGE_BAND,
+  chakraTrail,
+  clamp01,
+  impactBurst,
+  rgba,
+  snapOut,
+} from '../spellVfx';
 import { Naruto_Q_Charge } from './Naruto_Q_Charge';
 import { Naruto_Q2_Scorch } from './Naruto_Q2_Scorch';
 
@@ -70,10 +78,10 @@ export class Naruto_Q2_Object extends api.MissileSpellObject {
   splashDamage = Q2_SPLASH_DAMAGE;
   splashRadius = Q2_SPLASH_RADIUS;
 
-  trailSystem = chakraTrail(this.owner, 'rgba(255, 150, 60, 0.45)', 18);
+  trailSystem = chakraTrail(this.owner, rgba(BIJUU_ORANGE.glow, 0.45), 18);
 
   private burst = api.helpers.PredefinedParticleSystems.randomMovingParticlesDecreaseSize(
-    'rgba(255, 190, 110, 0.9)',
+    rgba(BIJUU_ORANGE.mote, 0.9),
     0.42
   );
   private spin = 0;
@@ -236,6 +244,8 @@ export default class Naruto_Q2 extends api.Spell {
     this.ratio = 0;
     const forming = new Naruto_Q_Charge(this.owner);
     forming.maxRadius = 34;
+    // The orb has to be the colour of the thing it becomes.
+    forming.palette = BIJUU_ORANGE;
     forming.attachTo(this.owner);
     this.forming = forming;
     this.game.objectManager.addObject(forming);

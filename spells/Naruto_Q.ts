@@ -1,6 +1,6 @@
 import type { AttackableUnit, CastContext, CastSpec, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
-import { RANGE_BAND, chakraTrail, clamp01 } from '../spellVfx';
+import { RANGE_BAND, RASENGAN_BLUE, chakraTrail, clamp01, rgba } from '../spellVfx';
 import { Naruto_Q_Charge } from './Naruto_Q_Charge';
 import { Naruto_Q_Vortex } from './Naruto_Q_Vortex';
 
@@ -71,7 +71,7 @@ export class Naruto_Q_Object extends api.MissileSpellObject {
   /** The vortex is what remains; the sphere itself is spent on contact. */
   vortexRadius = Q_MIN_VORTEX;
 
-  trailSystem = chakraTrail(this.owner, 'rgba(120, 190, 255, 0.42)', 14);
+  trailSystem = chakraTrail(this.owner, rgba(RASENGAN_BLUE.glow, 0.42), 14);
 
   private spin = 0;
   private shells: number[] = [];
@@ -182,6 +182,7 @@ export default class Naruto_Q extends api.Spell {
     this.ratio = 0;
     const forming = new Naruto_Q_Charge(this.owner);
     forming.maxRadius = Q_MAX_RADIUS;
+    forming.palette = RASENGAN_BLUE;
     // Attached so it dies with him rather than hanging in the air over a
     // corpse — the same rule every effect that rides a body follows.
     forming.attachTo(this.owner);
