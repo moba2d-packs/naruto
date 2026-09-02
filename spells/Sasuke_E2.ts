@@ -1,5 +1,6 @@
 import type { AttackableUnit, CastContext, CastSpec, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
+import { Sasuke_E2_Trace } from './Sasuke_E2_Trace';
 import { RANGE_BAND, clamp01, impactBurst, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
@@ -23,7 +24,23 @@ const QRectangle = api.utils.Quadtree.Rectangle;
 export const E2_MIN_DAMAGE = 45;
 export const E2_MAX_DAMAGE = 75;
 export const E2_RANGE = RANGE_BAND.ULTIMATE_LINE;
-export const E2_SPEED = 26;
+/**
+ * Slowed, and it is still the fastest thing either champion throws.
+ *
+ * Measured against the pack rather than retuned by feel: every other missile
+ * here runs 9–16, so 26 was 1.6x the next fastest and nearly three times the
+ * median — and at 30 across it was also one of the *smallest*. 650px at 26 is
+ * about four tenths of a second, which is not a skillshot, it is a hitscan
+ * with an animation nobody sees. Reported as "mũi tên cũng đang nhanh và khó
+ * thấy quá".
+ *
+ * 18 keeps it clearly the fastest — an arrow should be — and buys back about
+ * a third of a second of flight. The rest of the fix is legibility rather
+ * than speed: a bigger head, and a trail that stays behind it long enough to
+ * say where it went (`Sasuke_E2_Trace`), because the real reason it could not
+ * be seen is that it left nothing at all.
+ */
+export const E2_SPEED = 18;
 export const E2_CHARGE_MS = 900;
 export const E2_COOLDOWN_MS = 10_000;
 export const E2_CHAKRA = 85;
@@ -99,11 +116,15 @@ export class Sasuke_E2_Draw extends api.SpellObject {
 
 export class Sasuke_E2_Object extends api.MissileSpellObject {
   speed = E2_SPEED;
-  size = 30;
+  size = 42;
   damage = E2_MIN_DAMAGE;
   maxHitCount = Infinity;
 
   private ageMs = 0;
+  /** Where it was loosed from, so the trace can draw the whole line. */
+  private launch = { x: 0, y: 0 };
+  /** Latched: the ending fires once, whichever way the runtime removes it. */
+  private spent = false;
   private burst = api.helpers.PredefinedParticleSystems.randomMovingParticlesDecreaseSize(
     'rgba(200, 215, 255, 0.9)',
     0.4
@@ -111,7 +132,20 @@ export class Sasuke_E2_Object extends api.MissileSpellObject {
 
   onAdded(): void {
     super.onAdded();
+    this.launch = { x: this.position.x, y: this.position.y };
     this.useParticles(this.burst);
+  }
+
+  onRemoved(): void {
+    super.onRemoved?.();
+    if (this.spent) return;
+    this.spent = true;
+    const trace = new Sasuke_E2_Trace(this.owner);
+    trace.position.set(this.position.x, this.position.y);
+    trace.from = this.launch;
+    trace.to = { x: this.position.x, y: this.position.y };
+    trace.width = this.size;
+    this.game.objectManager.addObject(trace);
   }
 
   update(): void {
@@ -143,8 +177,8 @@ export class Sasuke_E2_Object extends api.MissileSpellObject {
     );
     const streak = 110 * snapOut(clamp01(this.ageMs / 90));
     push();
-    // A long bolt rather than a dot: at speed 26 a round head is a stutter of
-    // disconnected circles, and the streak is what makes it read as one line.
+    // A long bolt rather than a dot: at this speed a round head is a stutter
+    // of disconnected circles, and the streak is what makes it one line.
     stroke(150, 170, 255, 90);
     strokeWeight(this.size * 0.9);
     line(head.x, head.y, head.x + Math.cos(back) * streak, head.y + Math.sin(back) * streak);

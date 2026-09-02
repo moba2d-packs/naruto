@@ -24,6 +24,15 @@ import {
   Sasuke_W_Blaze,
 } from '../spells/Sasuke_W_Blaze';
 import Sasuke_E, { E_REVEAL_RADIUS, REVEAL_STACK_ID } from '../spells/Sasuke_E';
+import { E2_SPEED, Sasuke_E2_Object } from '../spells/Sasuke_E2';
+import { Sasuke_E2_Trace } from '../spells/Sasuke_E2_Trace';
+import { Q_SPEED as NARUTO_Q_SPEED } from '../spells/Naruto_Q';
+import { Q2_SPEED as NARUTO_Q2_SPEED } from '../spells/Naruto_Q2';
+import { E2_SPEED as NARUTO_E2_SPEED } from '../spells/Naruto_E2';
+import { W_SPEED as SASUKE_W_SPEED } from '../spells/Sasuke_W';
+import { W2_SPEED as NARUTO_W2_SPEED } from '../spells/Naruto_W2';
+import { W2_SPEED as SASUKE_W2_SPEED } from '../spells/Sasuke_W2';
+import { Q2_SPEED as SASUKE_Q2_SPEED } from '../spells/Sasuke_Q2';
 import Sasuke_R, { R_CHAKRA_PER_SECOND, R_SHIELD, SUSANOO_STANCE } from '../spells/Sasuke_R';
 import { basicAttackStub, champion, indexObjects, unit } from './_units';
 
@@ -386,5 +395,47 @@ describe('Susanoo', () => {
     expect(caster.shieldAmount).toBe(0);
     const Slow = buildTestApi().buffs.Slow;
     expect(caster.buffs.some(buff => buff instanceof Slow && !buff.toRemove)).toBe(false);
+  });
+});
+
+describe('Indra’s Arrow is fast, not invisible', () => {
+  /**
+   * Reported as "mũi tên cũng đang nhanh và khó thấy quá", and the pack's own
+   * numbers agreed: every other missile here runs 9–16 and this one ran 26,
+   * at a smaller size than most. 650px at 26 is about four tenths of a
+   * second — not a skillshot, a hitscan with an animation nobody sees.
+   */
+  it('stays the fastest thing either champion throws, without being three times the median', () => {
+    // Every other missile in the pack, so the claim is about the roster and
+    // not about whichever four this file happened to import.
+    const others = [
+      NARUTO_Q_SPEED,
+      NARUTO_Q2_SPEED,
+      NARUTO_E2_SPEED,
+      NARUTO_W2_SPEED,
+      SASUKE_W_SPEED,
+      SASUKE_W2_SPEED,
+      SASUKE_Q2_SPEED,
+    ];
+    expect(E2_SPEED).toBeGreaterThan(Math.max(...others));
+    expect(E2_SPEED).toBeLessThan(Math.max(...others) * 1.5);
+  });
+
+  it('leaves the line it flew on behind it', () => {
+    // The larger half of the fix. It could not be seen because it left
+    // *nothing* — and on a shot that pierces everything and stops at max
+    // range, "it came from there and ended here" has no other way to reach
+    // the player.
+    const caster = sasuke();
+    indexObjects(game, [caster]);
+    const arrow = new Sasuke_E2_Object(caster);
+    arrow.onAdded();
+    arrow.position.set(500, 40);
+
+    arrow.onRemoved();
+
+    const traces = inWorld(Sasuke_E2_Trace);
+    expect(traces).toHaveLength(1);
+    expect(Math.round(traces[0].to.x)).toBe(500);
   });
 });
