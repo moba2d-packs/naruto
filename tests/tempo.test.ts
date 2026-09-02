@@ -30,6 +30,8 @@ import { spellCatalog } from '../generated/spellCatalog';
 import { E_DURATION_MS as SAGE_MS, E_COOLDOWN_MS as SAGE_CD } from '../spells/Naruto_E';
 import { W_LIFETIME_MS, W_COOLDOWN_MS } from '../spells/Naruto_W';
 import { E_DURATION_MS as SHARINGAN_MS, E_COOLDOWN_MS as SHARINGAN_CD } from '../spells/Sasuke_E';
+import Naruto_Q from '../spells/Naruto_Q';
+import Sasuke_E2 from '../spells/Sasuke_E2';
 
 describeTempo({
   label: 'naruto — nobody stands around waiting',
@@ -51,5 +53,24 @@ describe('a timed effect is shorter than its own cooldown', () => {
     ['Sharingan', SHARINGAN_MS, SHARINGAN_CD],
   ])('%s is down for longer than it is up', (_name, durationMs, coolDownMs) => {
     expect(durationMs).toBeLessThan(coolDownMs / 2 + 1);
+  });
+});
+
+describe('a bot charges these to the top', () => {
+  // `BotBrain` used to release every charge at half its window, so Rasengan
+  // landed at 33 of its 18–48 and Indra's Arrow at 60 of its 45–75, always.
+  // The default is full charge now — but only safely: a charge whose spec is
+  // `releaseAtMax: false` is *cancelled* by the runtime at max, and the bot
+  // stops short of it. Both of these fire themselves at the top instead, and
+  // that is the fact worth pinning: flip either to `false` and the bot
+  // quietly goes back to a weaker shot with nothing to say so.
+  it.each([
+    ['Rasengan', Naruto_Q],
+    ["Indra's Arrow", Sasuke_E2],
+  ])('%s fires itself at full charge', (_name, spell) => {
+    expect(spell.prototype.castSpec.charge?.releaseAtMax).toBe(true);
+    // No override: the default is already the strongest safe answer, and a
+    // number here would be a second copy of the window waiting to drift.
+    expect(spell.aiChargeReleaseAtMs).toBeUndefined();
   });
 });
