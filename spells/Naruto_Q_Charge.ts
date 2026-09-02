@@ -43,6 +43,18 @@ export class Naruto_Q_Charge extends api.SpellObject {
    */
   palette: ChargePalette = RASENGAN_BLUE;
 
+  /**
+   * Where the caster is aiming, written by the spell every frame.
+   *
+   * This used to be read here, off `game.worldMouse`, and that was wrong on a
+   * phone: while a spell is charging the finger is pressing its *button*, so
+   * the orb swung round to the bottom corner of the screen instead of sitting
+   * at the hand he is aiming with. `Spell.aimPoint` is the only thing that
+   * knows the difference between a cursor and a thumb drag — so the spell
+   * pushes the answer down here rather than the orb going looking for it.
+   */
+  aim: { x: number; y: number } | null = null;
+
   private ageMs = 0;
   private motes: { angle: number; distance: number; speed: number }[] = [];
 
@@ -58,7 +70,7 @@ export class Naruto_Q_Charge extends api.SpellObject {
 
   /** The point the sphere sits at: beside him, on the side he is aiming. */
   private anchor(): { x: number; y: number } {
-    const aim = this.owner.game?.worldMouse;
+    const aim = this.aim;
     const dx = (aim?.x ?? this.owner.position.x + 1) - this.owner.position.x;
     const dy = (aim?.y ?? this.owner.position.y) - this.owner.position.y;
     const length = Math.hypot(dx, dy) || 1;

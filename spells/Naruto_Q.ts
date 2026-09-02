@@ -181,6 +181,7 @@ export default class Naruto_Q extends api.Spell {
   onCastStart(): void {
     this.ratio = 0;
     const forming = new Naruto_Q_Charge(this.owner);
+    forming.aim = { x: this.aimPoint.x, y: this.aimPoint.y };
     forming.maxRadius = Q_MAX_RADIUS;
     forming.palette = RASENGAN_BLUE;
     // Attached so it dies with him rather than hanging in the air over a
@@ -192,7 +193,12 @@ export default class Naruto_Q extends api.Spell {
 
   onChargeUpdate(_context: CastContext, _elapsedMs: number, ratio: number): void {
     this.ratio = ratio;
-    if (this.forming) this.forming.ratio = ratio;
+    if (!this.forming) return;
+    this.forming.ratio = ratio;
+    // The orb sits at the hand he is aiming with, so it has to be told where
+    // that is every frame. `aimPoint` is the only thing that knows a thumb
+    // drag from the finger pressing the button — see `Naruto_Q_Charge.aim`.
+    this.forming.aim = { x: this.aimPoint.x, y: this.aimPoint.y };
   }
 
   onRelease(): void {

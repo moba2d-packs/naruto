@@ -177,6 +177,7 @@ export default class Naruto_E2 extends api.Spell {
   onCastStart(): void {
     this.ratio = 0;
     const forming = new Naruto_Q_Charge(this.owner);
+    forming.aim = { x: this.aimPoint.x, y: this.aimPoint.y };
     // Bigger than either Rasengan's: this is the tailed beast's own bomb, and
     // the thing being compressed should read as the thing that comes out.
     forming.maxRadius = 40;
@@ -188,7 +189,12 @@ export default class Naruto_E2 extends api.Spell {
 
   onChargeUpdate(_context: CastContext, _elapsedMs: number, ratio: number): void {
     this.ratio = ratio;
-    if (this.forming) this.forming.ratio = ratio;
+    if (!this.forming) return;
+    this.forming.ratio = ratio;
+    // The orb sits at the hand he is aiming with, so it has to be told where
+    // that is every frame. `aimPoint` is the only thing that knows a thumb
+    // drag from the finger pressing the button — see `Naruto_Q_Charge.aim`.
+    this.forming.aim = { x: this.aimPoint.x, y: this.aimPoint.y };
   }
 
   onRelease(): void {

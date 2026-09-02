@@ -51,6 +51,17 @@ export const drawnDamage = (ratio: number): number =>
 /** The bow being drawn, on his body, where an enemy can read it. */
 export class Sasuke_E2_Draw extends api.SpellObject {
   ratio = 0;
+  /**
+   * Where he is aiming, written by the spell every frame.
+   *
+   * Read here off `game.worldMouse` once, which is right for a mouse and
+   * wrong for a thumb: while the bow is being drawn the finger is holding the
+   * ability button, so the bow swung round to point at the corner of the
+   * screen instead of at the target. `Spell.aimPoint` is what tells a drag
+   * apart from a press, so the spell pushes it down rather than the bow
+   * going looking for it.
+   */
+  aim: { x: number; y: number } | null = null;
   private ageMs = 0;
 
   update(): void {
@@ -73,7 +84,7 @@ export class Sasuke_E2_Draw extends api.SpellObject {
 
   draw(): void {
     const body = this.position;
-    const aim = this.owner.game?.worldMouse;
+    const aim = this.aim;
     const heading = Math.atan2(
       (aim?.y ?? body.y) - body.y,
       (aim?.x ?? body.x + 1) - body.x
@@ -222,6 +233,7 @@ export default class Sasuke_E2 extends api.Spell {
   onCastStart(): void {
     this.ratio = 0;
     const bow = new Sasuke_E2_Draw(this.owner);
+    bow.aim = { x: this.aimPoint.x, y: this.aimPoint.y };
     bow.attachTo(this.owner);
     this.drawing = bow;
     this.game.objectManager.addObject(bow);
@@ -229,7 +241,9 @@ export default class Sasuke_E2 extends api.Spell {
 
   onChargeUpdate(_context: CastContext, _elapsedMs: number, ratio: number): void {
     this.ratio = ratio;
-    if (this.drawing) this.drawing.ratio = ratio;
+    if (!this.drawing) return;
+    this.drawing.ratio = ratio;
+    this.drawing.aim = { x: this.aimPoint.x, y: this.aimPoint.y };
   }
 
   onRelease(): void {
