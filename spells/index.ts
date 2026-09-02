@@ -31,4 +31,8 @@ export { default as Gaara_Q } from './Gaara_Q';
 export { default as Gaara_W } from './Gaara_W';
 export { default as Gaara_E } from './Gaara_E';
 export { default as Gaara_R } from './Gaara_R';
+export { default as Sakura_Q } from './Sakura_Q';
+export { default as Sakura_W } from './Sakura_W';
+export { default as Sakura_E } from './Sakura_E';
+export { default as Sakura_R } from './Sakura_R';
 // moba2d-pack-add spell: new barrel entries go above this line

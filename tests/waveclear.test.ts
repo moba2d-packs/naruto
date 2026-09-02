@@ -32,6 +32,9 @@ import { Q_MAX_DAMAGE as NARUTO_Q_MAX, chargedDamage } from '../spells/Naruto_Q'
 import { Q_DAMAGE as GAARA_Q } from '../spells/Gaara_Q';
 import { SAND_TICK_DAMAGE, SAND_TOTAL_DAMAGE } from '../spells/Gaara_Q_Sand';
 import { W_BURST_DAMAGE as GAARA_W } from '../spells/Gaara_W';
+import { Q_DAMAGE as SAKURA_Q } from '../spells/Sakura_Q';
+import { E_BLEED_TICK, E_DAMAGE as SAKURA_E, E_TOTAL_DAMAGE as SAKURA_E_TOTAL } from '../spells/Sakura_E';
+import { CRATER_DAMAGE as SAKURA_R } from '../spells/Sakura_R_Crater';
 
 /** `tuningDefaults.ts` — the bodies a laner actually has to remove. */
 const MELEE = 70;
@@ -113,6 +116,23 @@ describe('waveclear', () => {
     expect(GAARA_Q + SAND_TOTAL_DAMAGE + GAARA_W).toBeGreaterThan(MELEE);
   });
 
+  it('makes Sakura swing for a melee minion, and never for a ranged one', () => {
+    // She is the first champion here who is not primarily a way of removing
+    // somebody, and the clear says so honestly: a punch and a cut together
+    // take a caster off the board, and a melee body needs a basic attack on
+    // top. She is standing next to the wave anyway — that is what melee is.
+    expect(SAKURA_Q + SAKURA_E_TOTAL).toBeGreaterThan(RANGED);
+    expect(SAKURA_Q + SAKURA_E_TOTAL).toBeLessThan(MELEE);
+  });
+
+  it('does not let her ultimate become the wave clear', () => {
+    // 48 removes a caster and leaves a melee minion standing. An ultimate
+    // that one-shot a wave would be the reason to press it, and pressing it
+    // to farm is not what a ten-second engage is for.
+    expect(SAKURA_R).toBeGreaterThan(RANGED);
+    expect(SAKURA_R).toBeLessThan(MELEE);
+  });
+
   it('keeps single-hit numbers inside the band core sets', () => {
     // 15–35 for an ability, 40–60 for an ultimate (`docs/VFX_STANDARD.md`).
     // The clear above comes from *area and repetition*, not from one number
@@ -129,6 +149,9 @@ describe('waveclear', () => {
       GAARA_Q,
       GAARA_W,
       SAND_TICK_DAMAGE,
+      SAKURA_Q,
+      SAKURA_E,
+      E_BLEED_TICK,
     ]) {
       expect(single).toBeLessThanOrEqual(35);
     }

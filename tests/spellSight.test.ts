@@ -45,6 +45,10 @@ import { Gaara_Q_Sand } from '../spells/Gaara_Q_Sand';
 import { Gaara_R_Grip } from '../spells/Gaara_R_Grip';
 import { Gaara_W_Shell } from '../spells/Gaara_W';
 import { Gaara_E_Wave } from '../spells/Gaara_E';
+import { Sakura_Q_Fissure } from '../spells/Sakura_Q';
+import { Sakura_W_Mend } from '../spells/Sakura_W';
+import { Sakura_E_Scalpel } from '../spells/Sakura_E';
+import { Sakura_R_Crater } from '../spells/Sakura_R_Crater';
 
 let game: TestGame;
 
@@ -77,6 +81,7 @@ const LIGHTS = [
   ['Suna Shigure lights where the column landed', Gaara_Q_Column, SIGHT.IMPACT],
   ['the sand patch holds the ground it is lying on', Gaara_Q_Sand, SIGHT.ZONE],
   ['Sabaku Sōsō marks the body it took', Gaara_R_Grip, SIGHT.MARK],
+  ['Ōkashō holds the ground it caved in', Sakura_R_Crater, SIGHT.BLAST],
 ] as const;
 
 describe('a landed effect lights the ground it landed on', () => {
@@ -116,6 +121,16 @@ describe('what deliberately lights nothing', () => {
     // Suna no Tate is worn too. It bursts where he is standing, and he can
     // already see there.
     expect(sightOf(Gaara_W_Shell as never)).toBe(DARK);
+  });
+
+  it("leaves Sakura's three melee effects dark, because they land at her feet", () => {
+    // The wedge reaches 200 and the cut 175 — ground she is standing on and
+    // can already see. A radius on either would be a champion who scouts by
+    // punching the floor. The mend is the same argument from the other side:
+    // `TargetResolver` refused the cast unless she could already see the ally.
+    expect(sightOf(Sakura_Q_Fissure as never)).toBe(DARK);
+    expect(sightOf(Sakura_E_Scalpel as never)).toBe(DARK);
+    expect(sightOf(Sakura_W_Mend as never)).toBe(DARK);
   });
 
   it('leaves the wave dark, which is the whole bargain of player-made terrain', () => {

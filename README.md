@@ -1,10 +1,10 @@
 # Naruto
 
-A `@moba2d/core` content pack: three champions, eighteen abilities, and a
+A `@moba2d/core` content pack: four champions, twenty-two abilities, and a
 build that publishes itself. Naruto and Sasuke transform — the ultimate swaps
 three of their own abilities out for three others — which is what made this
-pack the one that pushed `Champion.enterStance` into core. Gaara does not
-transform at all; he moves the ground instead.
+pack the one that pushed `Champion.enterStance` into core. Gaara and Sakura
+do not transform at all; they move the ground instead.
 
 Install it into a running game by pasting this into **Tìm pack**:
 
@@ -52,6 +52,22 @@ to swing, and every ability is about ground rather than about bodies.
 Nothing of his deals damage in a single big number. His clear is one full
 patch plus the shield burst, which is what `tests/waveclear.test.ts` pins —
 area and repetition, the way `docs/VFX_STANDARD.md` says a clear should come.
+
+**Sakura Haruno** — melee, and the first champion here whose kit is pointed
+at her own team as well as at the other one. Two hands: one breaks the floor,
+one mends.
+
+| Slot | Ability | What it is |
+|------|---------|-----------|
+| Q | Shannarō | The pavement in front of her crazes for 0.22s, then breaks: damage, and whoever is caught is thrown back off her. The only knock-back in the pack. |
+| W | Shōsen Jutsu | The pack's **first heal**, and its first ally-targeted cast at all. Instant, then a mend every half second for 2s — and worth half again as much on an ally under half health. |
+| E | Chakra no Mesu | A thin chakra blade, one short arc. Bleeds, **disarms**, and cuts every heal they get by 40% — the only disarm and the only anti-heal here. |
+| R | Ōkashō | She leaps to a point and lands fist-first: a crater, and rubble that slows for 3.5s. The ring is drawn from the moment she leaves the ground, so there is about half a second to walk out. |
+
+She is the reason `targetTeam: 'ALLY'` has callers in this pack at all. Her
+clear is deliberately the weakest of the four — a punch and a cut remove a
+caster, and a melee minion needs a basic attack on top, which
+`tests/waveclear.test.ts` pins.
 
 ## What is not done yet
 

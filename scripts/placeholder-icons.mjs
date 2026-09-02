@@ -60,6 +60,13 @@ export const PLACEHOLDERS = [
   { id: 'gaara_w', label: 'ST', tint: ['#6d5220', '#d8b877'] },
   { id: 'gaara_e', label: 'SB', tint: ['#5a431a', '#c9a868'] },
   { id: 'gaara_r', label: 'SO', tint: ['#4a3714', '#b89457'] },
+
+  // Two hands, two colours: the fists break stone, the palms mend. Q and R
+  // are her earth, W and E her chakra, and the pair is the champion.
+  { id: 'sakura_q', label: 'SH', tint: ['#8a4a3a', '#ffb59c'] },
+  { id: 'sakura_w', label: 'SJ', tint: ['#1f7a52', '#8bf0bd'] },
+  { id: 'sakura_e', label: 'CM', tint: ['#166b5c', '#7ef0d4'] },
+  { id: 'sakura_r', label: 'OK', tint: ['#a33055', '#ff9dbb'] },
 ];
 
 /**

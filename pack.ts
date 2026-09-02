@@ -11,7 +11,7 @@ import { spellModules } from './generated/spellModules';
 import { map } from './map';
 
 /**
- * Naruto — three champions, eighteen abilities, one map.
+ * Naruto — four champions, twenty-two abilities, one map.
  *
  * Four abilities per champion and not three, because core validates a pack
  * before installing it, and a `playable` champion there means exactly this: a
@@ -19,11 +19,12 @@ import { map } from './map';
  * gap in it, it is a pack that fails to install, in a browser, after it is
  * already published.
  *
- * Eighteen and not twelve because Naruto's and Sasuke's ultimates are
+ * Twenty-two and not sixteen because Naruto's and Sasuke's ultimates are
  * *forms*: they swap the champion's own Q/W/E out for three others while they
  * hold, through `Champion.enterStance`. Those six extra abilities are
  * declared here like any other, and then deliberately kept out of
- * `spellDisplay` — see below. Gaara has no form; his four are his four.
+ * `spellDisplay` — see below. Gaara and Sakura have no form; their four are
+ * their four.
  *
  * ## The two halves, and why the data one imports no spell
  *
@@ -134,6 +135,18 @@ export const data: ContentPackData = {
       // does the work, and the sand is placed rather than swung.
       attack: { damage: 12, attacksPerSecond: 0.72, range: 340 },
       spells: ['Gaara_Q', 'Gaara_W', 'Gaara_E', 'Gaara_R'],
+    },
+    {
+      id: 'sakura',
+      name: 'Sakura Haruno',
+      image: 'champ_sakura',
+      playable: true,
+      // Melee, and the first champion here whose kit is pointed at her own
+      // team as well as at the other one. She hits hard and slowly — the
+      // swing is not what she is for, and the numbers say so before the
+      // abilities do.
+      attack: { damage: 16, attacksPerSecond: 0.85, range: 130 },
+      spells: ['Sakura_Q', 'Sakura_W', 'Sakura_E', 'Sakura_R'],
     },
   ],
   spellDisplay: displayData(),

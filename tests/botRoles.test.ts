@@ -35,6 +35,8 @@ import Sasuke_R from '../spells/Sasuke_R';
 import Sasuke_Q from '../spells/Sasuke_Q';
 import Naruto_Q from '../spells/Naruto_Q';
 import Sasuke_W from '../spells/Sasuke_W';
+import Sakura_W from '../spells/Sakura_W';
+import Sakura_R from '../spells/Sakura_R';
 
 /**
  * A form's abilities never appear in `champions[].spells` — they are not
@@ -124,6 +126,23 @@ describe('what the tags say', () => {
     // says so.
     expect(Naruto_R.aiRecastAfterMs).toBe(Infinity);
     expect(Sasuke_R.aiRecastAfterMs).toBe(Infinity);
+  });
+
+  it('tells the bot the first heal in the pack is a heal', () => {
+    // There is nothing in the *shape* of an ability that says which team it
+    // is pointed at, so inference reads a `UNIT` cast as damage. Untagged,
+    // this is a nuke the bot spends on whoever is nearest — which for an
+    // `'ALLY'` cast means it never resolves anything at all.
+    expect(Sakura_W.aiRoles).toBe(Role.Heal);
+  });
+
+  it('tells the bot her ultimate is the way in, not the way out', () => {
+    // `Dash` is the one core refuses to infer, and this is the reason it
+    // refuses: a bot that files its engage as an escape runs *at* whatever is
+    // chasing it. All four tags are terms `scoreSpell` actually pays for.
+    expect(has(Sakura_R.aiRoles, Role.Dash)).toBe(true);
+    expect(has(Sakura_R.aiRoles, Role.Burst)).toBe(true);
+    expect(has(Sakura_R.aiRoles, Role.Cc)).toBe(true);
   });
 
   it('leaves the abilities inference already reads correctly untagged', () => {
