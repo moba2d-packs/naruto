@@ -1,0 +1,15 @@
+{
+  "championName": "Gaara",
+  "casts": [
+    { "champion": "Gaara", "slot": "Q", "aim": [300, 0], "frames": [200, 430, 800] },
+    { "champion": "Gaara", "slot": "W", "aim": [0, 0], "frames": [120, 2000, 4200] },
+    { "champion": "Gaara", "slot": "E", "aim": [300, 0], "frames": [150, 1200, 2700] },
+    { "champion": "Gaara", "slot": "R", "aim": [600, 0], "frames": [300, 900, 1300] },
+    { "champion": "Naruto Uzumaki", "slot": "Q", "aim": [430, 0], "frames": [200, 700, 1100] },
+    { "champion": "Naruto Uzumaki", "slot": "W", "aim": [200, 0], "frames": [100, 600, 2000] },
+    { "champion": "Naruto Uzumaki", "slot": "R", "aim": [0, 0], "frames": [150, 900, 3000] },
+    { "champion": "Sasuke Uchiha", "slot": "Q", "aim": [300, 0], "frames": [80, 250, 600] },
+    { "champion": "Sasuke Uchiha", "slot": "W", "aim": [430, 0], "frames": [150, 600, 1600] },
+    { "champion": "Sasuke Uchiha", "slot": "R", "aim": [0, 0], "frames": [150, 900, 3000] }
+  ]
+}

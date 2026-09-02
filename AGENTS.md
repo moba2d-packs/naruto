@@ -78,8 +78,17 @@ shape in it:
   **before** porting a shape into a spell. Gaara's ultimate took six rounds
   there and produced, in order: a biscuit, a Pac-Man, a hex nut and a
   hedgehog. Not one of those was visible from the code.
-- A real match. `verify` cannot see whether an effect is legible and no unit
-  test ever will.
+- `npm run e2e:vfx` shoots the ability in the **real renderer** and
+  screenshots it at frames straddling the moments it changes. Add your
+  ability to `tests/e2e/vfx-casts.json` — champion, slot, aim, and three
+  frame times derived from the spell's own tuning constants — then open one
+  or two PNGs.
+
+  It needs a linked core checkout and a real Chrome, so it is deliberately
+  **not** in `verify`. Run it once per ability with a shape, not per commit.
+  Its first run on Gaara found that his ultimate's grip renders as a gold
+  starburst rather than sand closing on somebody — a legibility failure that
+  typechecked, passed its tests, and was invisible in every other way.
 
 **One shape rule worth writing down, because it has now cost time twice:**
 ridges, fingers, spikes — anything repeated — must be **rooted along a line
