@@ -189,6 +189,42 @@ export const impactBurst = (
 };
 
 /**
+ * Debris thrown **along a heading**, rather than out in a ring.
+ *
+ * `impactBurst` above is a symmetric puff, which is right for something that
+ * went off and wrong for something that was *hit*. A punch throws grit the
+ * way the punch went, and a symmetric burst over a directional blow is the
+ * standard's fourth legibility rule broken — the art saying one thing while
+ * the game did another. Reported as the whole family: "ko có tý vật lý nào,
+ * ... chỉ thấy hình quạt hiện lên rồi đẩy+gây damage".
+ *
+ * Seeded at the moment of impact, never in `draw()`, for `impactBurst`'s
+ * reason: `random()` inside a draw call re-rolls every frame and flickers.
+ */
+export const impactSpray = (
+  system: ReturnType<typeof api.helpers.PredefinedParticleSystems.randomMovingParticlesDecreaseSize>,
+  at: { x: number; y: number },
+  heading: number,
+  count: number,
+  reach: number,
+  radius: number
+): void => {
+  for (let grain = 0; grain < count; grain++) {
+    // A narrow fan around the heading, weighted toward it: the outliers are
+    // what stop a spray reading as a solid cone, and the centre is what makes
+    // it read as a direction at all.
+    const spread = (Math.random() - 0.5) * 1.1;
+    const angle = heading + spread;
+    const distance = reach * (0.25 + Math.random() * 0.75);
+    system.addParticle({
+      x: at.x + Math.cos(angle) * distance,
+      y: at.y + Math.sin(angle) * distance,
+      r: radius * (0.5 + Math.random() * 0.5),
+    });
+  }
+};
+
+/**
  * `1 - (1-t)³` — a snap-out. Fast at the start, settling at the end.
  *
  * Named rather than inlined because the standard is explicit that linear

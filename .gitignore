@@ -11,4 +11,8 @@ generated/
 # that has moved on, until someone remembers to reinstall. CI installs fresh
 # every run for the same reason.
 package-lock.json
+# `tools/preview-shape.mjs` writes both: the SVG it composes and the PNG it
+# rasterises through sharp. Scratch output for looking at a shape before it is
+# ported — the file worth committing is the script that draws it.
 tools/preview-shape.svg
+tools/preview-shape.png

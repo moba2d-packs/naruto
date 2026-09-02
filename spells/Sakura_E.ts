@@ -83,6 +83,15 @@ export class Sakura_E_Scalpel extends api.SpellObject {
   private lastAngle = -E_HALF_ANGLE;
   /** Multi-hit protection: one cut is one cut, however slow the frame was. */
   private cut = new Set<AttackableUnit>();
+  /**
+   * Where each cut landed, so the wound can be drawn **on the body**.
+   *
+   * The standard's third legibility rule, and the half this ability was
+   * missing: an impact belongs on the unit that took it. A sector lighting up
+   * near somebody says an area happened; a line drawn across them says *they
+   * were cut*, which is the whole verb of the ability.
+   */
+  private marks: { x: number; y: number; angle: number; atMs: number }[] = [];
 
   private spray = api.helpers.PredefinedParticleSystems.randomMovingParticlesDecreaseSize(
     'rgba(150, 240, 190, 0.85)',
@@ -136,6 +145,14 @@ export class Sakura_E_Scalpel extends api.SpellObject {
       if (off < from || off > to) continue;
 
       this.cut.add(victim);
+      this.marks.push({
+        x: victim.position.x,
+        y: victim.position.y,
+        // Across the body, along the way the blade was travelling. A mark at
+        // the angle of the *reach* would read as a spoke, not a cut.
+        angle: this.heading + off + Math.PI / 2,
+        atMs: this.ageMs,
+      });
       this.open(victim);
     }
   }
@@ -221,8 +238,13 @@ export class Sakura_E_Scalpel extends api.SpellObject {
     // It fills in *behind* the blade, from the starting edge to wherever the
     // edge is now, so the shape is never a promise: it is a record of what
     // has already been cut.
+    // Faint, and gone well before the blade is: it is a *record* of what has
+    // been cut, and a record must not out-shout the cut. The subject of this
+    // effect is the edge, and an area that competes with it is what makes two
+    // abilities in one kit read as the same wedge twice.
+    const wash = alpha * (1 - swept * 0.45);
     noStroke();
-    fill(96, 214, 160, 52 * alpha);
+    fill(96, 214, 160, 40 * wash);
     this.sector(-E_HALF_ANGLE, edge, E_REACH);
 
     // Mint, not white. The first shot of this in the real renderer came out
@@ -246,15 +268,33 @@ export class Sakura_E_Scalpel extends api.SpellObject {
     line(0, 0, Math.cos(-E_HALF_ANGLE) * E_REACH, Math.sin(-E_HALF_ANGLE) * E_REACH);
 
     if (swept < 1) {
+      // GHOSTS: where the edge was a few frames ago, fading. Three of them,
+      // and they are the entire reason this reads as *fast*. A single bright
+      // line moving between frames is a line that teleports; the smear behind
+      // it is what a swing looks like. Reported as the absence of exactly
+      // this — "ko có tý vật lý nào ... ko hiệu ứng đã như naruto hay sasuke".
+      for (let ghost = 1; ghost <= 3; ghost++) {
+        const back = this.edgeAt(this.ageMs - ghost * 34);
+        if (back <= -E_HALF_ANGLE) break;
+        stroke(126, 245, 190, 150 / (ghost + 0.6));
+        strokeWeight(3.4 - ghost * 0.7);
+        line(
+          Math.cos(back) * 20,
+          Math.sin(back) * 20,
+          Math.cos(back) * E_REACH,
+          Math.sin(back) * E_REACH
+        );
+      }
+
       stroke(34, 122, 88, 225);
-      strokeWeight(6);
+      strokeWeight(7);
       line(
         Math.cos(edge) * 20,
         Math.sin(edge) * 20,
         Math.cos(edge) * E_REACH,
         Math.sin(edge) * E_REACH
       );
-      stroke(150, 255, 205, 255);
+      stroke(190, 255, 226, 255);
       strokeWeight(3);
       line(
         Math.cos(edge) * 20,
@@ -262,11 +302,34 @@ export class Sakura_E_Scalpel extends api.SpellObject {
         Math.cos(edge) * E_REACH,
         Math.sin(edge) * E_REACH
       );
+      // The tip, which is the fastest-moving thing on screen and therefore
+      // the one the eye actually follows.
       noStroke();
-      fill(198, 255, 226, 245);
-      circle(Math.cos(edge) * E_REACH, Math.sin(edge) * E_REACH, 11);
+      fill(232, 255, 242, 250);
+      circle(Math.cos(edge) * E_REACH, Math.sin(edge) * E_REACH, 14);
+      fill(150, 255, 205, 120);
+      circle(Math.cos(edge) * E_REACH, Math.sin(edge) * E_REACH, 26);
     }
 
+    pop();
+
+    // The wounds, in world space — the blade rides her body and these do not,
+    // because they belong to the victims and stay where the cut landed.
+    push();
+    noFill();
+    for (const mark of this.marks) {
+      const since = clamp01((this.ageMs - mark.atMs) / 380);
+      if (since >= 1) continue;
+      const reach = 20 + 16 * snapOut(since);
+      const dx = Math.cos(mark.angle) * reach;
+      const dy = Math.sin(mark.angle) * reach;
+      stroke(20, 70, 50, 200 * (1 - since));
+      strokeWeight(6 * (1 - since * 0.6));
+      line(mark.x - dx, mark.y - dy, mark.x + dx, mark.y + dy);
+      stroke(206, 255, 230, 255 * (1 - since));
+      strokeWeight(2.5 * (1 - since * 0.6));
+      line(mark.x - dx, mark.y - dy, mark.x + dx, mark.y + dy);
+    }
     pop();
   }
 

@@ -15,103 +15,130 @@
  *
  * ## How to use it
  *
- *   node tools/preview-shape.mjs && magick tools/preview-shape.svg out.png
+ *   node tools/preview-shape.mjs           # writes the SVG *and* the PNG
  *
  * Copy the *geometry* from the spell, not the colours — what is being judged
- * is the shape. Two things this harness cannot do that p5 can, both learned
- * the hard way: ImageMagick ignores the three-argument `rotate(angle cx cy)`
- * and flings the element across the canvas, and it needs a font for `<text>`
- * or it refuses the whole file. Avoid both.
+ * is the shape.
  *
- * What this file currently holds is Sakura's R — the crater her fist leaves —
- * at three moments: the landing, the rubble holding, and the floor sinking
- * back.
+ * ## It rasterises itself, and that is not a convenience
+ *
+ * This used to say `magick tools/preview-shape.svg out.png`, and ImageMagick
+ * **silently dropped the second `<polyline>` of every overlapping pair**. A
+ * shadow drawn as a dark body inside a bright rim came back as bare rims, and
+ * two rounds went into "fixing" a colour problem that did not exist — a
+ * preview harness that quietly loses layers is worse than no harness at all,
+ * because it invents work.
+ *
+ * `sharp` (already a devDependency, for the art pipeline) renders the same
+ * file correctly. Two more things this harness still cannot do that p5 can,
+ * both learned the same way: the three-argument `rotate(angle cx cy)` is not
+ * portable here, and `<text>` needs a font or the file is refused. Avoid
+ * both.
+ *
+ * What this file currently holds is Shikamaru's shadow: the R web spreading at
+ * three moments, and the Q line beside it.
  */
 import fs from 'node:fs';
+import sharp from 'sharp';
+import { fileURLToPath } from 'node:url';
 
-const RADIUS = 175;   // the damage radius, and the rubble that slows
-const CHUNKS = 14;    // debris rooted ON the rim, not fanned out of the centre
-const FISSURES = 7;
+const WEB_REACH = 300;      // how far the furthest tendril reaches
+const PRIMARIES = 7;        // tendrils leaving him
+const SEGMENTS = 9;
 
-/** Seeded per piece so nothing re-rolls its own size every frame. */
+/** Seeded per piece so nothing re-rolls its own wander every frame. */
 const seedOf = (i, salt) => Math.sin(i * 12.9898 + salt * 4.1414) * 0.5 + 0.5;
 
-function stage(cx, cy, out, rubble) {
+/**
+ * One tendril: a wandering polyline, NOT a straight ray.
+ *
+ * Straight rays leaving a point are a mace, whatever they were meant to be —
+ * the failure that turned an arm into a club, a wave into a hedgehog and a
+ * grip into a starburst. A shadow crawls: it wanders, it is thin, and it
+ * forks, and those three together are what stop five of them at one origin
+ * reading as a star.
+ */
+function tendril(fromX, fromY, angle, length, seed, grow) {
+  const pts = [];
+  let x = fromX, y = fromY;
+  for (let s = 0; s <= SEGMENTS; s++) {
+    const t = s / SEGMENTS;
+    if (t > grow) break;
+    pts.push({ x, y, t });
+    // Wander AROUND the tendril's own heading, never a random walk off it.
+    // A walk accumulates, so seven tendrils that were meant to go seven ways
+    // all drift the same way and pile into one streak — which is what the
+    // first render of this did.
+    const at = angle + Math.sin(t * 5.5 + seedOf(seed, 2) * 6.28) * 0.42;
+    const step = length / SEGMENTS;
+    x += Math.cos(at) * step;
+    y += Math.sin(at) * step;
+  }
+  return { pts, x, y };
+}
+
+function web(cx, cy, grow) {
   const g = [`<g transform="translate(${cx} ${cy})">`];
 
-  // Churned floor, not a hole. The first cut filled this with near-black at
-  // 0.7 and it read as a void punched in the map — worse, it swallowed
-  // everybody standing in the zone it exists to mark. The standard says to
-  // avoid both ends of value for exactly this: the ground is lighter dust,
-  // and only the bowl right under the fist is darker than the map.
-  g.push(`<circle cx="0" cy="0" r="${(RADIUS * 0.96).toFixed(1)}"
-      fill="#c9a86f" fill-opacity="${(0.10 + 0.14 * rubble).toFixed(2)}"/>`);
-  g.push(`<circle cx="0" cy="0" r="${(RADIUS * 0.34).toFixed(1)}"
-      fill="#3a2c17" fill-opacity="${(0.30 * rubble).toFixed(2)}"/>`);
+  // The reach, drawn whatever the tendrils are doing: the web roots anything
+  // a tendril touches, and the tendrils never leave this circle.
+  g.push(`<circle cx="0" cy="0" r="${WEB_REACH}" fill="#2a1f3d" fill-opacity="0.16"
+      stroke="#8f6ede" stroke-opacity="0.75" stroke-width="3"/>`);
 
-  // fissures running out of the impact point to the rim — they stop AT the
-  // rim, so the longest one is not read as the reach
-  for (let f = 0; f < FISSURES; f++) {
-    const a = (f / FISSURES) * Math.PI * 2 + seedOf(f, 3) * 0.3;
-    const pts = [];
-    for (let s = 0; s <= 5; s++) {
-      const t = s / 5;
-      const wob = Math.sin(t * 6 + f) * 9 * t;
-      const r = RADIUS * 0.94 * t;
-      pts.push(`${(Math.cos(a) * r - Math.sin(a) * wob).toFixed(1)},${(Math.sin(a) * r + Math.cos(a) * wob).toFixed(1)}`);
+  const strokes = [];
+  for (let p = 0; p < PRIMARIES; p++) {
+    const angle = (p / PRIMARIES) * Math.PI * 2 + seedOf(p, 1) * 0.5;
+    // 0.8, not 0.95: the wander adds arc length, so a tendril written to the
+    // full reach ends up outside the circle that is supposed to bound it —
+    // and the circle is the rim the damage really uses.
+    const main = tendril(0, 0, angle, WEB_REACH * 0.72, p * 7, grow);
+    strokes.push({ pts: main.pts, w: 13 });
+
+    // forks, rooted PART WAY ALONG the parent rather than at the hub
+    for (let f = 0; f < 2; f++) {
+      const at = Math.floor(main.pts.length * (0.35 + f * 0.3));
+      const root = main.pts[at];
+      if (!root) continue;
+      const side = f % 2 === 0 ? 1 : -1;
+      const branch = tendril(
+        root.x, root.y,
+        angle + side * (0.6 + seedOf(p + f, 3) * 0.5),
+        WEB_REACH * 0.34, p * 31 + f * 11,
+        Math.max(0, (grow - root.t) / Math.max(1 - root.t, 0.001))
+      );
+      strokes.push({ pts: branch.pts, w: 8 });
     }
-    g.push(`<polyline points="${pts.join(' ')}" fill="none"
-        stroke="#4a3418" stroke-opacity="${(0.85 * rubble).toFixed(2)}" stroke-width="${(3 + 3 * rubble).toFixed(1)}"/>`);
   }
 
-  // the rubble ring: chunks ROOTED ON the rim circle. Each sits astride the
-  // rim rather than radiating from the middle, which is what keeps this a
-  // ring of debris instead of a sun.
-  for (let c = 0; c < CHUNKS; c++) {
-    const a = (c / CHUNKS) * Math.PI * 2 + seedOf(c, 1) * 0.18;
-    const seed = seedOf(c, 2);
-    const w = 16 + seed * 16;          // along the rim
-    const h = (9 + seed * 13) * rubble; // across it
-    const ca = Math.cos(a), sa = Math.sin(a);
-    const tx = -sa, ty = ca;           // tangent
-    const inner = RADIUS - h * 0.55, outer = RADIUS + h * 0.45;
-    const v = [
-      [ca * inner - tx * w / 2, sa * inner - ty * w / 2],
-      [ca * inner + tx * w / 2, sa * inner + ty * w / 2],
-      [ca * outer + tx * w * 0.32, sa * outer + ty * w * 0.32],
-      [ca * outer - tx * w * 0.38, sa * outer - ty * w * 0.38],
-    ];
-    g.push(`<polygon points="${v.map(q => `${q[0].toFixed(1)},${q[1].toFixed(1)}`).join(' ')}"
-        fill="#b99a63" fill-opacity="${(0.9 * rubble).toFixed(2)}" stroke="#3b2a14" stroke-width="2"/>`);
+  for (const { pts, w } of strokes) {
+    if (pts.length < 2) continue;
+    const d = pts.map(q => `${q.x.toFixed(1)},${q.y.toFixed(1)}`).join(' ');
+    // a bright rim UNDER a near-black body: a shadow on a nearly black floor
+    // is invisible without one, which Sakura's R already had to learn twice
+    // The rim is a HAIRLINE around a wide dark body, not the other way round.
+    // First render made the rim nearly as wide as the body and the whole web
+    // read as violet worms — the shadow has to be the thing you see, and the
+    // rim only exists so it is not invisible on a nearly black floor.
+    g.push(`<polyline points="${d}" fill="none" stroke="#a184f0" stroke-opacity="0.95"
+        stroke-width="${w + 5}" stroke-linecap="round" stroke-linejoin="round"/>`);
+    g.push(`<polyline points="${d}" fill="none" stroke="#0b0810"
+        stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`);
   }
 
-  // the rim itself, on the radius the damage really used — the last thing to
-  // fade, so the next press is aimed by something true
-  g.push(`<circle cx="0" cy="0" r="${RADIUS}" fill="none"
-      stroke="#6b4f2a" stroke-opacity="0.95" stroke-width="3.5"/>`);
-
-  // the shockwave: only on the landing frame, expanding past the rim
-  if (out > 0 && out < 1) {
-    g.push(`<circle cx="0" cy="0" r="${(RADIUS * (0.3 + out * 1.05)).toFixed(1)}" fill="none"
-        stroke="#ffe9c9" stroke-opacity="${(1 - out).toFixed(2)}" stroke-width="${(9 * (1 - out)).toFixed(1)}"/>`);
-  }
-
-  // her mark at the point of impact: the Byakugo rhombus, which every effect
-  // in this kit carries
-  const m = 26;
-  g.push(`<polygon points="0,${-m} ${m * 0.62},0 0,${m} ${-m * 0.62},0"
-      fill="none" stroke="#e46a8c" stroke-opacity="0.95" stroke-width="3"/>`);
-
+  g.push(`<circle cx="0" cy="0" r="20" fill="none" stroke="#7bd1a0" stroke-width="3"/>`);
   g.push(`</g>`);
   return g.join('\n');
 }
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="460" viewBox="0 0 1500 460">
-<rect width="1500" height="460" fill="#1b1e24"/>
-${stage(260, 230, 0.35, 0.55)}
-${stage(760, 230, 0, 1)}
-${stage(1260, 230, 0, 0.3)}
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="700" viewBox="0 0 1500 700">
+<rect width="1500" height="700" fill="#1b1e24"/>
+${web(330, 350, 0.35)}
+${web(830, 350, 0.7)}
+${web(1330, 350, 1)}
 </svg>`;
 
-fs.writeFileSync(new URL('./preview-shape.svg', import.meta.url), svg);
-console.log('wrote tools/preview-shape.svg — landing, rubble holding, sinking back');
+const svgPath = new URL('./preview-shape.svg', import.meta.url);
+const pngPath = new URL('./preview-shape.png', import.meta.url);
+fs.writeFileSync(svgPath, svg);
+await sharp(Buffer.from(svg)).png().toFile(fileURLToPath(pngPath));
+console.log('wrote tools/preview-shape.svg + .png — the shadow web at a third, two thirds, full');
