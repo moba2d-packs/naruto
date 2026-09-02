@@ -27,4 +27,8 @@ export { default as Sasuke_R } from './Sasuke_R';
 export { default as Sasuke_Q2 } from './Sasuke_Q2';
 export { default as Sasuke_W2 } from './Sasuke_W2';
 export { default as Sasuke_E2 } from './Sasuke_E2';
+export { default as Gaara_Q } from './Gaara_Q';
+export { default as Gaara_W } from './Gaara_W';
+export { default as Gaara_E } from './Gaara_E';
+export { default as Gaara_R } from './Gaara_R';
 // moba2d-pack-add spell: new barrel entries go above this line

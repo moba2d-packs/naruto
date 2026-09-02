@@ -29,6 +29,9 @@ import { Q_DAMAGE as SASUKE_Q, Q_SHOCK } from '../spells/Sasuke_Q';
 import { Q2_DAMAGE as SASUKE_Q2 } from '../spells/Sasuke_Q2';
 import { E2_MAX_DAMAGE as SASUKE_E2 } from '../spells/Sasuke_E2';
 import { Q_MAX_DAMAGE as NARUTO_Q_MAX, chargedDamage } from '../spells/Naruto_Q';
+import { Q_DAMAGE as GAARA_Q } from '../spells/Gaara_Q';
+import { SAND_TICK_DAMAGE, SAND_TOTAL_DAMAGE } from '../spells/Gaara_Q_Sand';
+import { W_BURST_DAMAGE as GAARA_W } from '../spells/Gaara_W';
 
 /** `tuningDefaults.ts` — the bodies a laner actually has to remove. */
 const MELEE = 70;
@@ -93,13 +96,40 @@ describe('waveclear', () => {
     expect(NARUTO_Q2_FULL + Q2_MAX_SPLASH_DAMAGE).toBeGreaterThan(MELEE);
   });
 
+  it('lets Gaara clear with ground rather than with a nuke', () => {
+    // He has no single number that removes anything, on purpose: his whole
+    // kit is area and repetition, which is exactly what the standard says a
+    // clear is supposed to come from. The column alone is 22 against a 45
+    // body — what kills is standing in the sand afterwards.
+    expect(GAARA_Q).toBeLessThan(RANGED);
+    expect(GAARA_Q + SAND_TOTAL_DAMAGE).toBeGreaterThan(RANGED);
+  });
+
+  it('makes him spend two buttons on a melee minion, not one', () => {
+    // The breakpoint that decides whether he can hold a lane alone. One full
+    // patch does not remove a 70 body; the patch plus the shield burst does,
+    // which is the pair of buttons his kit actually wants pressed together.
+    expect(GAARA_Q + SAND_TOTAL_DAMAGE).toBeLessThan(MELEE);
+    expect(GAARA_Q + SAND_TOTAL_DAMAGE + GAARA_W).toBeGreaterThan(MELEE);
+  });
+
   it('keeps single-hit numbers inside the band core sets', () => {
     // 15–35 for an ability, 40–60 for an ultimate (`docs/VFX_STANDARD.md`).
     // The clear above comes from *area and repetition*, not from one number
     // quietly growing past what the rest of the game is tuned against.
     // Charged abilities are the stated exception and are priced like an
     // ultimate — they cost a second of standing still with a growing tell.
-    for (const single of [SASUKE_Q, SASUKE_W, SASUKE_Q2, Q_SHOCK, W_SPLASH, BLAZE_TICK_DAMAGE]) {
+    for (const single of [
+      SASUKE_Q,
+      SASUKE_W,
+      SASUKE_Q2,
+      Q_SHOCK,
+      W_SPLASH,
+      BLAZE_TICK_DAMAGE,
+      GAARA_Q,
+      GAARA_W,
+      SAND_TICK_DAMAGE,
+    ]) {
       expect(single).toBeLessThanOrEqual(35);
     }
     expect(chargedDamage(0)).toBeLessThanOrEqual(35);

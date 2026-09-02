@@ -11,7 +11,7 @@ import { spellModules } from './generated/spellModules';
 import { map } from './map';
 
 /**
- * Naruto — two champions, fourteen abilities, one map.
+ * Naruto — three champions, eighteen abilities, one map.
  *
  * Four abilities per champion and not three, because core validates a pack
  * before installing it, and a `playable` champion there means exactly this: a
@@ -19,10 +19,11 @@ import { map } from './map';
  * gap in it, it is a pack that fails to install, in a browser, after it is
  * already published.
  *
- * Fourteen and not eight because both ultimates are *forms*: they swap the
- * champion's own Q/W/E out for three others while they hold, through
- * `Champion.enterStance`. Those seven extra abilities are declared here like
- * any other, and then deliberately kept out of `spellDisplay` — see below.
+ * Eighteen and not twelve because Naruto's and Sasuke's ultimates are
+ * *forms*: they swap the champion's own Q/W/E out for three others while they
+ * hold, through `Champion.enterStance`. Those six extra abilities are
+ * declared here like any other, and then deliberately kept out of
+ * `spellDisplay` — see below. Gaara has no form; his four are his four.
  *
  * ## The two halves, and why the data one imports no spell
  *
@@ -122,6 +123,17 @@ export const data: ContentPackData = {
       // fight open.
       attack: { damage: 17, attacksPerSecond: 1.0, range: 130 },
       spells: ['Sasuke_Q', 'Sasuke_W', 'Sasuke_E', 'Sasuke_R'],
+    },
+    {
+      id: 'gaara',
+      name: 'Gaara',
+      image: 'champ_gaara',
+      playable: true,
+      // A ranged controller, and the first champion here who does not want to
+      // be where the fight is. He hits softly and slowly on purpose: the sand
+      // does the work, and the sand is placed rather than swung.
+      attack: { damage: 12, attacksPerSecond: 0.72, range: 340 },
+      spells: ['Gaara_Q', 'Gaara_W', 'Gaara_E', 'Gaara_R'],
     },
   ],
   spellDisplay: displayData(),

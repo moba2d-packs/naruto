@@ -40,6 +40,11 @@ import { AmaterasuFlame } from '../spells/Sasuke_W2';
 import { Naruto_W_Smoke } from '../spells/Naruto_W_Smoke';
 import { KuramaAura } from '../spells/Naruto_R_Aura';
 import { SageAura } from '../spells/Naruto_E_Aura';
+import { Gaara_Q_Column } from '../spells/Gaara_Q';
+import { Gaara_Q_Sand } from '../spells/Gaara_Q_Sand';
+import { Gaara_R_Grip } from '../spells/Gaara_R_Grip';
+import { Gaara_W_Shell } from '../spells/Gaara_W';
+import { Gaara_E_Wave } from '../spells/Gaara_E';
 
 let game: TestGame;
 
@@ -69,6 +74,9 @@ const LIGHTS = [
   ['Chidori arrival', Sasuke_Q_Bolt, SIGHT.IMPACT],
   ['Gōkakyū blaze', Sasuke_W_Blaze, SIGHT.ZONE],
   ['Amaterasu flame', AmaterasuFlame, SIGHT.MARK],
+  ['Suna Shigure lights where the column landed', Gaara_Q_Column, SIGHT.IMPACT],
+  ['the sand patch holds the ground it is lying on', Gaara_Q_Sand, SIGHT.ZONE],
+  ['Sabaku Sōsō marks the body it took', Gaara_R_Grip, SIGHT.MARK],
 ] as const;
 
 describe('a landed effect lights the ground it landed on', () => {
@@ -102,6 +110,20 @@ describe('what deliberately lights nothing', () => {
     // ability says it does.
     expect(sightOf(KuramaAura as never)).toBe(DARK);
     expect(sightOf(SageAura as never)).toBe(DARK);
+  });
+
+  it('leaves the sand shield dark, for the same reason', () => {
+    // Suna no Tate is worn too. It bursts where he is standing, and he can
+    // already see there.
+    expect(sightOf(Gaara_W_Shell as never)).toBe(DARK);
+  });
+
+  it('leaves the wave dark, which is the whole bargain of player-made terrain', () => {
+    // A ridge that granted sight would be a ward with a cooldown — and a
+    // *travelling* one, which is worse: a moving eye that sweeps a lane. It blocks feet and
+    // not eyes on purpose (see the class header), and lighting the fog would
+    // give back with one hand exactly what that decision took with the other.
+    expect(sightOf(Gaara_E_Wave as never)).toBe(DARK);
   });
 });
 

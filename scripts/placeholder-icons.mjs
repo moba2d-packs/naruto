@@ -55,6 +55,11 @@ export const PLACEHOLDERS = [
   { id: 'sasuke_q2', label: 'YM', tint: ['#5a2a9c', '#d3b0ff'] },
   { id: 'sasuke_w2', label: 'AM', tint: ['#1a1420', '#7a6a86'] },
   { id: 'sasuke_e2', label: 'IA', tint: ['#3a2f8c', '#a8b6ff'] },
+
+  { id: 'gaara_q', label: 'SS', tint: ['#8a6a2c', '#e6c98a'] },
+  { id: 'gaara_w', label: 'ST', tint: ['#6d5220', '#d8b877'] },
+  { id: 'gaara_e', label: 'SB', tint: ['#5a431a', '#c9a868'] },
+  { id: 'gaara_r', label: 'SO', tint: ['#4a3714', '#b89457'] },
 ];
 
 /**

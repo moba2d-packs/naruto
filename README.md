@@ -1,9 +1,10 @@
 # Naruto
 
-A `@moba2d/core` content pack: two champions, fourteen abilities, and a
-build that publishes itself. Both champions transform — the ultimate swaps
-three of their own abilities out for three others — which is what makes this
-pack the one that pushed `Champion.enterStance` into core.
+A `@moba2d/core` content pack: three champions, eighteen abilities, and a
+build that publishes itself. Naruto and Sasuke transform — the ultimate swaps
+three of their own abilities out for three others — which is what made this
+pack the one that pushed `Champion.enterStance` into core. Gaara does not
+transform at all; he moves the ground instead.
 
 Install it into a running game by pasting this into **Tìm pack**:
 
@@ -38,6 +39,20 @@ ability is about arriving on one person.
 
 Susanoo swaps in **Yasaka Magatama**, **Amaterasu** and **Indra's Arrow**.
 
+**Gaara** — the one who does not want to be where the fight is. Ranged, slow
+to swing, and every ability is about ground rather than about bodies.
+
+| Slot | Ability | What it is |
+|------|---------|-----------|
+| Q | Suna Shigure | A column erupts at a point after a visible 0.4s gather, then leaves a patch that keeps biting and slowing for 2.2s. |
+| W | Suna no Tate | A shield. When it breaks **or** when it expires it bursts, damaging and throwing nearby enemies — both endings pay. |
+| E | Suna Nami | A ridge of sand that **advances**, ploughing whoever is in front of it along. Real terrain, and the only terrain in either pack that moves. |
+| R | Sabaku Sōsō | A slow wave along the ground; the first body it reaches is rooted, squeezed, then crushed. It travels for about a second and a half, so it can be walked out of. |
+
+Nothing of his deals damage in a single big number. His clear is one full
+patch plus the shield burst, which is what `tests/waveclear.test.ts` pins —
+area and repetition, the way `docs/VFX_STANDARD.md` says a clear should come.
+
 ## What is not done yet
 
 `map.ts` / `geometry.ts` still ship the **scaffold arena** — one wall band,
@@ -45,8 +60,9 @@ one 200px gap, no turrets and no camps. It loads and it is playable, and it
 is not a map anyone designed. That is the largest open piece of work in this
 repository.
 
-There are also no items, no monsters, and ten champions' worth of room on a
-roster that currently holds two.
+There are also no items, no monsters, and nine champions' worth of room on a
+roster that currently holds three — the portraits for ten more are already
+fetched and on the ledger.
 
 ## Run this next
 
@@ -116,7 +132,7 @@ MIME type for `.js` works exactly as well — core `fetch`es the manifest and
   (`_[QWER]\d+$`), so a loadout screen cannot hand anyone Bijuudama as a
   free pick.
 - `spells/` — one file per ability plus the `SpellObject`s each one spawns,
-  which is why thirty files back fourteen abilities. A charged ability is
+  which is why thirty-six files back eighteen abilities. A charged ability is
   typically three (charge, projectile, aftermath) because the phases outlive
   each other.
 - `spells/index.ts` — the barrel. Adding a spell means adding one line here

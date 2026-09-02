@@ -30,6 +30,8 @@ import { spellCatalog } from '../generated/spellCatalog';
 import { E_DURATION_MS as SAGE_MS, E_COOLDOWN_MS as SAGE_CD } from '../spells/Naruto_E';
 import { W_LIFETIME_MS, W_COOLDOWN_MS } from '../spells/Naruto_W';
 import { E_DURATION_MS as SHARINGAN_MS, E_COOLDOWN_MS as SHARINGAN_CD } from '../spells/Sasuke_E';
+import { W_DURATION_MS as SAND_SHIELD_MS, W_COOLDOWN_MS as SAND_SHIELD_CD } from '../spells/Gaara_W';
+import { E_CROSSING_MS as SAND_WAVE_MS, E_COOLDOWN_MS as SAND_WAVE_CD } from '../spells/Gaara_E';
 import Naruto_Q from '../spells/Naruto_Q';
 import Sasuke_E2 from '../spells/Sasuke_E2';
 
@@ -51,6 +53,8 @@ describe('a timed effect is shorter than its own cooldown', () => {
     ['Sennin Mōdo', SAGE_MS, SAGE_CD],
     ['Kage Bunshin', W_LIFETIME_MS, W_COOLDOWN_MS],
     ['Sharingan', SHARINGAN_MS, SHARINGAN_CD],
+    ['Suna no Tate', SAND_SHIELD_MS, SAND_SHIELD_CD],
+    ['Suna Nami', SAND_WAVE_MS, SAND_WAVE_CD],
   ])('%s is down for longer than it is up', (_name, durationMs, coolDownMs) => {
     expect(durationMs).toBeLessThan(coolDownMs / 2 + 1);
   });

@@ -35,6 +35,19 @@ export const RANGE_BAND = Object.freeze({
   UPGRADED: 500,
   GRAB: 560,
   ULTIMATE_LINE: 650,
+
+  /**
+   * How far a *placed* structure may be put from the caster.
+   *
+   * Deliberately the shortest reach in the pack and deliberately its own slot
+   * rather than a share of `ABILITY`: a wall dropped at skillshot range is a
+   * tool for cutting off a fight somebody else is having, which is a
+   * different — and much stronger — ability than one that shapes the ground
+   * around its own caster. Short enough that placing it means committing to
+   * where he is standing.
+   */
+  PLACED: 300,
+
 });
 
 /**

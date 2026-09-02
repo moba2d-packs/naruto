@@ -19,13 +19,24 @@ import Naruto_Q, { Q_RANGE } from '../spells/Naruto_Q';
 import { Q2_RANGE } from '../spells/Naruto_Q2';
 import { W2_RANGE } from '../spells/Naruto_W2';
 import { E2_RANGE } from '../spells/Naruto_E2';
+import { Q_RANGE as GAARA_Q_RANGE } from '../spells/Gaara_Q';
+import { E_TRAVEL as GAARA_E_TRAVEL } from '../spells/Gaara_E';
+import { R_RANGE as GAARA_R_RANGE } from '../spells/Gaara_R';
 
 /** The widest anything in this pack may reach. See the header. */
 const CEILING = RANGE_BAND.ULTIMATE_LINE;
 
 describe('spell ranges', () => {
   it('keeps every aimed ability inside the band', () => {
-    const overshot = Object.entries({ Q_RANGE, Q2_RANGE, W2_RANGE, E2_RANGE }).filter(
+    const overshot = Object.entries({
+      Q_RANGE,
+      Q2_RANGE,
+      W2_RANGE,
+      E2_RANGE,
+      GAARA_Q_RANGE,
+      GAARA_E_TRAVEL,
+      GAARA_R_RANGE,
+    }).filter(
       ([, range]) => range > CEILING
     );
     expect(overshot).toEqual([]);
@@ -38,6 +49,9 @@ describe('spell ranges', () => {
     expect(Q2_RANGE).toBe(RANGE_BAND.UPGRADED);
     expect(W2_RANGE).toBe(RANGE_BAND.GRAB);
     expect(E2_RANGE).toBe(RANGE_BAND.ULTIMATE_LINE);
+    expect(GAARA_Q_RANGE).toBe(RANGE_BAND.ABILITY);
+    expect(GAARA_E_TRAVEL).toBe(RANGE_BAND.PLACED);
+    expect(GAARA_R_RANGE).toBe(RANGE_BAND.ULTIMATE_LINE);
   });
 
   it('orders the band the way the abilities are meant to feel', () => {
@@ -46,6 +60,9 @@ describe('spell ranges', () => {
     expect(RANGE_BAND.UPGRADED).toBeGreaterThan(RANGE_BAND.ABILITY);
     expect(RANGE_BAND.GRAB).toBeGreaterThan(RANGE_BAND.UPGRADED);
     expect(RANGE_BAND.ULTIMATE_LINE).toBeGreaterThan(RANGE_BAND.GRAB);
+    // A placed structure is the shortest reach in the pack: it shapes the
+    // ground its caster is standing on, not a fight somebody else is having.
+    expect(RANGE_BAND.PLACED).toBeLessThan(RANGE_BAND.ABILITY);
   });
 
   it('has the ability declare the range the HUD ring draws', () => {
