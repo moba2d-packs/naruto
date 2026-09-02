@@ -336,6 +336,23 @@ describe('Chakra no Mesu (E) — one line, and it opens somebody up', () => {
     expect(victim.stats.health.value).toBe(100 - E_DAMAGE);
   });
 
+  it('cuts a body well inside the arc, not only one out at its edge', () => {
+    // The hitbox is a **sector**: the blade damages everything it passed
+    // over, at any distance inside the reach. Pinned because the drawing
+    // disagreed with it — the first version painted only the crescent at
+    // `E_REACH`, and a player read the picture correctly and the ability
+    // wrongly: "tưởng chỉ gây damage ở đường tròn, ko biết gây damage cả
+    // trong hình quạt". Narrowing the damage to that line is a legitimate
+    // redesign; doing it by accident is not, and this is what stops it.
+    const caster = champion(game, 0, 'blue');
+    const close = unit(game, 60, 'red', 25);
+    indexObjects(game, [caster, close]);
+
+    pressSpell(new Sakura_E(caster), { caster, at: { x: 300, y: 0 } });
+    run(inWorld(Sakura_E_Scalpel), E_WINDUP_MS + E_SWEEP_MS + 16);
+    expect(close.stats.health.value).toBeLessThanOrEqual(100 - E_DAMAGE);
+  });
+
   it('leaves alone somebody standing behind her', () => {
     const caster = champion(game, 0, 'blue');
     const behind = unit(game, -120, 'red');

@@ -208,9 +208,23 @@ export class Sakura_E_Scalpel extends api.SpellObject {
     const alpha = 1 - leaving;
     const edge = this.lastAngle;
 
-    // CLIMAX and DISSIPATION: the cut it has already made, kept on screen as
-    // a thin crescent so the player can see how far the arc actually reached
-    // — and the live edge, which is the only bright thing in the effect.
+    // CLIMAX and DISSIPATION.
+    //
+    // **The filled wedge is the ability, and it is what was missing.** The
+    // first version drew only the crescent at the outer radius, and a player
+    // reported exactly what that picture says: "tưởng chỉ gây damage ở đường
+    // tròn, ko biết gây damage cả trong hình quạt". The cut damages
+    // *everything the blade passed over* — every body inside the swept
+    // sector, at any distance — so the sector is what has to be on screen.
+    // A stroke at the far edge draws the reach and hides the area.
+    //
+    // It fills in *behind* the blade, from the starting edge to wherever the
+    // edge is now, so the shape is never a promise: it is a record of what
+    // has already been cut.
+    noStroke();
+    fill(96, 214, 160, 52 * alpha);
+    this.sector(-E_HALF_ANGLE, edge, E_REACH);
+
     // Mint, not white. The first shot of this in the real renderer came out
     // as a plain white slash: `(200, 255, 224)` at three pixels reads as
     // white on a dark floor, and the green underlayer was too thin to
@@ -224,6 +238,12 @@ export class Sakura_E_Scalpel extends api.SpellObject {
     stroke(126, 245, 190, 245 * alpha);
     strokeWeight(3);
     this.crescent(-E_HALF_ANGLE, edge, E_REACH * 0.97);
+
+    // The straight edge the cut opened from. Without it the wedge has one
+    // boundary drawn and two guessed.
+    stroke(126, 245, 190, 190 * alpha);
+    strokeWeight(2);
+    line(0, 0, Math.cos(-E_HALF_ANGLE) * E_REACH, Math.sin(-E_HALF_ANGLE) * E_REACH);
 
     if (swept < 1) {
       stroke(34, 122, 88, 225);
@@ -248,6 +268,24 @@ export class Sakura_E_Scalpel extends api.SpellObject {
     }
 
     pop();
+  }
+
+  /**
+   * The wedge the blade has already swept — apex, arc, back to apex.
+   *
+   * This is the hitbox. `sweep()` damages a body when its angle falls between
+   * two edges and its distance is inside the reach, which is a *sector* and
+   * not a line, and this is the only thing on screen that says so.
+   */
+  private sector(from: number, to: number, radius: number): void {
+    beginShape();
+    vertex(0, 0);
+    const steps = 14;
+    for (let step = 0; step <= steps; step++) {
+      const at = from + ((to - from) * step) / steps;
+      vertex(Math.cos(at) * radius, Math.sin(at) * radius);
+    }
+    endShape(CLOSE);
   }
 
   /** The arc the blade has covered so far, at the radius it really reaches. */
