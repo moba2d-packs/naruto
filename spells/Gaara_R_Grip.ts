@@ -11,6 +11,15 @@ export const GRIP_CRUSH_DAMAGE = 24;
 /** How long the sand hangs in the air after the crush, before it falls. */
 export const GRIP_FALL_MS = 420;
 export const GRIP_RADIUS = 62;
+/**
+ * How long the jaws take to come out of the ground.
+ *
+ * They used to be at full size on frame one, which is the other half of "ko
+ * có transition": the wave vanished and the spikes were simply *there*. The
+ * rise overlaps the wave's collapse, so the hand-off is one continuous
+ * motion rather than two events.
+ */
+export const GRIP_RISE_MS = 200;
 
 /**
  * The sand that has hold of somebody, and then closes.
@@ -115,25 +124,31 @@ export class Gaara_R_Grip extends api.SpellObject {
       // the whole root, so the enemy team can read how long is left from the
       // picture rather than from a buff icon nobody is looking at.
       const closing = windIn(holding);
+      // Rising out of the ground, overlapping the wave's collapse — the two
+      // together are one motion, which is what "smooth" actually means here.
+      const risen = snapOut(clamp01(this.ageMs / GRIP_RISE_MS));
       noStroke();
-      fill(150, 116, 66, 120 + 70 * closing);
-      circle(centre.x, centre.y, GRIP_RADIUS * 2 * (0.6 + 0.25 * closing));
+      fill(150, 116, 66, (120 + 70 * closing) * risen);
+      circle(centre.x, centre.y, GRIP_RADIUS * 2 * (0.6 + 0.25 * closing) * (0.35 + 0.65 * risen));
 
       for (const jaw of this.jaws) {
         // Motion agreeing with the effect: everything travels inward,
         // because the ability is closing on them.
+        // Still buried while `risen` is low: the jaws come *up* through the
+        // floor before they close, so there is no frame where they pop in.
         const reach = GRIP_RADIUS * (1.55 - 0.62 * closing) * jaw.length;
+        const emerged = risen;
         const baseX = centre.x + Math.cos(jaw.angle) * reach;
         const baseY = centre.y + Math.sin(jaw.angle) * reach;
         const tipX = centre.x + Math.cos(jaw.angle + jaw.lean) * reach * 0.42;
         const tipY = centre.y + Math.sin(jaw.angle + jaw.lean) * reach * 0.42;
-        const width = 8 + jaw.length * 5;
+        const width = (8 + jaw.length * 5) * (0.4 + 0.6 * emerged);
         const nx = -Math.sin(jaw.angle) * width;
         const ny = Math.cos(jaw.angle) * width;
 
-        fill(74, 52, 26, 225);
+        fill(74, 52, 26, 225 * emerged);
         triangle(baseX - nx, baseY - ny, baseX + nx, baseY + ny, tipX, tipY);
-        fill(206, 174, 116, 235);
+        fill(206, 174, 116, 235 * emerged);
         triangle(
           baseX - nx * 0.55,
           baseY - ny * 0.55,

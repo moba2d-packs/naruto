@@ -20,7 +20,7 @@ import Gaara_E, {
 } from '../spells/Gaara_E';
 import Gaara_R, { R_CRUSH_DAMAGE, R_TOTAL_DAMAGE, R_TRAVEL_MS } from '../spells/Gaara_R';
 import { GRIP_TICK_DAMAGE, GRIP_TICK_MS, Gaara_R_Grip } from '../spells/Gaara_R_Grip';
-import { Gaara_R_Surge } from '../spells/Gaara_R_Surge';
+import { Gaara_R_Surge, SURGE_COLLAPSE_MS } from '../spells/Gaara_R_Surge';
 import { champion, indexObjects, unit } from './_units';
 
 /**
@@ -426,6 +426,22 @@ describe('Sabaku Sōsō (R) — the sand crosses the ground first', () => {
     return surge;
   };
 
+  /**
+   * Advance to the frame the wave lands and stop there.
+   *
+   * Driving a fixed number of frames instead is how the first cut of these
+   * assertions failed: the wave landed, collapsed on schedule and was gone
+   * again well before the loop ended, so "it vanished on the landing frame"
+   * and "it finished its collapse" looked identical.
+   */
+  const advanceToCatch = (surge: Gaara_R_Surge): number => {
+    for (let frame = 0; frame < 200; frame++) {
+      tick([surge], 16);
+      if (inWorld(Gaara_R_Grip).length > 0) return frame;
+    }
+    throw new Error('the wave never caught anybody');
+  };
+
   it('sends a wave rather than simply happening to somebody', () => {
     // The report this ability was rebuilt from: "instant quá, ko có animation
     // gì bay từ Gaara tới kẻ địch, địch ko né đc". There is now a thing in
@@ -456,6 +472,52 @@ describe('Sabaku Sōsō (R) — the sand crosses the ground first', () => {
 
     expect(victim.buffs.some(buff => buff instanceof api.buffs.Root)).toBe(true);
     expect(inWorld(Gaara_R_Grip)).toHaveLength(1);
+  });
+
+  it('does not vanish on the frame it lands', () => {
+    // `docs/VFX_STANDARD.md`'s dissipation rule, and the exact thing that was
+    // reported: the wave used to set `toRemove` on the landing frame — the
+    // `MissileSpellObject` default — so the sand stopped existing and the
+    // grip's jaws replaced it in one frame with nothing in between.
+    const caster = champion(game, 0, 'blue');
+    const victim = unit(game, 200, 'red');
+    indexObjects(game, [caster, victim]);
+
+    const surge = surgeFrom(caster, { x: 600, y: 0 });
+    advanceToCatch(surge);
+
+    expect(inWorld(Gaara_R_Grip)).toHaveLength(1);
+    expect(surge.toRemove, 'the wave has to outlive its own hit').toBe(false);
+  });
+
+  it('collapses onto the body it caught, then goes', () => {
+    const caster = champion(game, 0, 'blue');
+    const victim = unit(game, 200, 'red');
+    indexObjects(game, [caster, victim]);
+
+    const surge = surgeFrom(caster, { x: 600, y: 0 });
+    advanceToCatch(surge);
+    expect(surge.toRemove).toBe(false);
+
+    // It sits on the victim while it slumps, rather than sailing on past.
+    expect(surge.position.x).toBeCloseTo(victim.position.x, 0);
+
+    tick([surge], SURGE_COLLAPSE_MS + 1);
+    expect(surge.toRemove).toBe(true);
+  });
+
+  it('stops travelling once it has hold of somebody', () => {
+    const caster = champion(game, 0, 'blue');
+    const victim = unit(game, 200, 'red');
+    indexObjects(game, [caster, victim]);
+
+    const surge = surgeFrom(caster, { x: 600, y: 0 });
+    advanceToCatch(surge);
+    const landed = surge.position.x;
+
+    tick([surge], 16);
+    tick([surge], 16);
+    expect(surge.position.x).toBeCloseTo(landed, 0);
   });
 
   it('takes one person, not the whole line', () => {

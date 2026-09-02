@@ -1,6 +1,6 @@
 import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
-import { SIGHT } from '../spellVfx';
+import { SIGHT, clamp01, impactBurst, snapOut } from '../spellVfx';
 import { Gaara_R_Grip } from './Gaara_R_Grip';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
@@ -9,6 +9,20 @@ const QRectangle = api.utils.Quadtree.Rectangle;
 const QUARTER_TURN = Math.PI / 2;
 
 export const SURGE_SPEED = 7.5;
+/**
+ * How long the wave takes to collapse onto whoever it caught.
+ *
+ * It used to be zero: `removeOnMaxHit` defaults true, so the surge set
+ * `toRemove` on the very frame it landed and the sand simply stopped
+ * existing, with the grip's jaws appearing at full size in its place.
+ * Reported as "lúc chạm mục tiêu lại biến mất, rồi những cái gai hiện ngay
+ * luôn, ko có transition" — the dissipation phase missing, which
+ * `docs/VFX_STANDARD.md` says is always the one that gets skipped.
+ *
+ * The two effects now overlap: the wave slumps into the body over this
+ * window while the grip rises out of it, so there is no frame with neither.
+ */
+export const SURGE_COLLAPSE_MS = 280;
 /**
  * The wave's width, which is also its hitbox: `MissileSpellObject` collides on
  * a circle of `size / 2`. Widened from 74 for the same reason the art was
@@ -51,6 +65,11 @@ export class Gaara_R_Surge extends api.MissileSpellObject {
   /** The wave itself hurts nobody. Everything it is worth happens in the grip. */
   damage = 0;
   maxHitCount = 1;
+  /**
+   * The wave outlives its own hit. `MissileSpellObject` would otherwise mark
+   * it removed on the landing frame — see `SURGE_COLLAPSE_MS`.
+   */
+  removeOnMaxHit = false;
 
   /** It runs along the ground it is crossing, so it lights that ground. */
   visionRadius = SIGHT.IMPACT;
@@ -77,6 +96,7 @@ export class Gaara_R_Surge extends api.MissileSpellObject {
 
   onAdded(): void {
     super.onAdded();
+    this.useParticles(this.burst);
     for (let i = 0; i < 13; i++) {
       const across = -1 + (2 * (i + 0.5)) / 13;
       this.ridges.push({
@@ -102,12 +122,46 @@ export class Gaara_R_Surge extends api.MissileSpellObject {
     }
   }
 
+  /** When the wave caught somebody, in its own ms. `null` while still flying. */
+  private caughtAtMs: number | null = null;
+  private caught: AttackableUnit | null = null;
+
+  private burst = api.helpers.PredefinedParticleSystems.randomMovingParticlesDecreaseSize(
+    'rgba(214, 184, 128, 0.92)',
+    0.45
+  );
+
   update(): void {
-    super.update();
+    // Once it has hold of somebody it stops being a missile: no more travel,
+    // no more collision scanning, just the collapse. Driving the base class
+    // past the catch would walk the sand off the body it caught.
+    if (this.caughtAtMs === null) super.update();
     this.ageMs += deltaTime;
+
+    if (this.caughtAtMs === null) return;
+    const victim = this.caught;
+    // It sits on whoever it took, even if something else displaces them.
+    if (victim && !victim.toRemove) this.position.set(victim.position.x, victim.position.y);
+    if (this.ageMs - this.caughtAtMs >= SURGE_COLLAPSE_MS) this.toRemove = true;
+  }
+
+  /** 0 while flying, 0..1 across the collapse. Drives every value in `draw`. */
+  private get collapse(): number {
+    if (this.caughtAtMs === null) return 0;
+    return clamp01((this.ageMs - this.caughtAtMs) / SURGE_COLLAPSE_MS);
   }
 
   onHit(target: AttackableUnit): void {
+    this.caughtAtMs = this.ageMs;
+    this.caught = target;
+    this.position.set(target.position.x, target.position.y);
+
+    // The catch has to show **on the victim**. Without this the only evidence
+    // the wave connected was a buff icon, which is not a thing anybody reads
+    // mid-fight — the standard's third rule, and the half of "no transition"
+    // that redrawing the wave could not have fixed.
+    impactBurst(this.burst, target.position, 18, 34, 14);
+
     // The wave arrives and becomes the grip. Nothing is dealt here: the
     // damage, the root and the crush all belong to the thing that holds them.
     const grip = new Gaara_R_Grip(this.owner);
@@ -167,15 +221,23 @@ export class Gaara_R_Surge extends api.MissileSpellObject {
   draw(): void {
     const half = this.size / 2;
     const roll = this.ageMs / 95;
+    // The collapse: the wave loses its speed lines first, then slumps forward
+    // into the body and fades. `snapOut` so it arrives hard and settles,
+    // which is what a mass of sand hitting somebody does.
+    const shut = snapOut(this.collapse);
+    const alive = 1 - this.collapse;
 
     push();
     translate(this.position.x, this.position.y);
     rotate(this.heading());
+    // Sinking into the victim rather than shrinking on the spot: the sand is
+    // going somewhere, and where it is going is *onto them*.
+    scale(1 - shut * 0.34);
 
     // Speed lines, behind. One layer, low alpha: they say "fast" and nothing
     // else, so they must not compete with the crest for attention.
     noStroke();
-    fill(165, 129, 63, 55);
+    fill(165, 129, 63, 55 * (1 - shut));
     for (const streak of this.streaks) {
       const length = half * streak.length;
       rect(-half * 0.5 - length, streak.side * half * 0.6 - 2, length, 4, 2);
@@ -188,7 +250,7 @@ export class Gaara_R_Surge extends api.MissileSpellObject {
       [1, [107, 80, 39]],
       [0.82, [165, 129, 63]],
     ] as const) {
-      fill(colour[0], colour[1], colour[2], 235);
+      fill(colour[0], colour[1], colour[2], 235 * alive);
       beginShape();
       for (let i = 0; i <= 24; i++) {
         const across = -1 + (2 * i) / 24;
@@ -208,7 +270,7 @@ export class Gaara_R_Surge extends api.MissileSpellObject {
       const drift = (grain.back + ((roll * 0.12 + grain.phase) % 1) * 0.35) % 1;
       const x = half * 0.2 - drift * half * 2.6;
       const y = grain.side * half * 1.7 * (1 - drift * 0.4);
-      fill(216, 188, 134, 205 * (1 - drift * 0.65));
+      fill(216, 188, 134, 205 * (1 - drift * 0.65) * alive);
       circle(x, y, grain.size * (1 - drift * 0.45) * 2);
     }
 
@@ -217,16 +279,16 @@ export class Gaara_R_Surge extends api.MissileSpellObject {
     for (const ridge of this.ridges) {
       const root = this.crest(ridge.across);
       const churn = 0.78 + 0.22 * Math.sin(roll + ridge.phase);
-      const length = half * 0.68 * ridge.height * churn;
+      const length = half * 0.68 * ridge.height * churn * (1 - shut * 0.55);
       const width = half * ridge.width;
       const tipX = root.x + length;
       const tipY = root.y + ridge.lean * length;
 
       // A dark rim under *each* ridge rather than around the group, or the
       // whole front merges into one blob at a glance.
-      fill(61, 43, 18, 235);
+      fill(61, 43, 18, 235 * alive);
       triangle(root.x - width * 0.2, root.y - width, root.x - width * 0.2, root.y + width, tipX, tipY);
-      fill(205, 170, 112, 240);
+      fill(205, 170, 112, 240 * alive);
       triangle(
         root.x - width * 0.2,
         root.y - width * 0.58,
@@ -243,7 +305,7 @@ export class Gaara_R_Surge extends api.MissileSpellObject {
     // guessing wrong every time the tallest one happened to be short.
     // Thin, so it says where the edge is without competing with the crest.
     noFill();
-    stroke(58, 42, 18, 150);
+    stroke(58, 42, 18, 150 * (1 - this.collapse * 0.5));
     strokeWeight(2);
     arc(0, 0, this.size, this.size, -QUARTER_TURN * 1.15, QUARTER_TURN * 1.15);
     noStroke();
