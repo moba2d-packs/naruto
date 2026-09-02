@@ -27,6 +27,7 @@ import Sasuke_E, { E_REVEAL_RADIUS, REVEAL_STACK_ID } from '../spells/Sasuke_E';
 import { E2_SPEED, Sasuke_E2_Object } from '../spells/Sasuke_E2';
 import { Sasuke_E2_Trace } from '../spells/Sasuke_E2_Trace';
 import { Sasuke_E_Sweep } from '../spells/Sasuke_E_Sweep';
+import { SharinganEye } from '../spells/Sasuke_E_Eye';
 import { Q_SPEED as NARUTO_Q_SPEED } from '../spells/Naruto_Q';
 import { Q2_SPEED as NARUTO_Q2_SPEED } from '../spells/Naruto_Q2';
 import { E2_SPEED as NARUTO_E2_SPEED } from '../spells/Naruto_E2';
@@ -331,6 +332,31 @@ describe('Sharingan shows how far it looked', () => {
     pressSpell(caster.spells[SLOT.E]);
 
     expect(inWorld(Sasuke_E_Sweep)[0].visionAnchor).toBe(caster);
+  });
+
+  it('hides the eye behind the same fog', () => {
+    // Both halves of the ability's art, not one. The eye is the smaller of
+    // the two and the easier to forget, and a spinning red disc on an
+    // invisible champion is the same tell as the ring.
+    const caster = sasuke();
+    indexObjects(game, [caster]);
+    pressSpell(caster.spells[SLOT.E]);
+
+    expect(inWorld(SharinganEye)[0].visionAnchor).toBe(caster);
+  });
+
+  it('gives the caster away no more than a skillshot would', () => {
+    // The rule that *would* light him: `combat/AttackReveal.ts` reveals a
+    // champion who unit-targets somebody out of the fog, keyed on a resolved
+    // `CastContext.target`. A `SELF` cast resolves none — measured here
+    // rather than assumed, because "does my own buff give me away" is the
+    // question a player asks about every self-cast in the game.
+    const caster = sasuke();
+    indexObjects(game, [caster]);
+
+    pressSpell(caster.spells[SLOT.E]);
+
+    expect(caster.isRevealed).toBe(false);
   });
 });
 
