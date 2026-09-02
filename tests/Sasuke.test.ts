@@ -23,7 +23,7 @@ import {
   BLAZE_TICK_MS,
   Sasuke_W_Blaze,
 } from '../spells/Sasuke_W_Blaze';
-import Sasuke_E, { E_REVEAL_RADIUS } from '../spells/Sasuke_E';
+import Sasuke_E, { E_REVEAL_RADIUS, REVEAL_STACK_ID } from '../spells/Sasuke_E';
 import Sasuke_R, { R_CHAKRA_PER_SECOND, R_SHIELD, SUSANOO_STANCE } from '../spells/Sasuke_R';
 import { basicAttackStub, champion, indexObjects, unit } from './_units';
 
@@ -215,6 +215,63 @@ describe('Sharingan', () => {
 
     for (let step = 0; step < 8; step++) advance(caster, 1_000);
     expect(caster.stats.attackSpeed.value).toBe(before);
+  });
+});
+
+describe('who Sharingan actually reveals', () => {
+  // Asked from a real match: "lộ mọi tướng địch... đang khiến sasuke cũng bị
+  // lộ luôn??" The reveal is one-directional and this is the measurement that
+  // says so — the alternative was believing either answer.
+  const cast = () => {
+    const caster = sasuke();
+    const enemy = champion(game, 400, 'red');
+    const friend = champion(game, 300, 'blue');
+    indexObjects(game, [caster, enemy, friend]);
+    pressSpell(caster.spells[SLOT.E]);
+    return { caster, enemy, friend };
+  };
+
+  const revealed = (unit: { buffs: { name: string }[] }): boolean =>
+    unit.buffs.some(buff => buff.name === 'Lộ Diện');
+
+  it('lights the enemy', () => {
+    expect(revealed(cast().enemy)).toBe(true);
+  });
+
+  it('does not light Sasuke himself', () => {
+    expect(revealed(cast().caster)).toBe(false);
+  });
+
+  it('does not light his own team either', () => {
+    expect(revealed(cast().friend)).toBe(false);
+  });
+
+  it('puts the sight on the enemy and gives it to Sasuke’s team', () => {
+    // The direction lives in one field: `TrueSight` stands a vision source at
+    // the *target's* position carrying the *source's* team. Swap that and the
+    // ability would hand the enemy a free eye on themselves.
+    const { caster, enemy } = cast();
+    const eyes = (
+      inWorld(buildTestApi().GameObject as never) as unknown as {
+        visionRadius?: number;
+        teamId: string;
+        position: { x: number };
+      }[]
+    ).filter(candidate => (candidate.visionRadius ?? 0) > 0);
+    expect(eyes).toHaveLength(1);
+    expect(eyes[0].teamId).toBe(caster.teamId);
+    expect(Math.round(eyes[0].position.x)).toBe(Math.round(enemy.position.x));
+  });
+
+  it('reveals from a slot of its own', () => {
+    // `TrueSight` is REPLACE_EXISTING and `addBuff` groups by `stackId`, so a
+    // reveal on the default id contends with every other reveal in the game —
+    // core measured four spells cutting each other short over one slot. This
+    // file used to build `TrueSight` directly and opt out of the question.
+    expect(REVEAL_STACK_ID).toBeTruthy();
+    const { enemy } = cast();
+    const lit = enemy.buffs.find(buff => buff.name === 'Lộ Diện');
+    expect(lit?.stackId).toBe(REVEAL_STACK_ID);
   });
 });
 

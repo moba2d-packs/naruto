@@ -23,6 +23,19 @@ export const E_SPEED_PERCENT = 0.2;
 export const E_COOLDOWN_MS = 10_000;
 export const E_CHAKRA = 50;
 
+/**
+ * Sharingan's own reveal slot.
+ *
+ * `AttackableUnit.addBuff` groups by `stackId`, and `TrueSight` is
+ * `REPLACE_EXISTING` — so every reveal left on the default id contends for one
+ * slot. Core measured that with four spells sharing it: a short reveal cut a
+ * long one short, and `hudState.buildBuffs` folded them into a single row
+ * wearing whichever icon arrived first. `createReveal` exists to make the
+ * compiler ask for the slot; this file was constructing `TrueSight` directly
+ * and had quietly opted out of the question.
+ */
+export const REVEAL_STACK_ID = 'sasuke_e_reveal';
+
 export class SharinganSight extends api.buffs.Buff {
   name = 'Sharingan';
   image = api.asset('spell_sasuke_e');
@@ -80,9 +93,15 @@ export default class Sasuke_E extends api.Spell {
     }) as AttackableUnit[];
 
     for (const target of seen) {
-      const lit = new api.buffs.TrueSight(E_DURATION_MS, this.owner, target);
-      lit.image = this.image;
-      target.addBuff(lit);
+      target.addBuff(
+        api.buffs.createReveal({
+          stackId: REVEAL_STACK_ID,
+          durationMs: E_DURATION_MS,
+          source: this.owner,
+          target,
+          image: this.image,
+        })
+      );
     }
   }
 }

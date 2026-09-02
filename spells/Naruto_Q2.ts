@@ -1,6 +1,12 @@
-import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
+import type {
+  AttackableUnit,
+  CastContext,
+  CastSpec,
+  Rectangle,
+} from '@moba2d/core/content/types';
 import { api } from '../packApi';
 import { RANGE_BAND, chakraTrail, clamp01, impactBurst, snapOut } from '../spellVfx';
+import { Naruto_Q_Charge } from './Naruto_Q_Charge';
 import { Naruto_Q2_Scorch } from './Naruto_Q2_Scorch';
 
 const Circle = api.utils.Quadtree.Circle;
@@ -14,10 +20,43 @@ const QRectangle = api.utils.Quadtree.Rectangle;
  * needed a step and a half of reach now covers a screen and hits everyone
  * standing near where it lands.
  */
-export const Q2_DAMAGE = 34;
+/**
+ * Charged, like the Rasengan it grew out of.
+ *
+ * The base Q is a hold, so the form's Q being a tap made entering Kurama Mode
+ * change how the button *feels* as well as what it does — and the one thing a
+ * form should not do is take an interaction away. Holding it now buys the two
+ * things the throw is actually about: how hard it lands and how far it goes.
+ *
+ * `Q2_DAMAGE` and `Q2_SPLASH_DAMAGE` keep their names as the **floor**, so a
+ * tapped Bijuu Rasengan is still stronger than a fully charged base Rasengan
+ * (48) once its splash lands — `waveclear.test.ts` reads both.
+ */
+export const Q2_DAMAGE = 26;
+export const Q2_MAX_DAMAGE = 46;
 export const Q2_SPLASH_DAMAGE = 22;
+export const Q2_MAX_SPLASH_DAMAGE = 30;
 export const Q2_SPLASH_RADIUS = 150;
+export const Q2_MAX_SPLASH_RADIUS = 190;
+export const Q2_CHARGE_MS = 900;
+/**
+ * The floor and the ceiling of the throw.
+ *
+ * `Q2_RANGE` stays the name the band test reads and stays `UPGRADED`: it is
+ * what the ability *can* reach, which is what a preview draws and what the
+ * bot's `declaredRange` means. A tap falls short of it.
+ */
+export const Q2_MIN_RANGE = RANGE_BAND.ABILITY;
 export const Q2_RANGE = RANGE_BAND.UPGRADED;
+
+export const q2Damage = (ratio: number): number =>
+  Q2_DAMAGE + (Q2_MAX_DAMAGE - Q2_DAMAGE) * clamp01(ratio);
+export const q2Splash = (ratio: number): number =>
+  Q2_SPLASH_DAMAGE + (Q2_MAX_SPLASH_DAMAGE - Q2_SPLASH_DAMAGE) * clamp01(ratio);
+export const q2SplashRadius = (ratio: number): number =>
+  Q2_SPLASH_RADIUS + (Q2_MAX_SPLASH_RADIUS - Q2_SPLASH_RADIUS) * clamp01(ratio);
+export const q2Range = (ratio: number): number =>
+  Q2_MIN_RANGE + (Q2_RANGE - Q2_MIN_RANGE) * clamp01(ratio);
 export const Q2_SPEED = 10;
 export const Q2_COOLDOWN_MS = 8_000;
 export const Q2_CHAKRA = 45;
@@ -27,6 +66,9 @@ export class Naruto_Q2_Object extends api.MissileSpellObject {
   size = 52;
   damage = Q2_DAMAGE;
   maxHitCount = 1;
+  /** Written by the spell on release; the floor is what a tap throws. */
+  splashDamage = Q2_SPLASH_DAMAGE;
+  splashRadius = Q2_SPLASH_RADIUS;
 
   trailSystem = chakraTrail(this.owner, 'rgba(255, 150, 60, 0.45)', 18);
 
@@ -51,7 +93,7 @@ export class Naruto_Q2_Object extends api.MissileSpellObject {
 
   /** Paints well past its own centre, so the culling box has to say so. */
   getDisplayBoundingBox(): Rectangle {
-    const reach = Q2_SPLASH_RADIUS;
+    const reach = this.splashRadius;
     return new QRectangle({
       x: this.position.x - reach,
       y: this.position.y - reach,
@@ -67,7 +109,7 @@ export class Naruto_Q2_Object extends api.MissileSpellObject {
   onHit(target: AttackableUnit): void {
     target.takeDamage(this.damage, this.owner);
     this.blastAgeMs = 0;
-    impactBurst(this.burst, target.position, 22, Q2_SPLASH_RADIUS * 0.55, 15);
+    impactBurst(this.burst, target.position, 22, this.splashRadius * 0.55, 15);
     this.detonate(target);
   }
 
@@ -101,14 +143,14 @@ export class Naruto_Q2_Object extends api.MissileSpellObject {
     // how wide it reached is a damage number.
     const scorch = new Naruto_Q2_Scorch(this.owner);
     scorch.position.set(this.position.x, this.position.y);
-    scorch.radius = Q2_SPLASH_RADIUS;
+    scorch.radius = this.splashRadius;
     this.game.objectManager.addObject(scorch);
 
     const caught = this.game.objectManager.queryObjects({
       area: new Circle({
         x: this.position.x,
         y: this.position.y,
-        r: Q2_SPLASH_RADIUS,
+        r: this.splashRadius,
       }),
       // No vision filter: this is an area that detonates over whatever it
       // overlaps, so a champion standing in an unlit bush inside the blast
@@ -117,7 +159,7 @@ export class Naruto_Q2_Object extends api.MissileSpellObject {
     }) as AttackableUnit[];
     for (const unit of caught) {
       if (unit === struck) continue;
-      unit.takeDamage(Q2_SPLASH_DAMAGE, this.owner);
+      unit.takeDamage(this.splashDamage, this.owner);
       // Every unit the splash reached gets its own mark. Grit at the centre
       // would say "something exploded"; grit on each victim says who it hit.
       impactBurst(this.burst, unit.position, 8, 22, 10);
@@ -164,21 +206,75 @@ export default class Naruto_Q2 extends api.Spell {
   name = 'Bijuu Rasengan';
   image = api.asset('spell_naruto_q2');
   description =
-    'Ném khối chakra vĩ thú, gây <span class="damage magic">34</span> sát thương lên mục ' +
-    'tiêu trúng và <span class="damage magic">22</span> cho kẻ địch xung quanh.';
+    `Giữ để nén khối chakra vĩ thú, thả ra ném đi. Gây ` +
+    `<span class="damage magic">${Q2_DAMAGE}–${Q2_MAX_DAMAGE}</span> sát thương lên mục ` +
+    `tiêu trúng và <span class="damage magic">${Q2_SPLASH_DAMAGE}–${Q2_MAX_SPLASH_DAMAGE}</span> ` +
+    `cho kẻ địch xung quanh. Nén càng lâu, <span class="buff">càng mạnh và càng xa</span>.`;
   coolDown = Q2_COOLDOWN_MS;
   manaCost = Q2_CHAKRA;
-  targetingMode = 'DIRECTION' as const;
   range = Q2_RANGE;
 
-  onSpellCast(): void {
+  private forming: Naruto_Q_Charge | null = null;
+  private ratio = 0;
+
+  get castSpec(): Readonly<CastSpec> {
+    return {
+      activation: 'HOLD_RELEASE',
+      targeting: 'DIRECTION',
+      castTimeMs: 0,
+      // `releaseAtMax: true` — the runtime throws it at full charge rather
+      // than cancelling, which is also what lets a bot hold to the top
+      // safely. See `Spell.aiChargeReleaseAtMs`.
+      charge: { maxDurationMs: Q2_CHARGE_MS, releaseAtMax: true },
+      resource: { commitAt: 'release', refundOn: ['STUN', 'SILENCE', 'DEATH', 'PLAYER_CANCEL'] },
+      cooldown: { startAt: 'release', durationMs: Q2_COOLDOWN_MS },
+      interrupts: api.enums.SpellForm.AIMED,
+    };
+  }
+
+  onCastStart(): void {
+    this.ratio = 0;
+    const forming = new Naruto_Q_Charge(this.owner);
+    forming.maxRadius = 34;
+    forming.attachTo(this.owner);
+    this.forming = forming;
+    this.game.objectManager.addObject(forming);
+  }
+
+  onChargeUpdate(_context: CastContext, _elapsedMs: number, ratio: number): void {
+    this.ratio = ratio;
+    if (this.forming) this.forming.ratio = ratio;
+  }
+
+  onRelease(): void {
+    const ratio = this.ratio;
+    this.clearForming();
+
     const shot = new Naruto_Q2_Object(this.owner);
+    shot.damage = q2Damage(ratio);
+    shot.splashDamage = q2Splash(ratio);
+    shot.splashRadius = q2SplashRadius(ratio);
     shot.destination = api.utils.VectorUtils.getVectorWithRange(
       this.owner.position,
       this.aimPoint,
-      Q2_RANGE
+      q2Range(ratio)
     ).to;
     this.game.objectManager.addObject(shot);
+  }
+
+  onCancel(): void {
+    this.clearForming();
+  }
+
+  onComplete(): void {
+    this.clearForming();
+  }
+
+  /** Idempotent: a hold can route through release and complete both. */
+  private clearForming(): void {
+    if (!this.forming) return;
+    this.forming.toRemove = true;
+    this.forming = null;
   }
 
   drawPreview(): void {

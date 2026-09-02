@@ -14,6 +14,8 @@ import { Naruto_Q2_Scorch, SCORCH_FADE_MS, SCORCH_GROW_MS, SCORCH_HOLD_MS } from
 import { Naruto_E2_Object } from '../spells/Naruto_E2';
 import { BOOM_GROW_MS, Naruto_E2_Detonation } from '../spells/Naruto_E2_Detonation';
 import { champion, indexObjects, unit } from './_units';
+import Naruto_Q2, { Q2_CHARGE_MS, Q2_RANGE, q2Damage, q2Range } from '../spells/Naruto_Q2';
+import Naruto_E2, { E2_CHARGE_MS, E2_RANGE, e2Damage, e2Range } from '../spells/Naruto_E2';
 
 let game: TestGame;
 
@@ -160,5 +162,47 @@ describe('Bijuudama', () => {
     tick(boom, BOOM_GROW_MS - 30);
 
     expect(bystander.stats.health.baseValue).toBe(before);
+  });
+});
+
+describe('the form’s two thrown abilities charge', () => {
+  /**
+   * The base Q is a hold. Before this, entering Kurama Mode turned it into a
+   * tap — so the form changed how the button *feels* as well as what it does,
+   * and the one thing a form should not do is take an interaction away.
+   *
+   * Both ends are asserted deliberately. A charge that is *required* for the
+   * ability to work at all is not a choice, it is a delay; and a charge that
+   * buys nothing is a wait. So the floor has to be worth pressing and the
+   * ceiling has to be worth holding for.
+   */
+  it.each([
+    ['Bijuu Rasengan', Naruto_Q2, Q2_CHARGE_MS],
+    ['Bijuudama', Naruto_E2, E2_CHARGE_MS],
+  ])('%s is held, not tapped', (_name, spell, windowMs) => {
+    const charge = spell.prototype.castSpec.charge;
+    expect(spell.prototype.castSpec.activation).toBe('HOLD_RELEASE');
+    expect(charge?.maxDurationMs).toBe(windowMs);
+    // Fires at the top rather than cancelling there — which is also what lets
+    // a bot hold to full charge safely. See `Spell.aiChargeReleaseAtMs`.
+    expect(charge?.releaseAtMax).toBe(true);
+  });
+
+  it('buys both power and reach, and reaches no further than the band allows', () => {
+    expect(q2Damage(1)).toBeGreaterThan(q2Damage(0));
+    expect(e2Damage(1)).toBeGreaterThan(e2Damage(0));
+    expect(q2Range(1)).toBeGreaterThan(q2Range(0));
+    expect(e2Range(1)).toBeGreaterThan(e2Range(0));
+    // The ceiling is the band slot the range suite already pins, so a charge
+    // cannot quietly out-reach what the pack says the ability is.
+    expect(q2Range(1)).toBe(Q2_RANGE);
+    expect(e2Range(1)).toBe(E2_RANGE);
+  });
+
+  it('never asks the player to charge just to be usable', () => {
+    // A tapped throw is still a real throw: both floors clear a caster
+    // minion, which `waveclear.test.ts` states in its own terms.
+    expect(q2Damage(0)).toBeGreaterThan(0);
+    expect(e2Damage(0)).toBeGreaterThan(q2Damage(1));
   });
 });

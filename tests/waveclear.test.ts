@@ -16,8 +16,13 @@
  * the thing they have to kill instead of to each other.
  */
 import { describe, expect, it } from 'vitest';
-import { Q2_DAMAGE as NARUTO_Q2, Q2_SPLASH_DAMAGE } from '../spells/Naruto_Q2';
-import { E2_DAMAGE as NARUTO_E2 } from '../spells/Naruto_E2';
+import {
+  Q2_DAMAGE as NARUTO_Q2,
+  Q2_MAX_DAMAGE as NARUTO_Q2_FULL,
+  Q2_MAX_SPLASH_DAMAGE,
+  Q2_SPLASH_DAMAGE,
+} from '../spells/Naruto_Q2';
+import { E2_DAMAGE as NARUTO_E2_TAP, E2_MAX_DAMAGE as NARUTO_E2 } from '../spells/Naruto_E2';
 import { W_DAMAGE as SASUKE_W, W_SPLASH } from '../spells/Sasuke_W';
 import { BLAZE_BURN_MS, BLAZE_TICK_DAMAGE, BLAZE_TICK_MS } from '../spells/Sasuke_W_Blaze';
 import { Q_DAMAGE as SASUKE_Q, Q_SHOCK } from '../spells/Sasuke_Q';
@@ -78,6 +83,14 @@ describe('waveclear', () => {
     expect(chargedDamage(1)).toBeGreaterThan(RANGED);
     expect(NARUTO_Q2 + Q2_SPLASH_DAMAGE).toBeGreaterThan(RANGED);
     expect(NARUTO_E2).toBeGreaterThan(RANGED);
+    // And the *tap* clears too. Both of Naruto's form abilities charge now,
+    // and a charge that is required for the ability to do its job at all is
+    // not a choice, it is a delay — so the floor has to be worth pressing.
+    expect(NARUTO_E2_TAP, 'a tapped Bijuudama still kills a caster').toBeGreaterThan(RANGED);
+    expect(NARUTO_Q2 + Q2_SPLASH_DAMAGE, 'a tapped Bijuu Rasengan too').toBeGreaterThan(RANGED);
+    // Charging is what turns clearing into killing: a full throw pairs the
+    // maximum of both halves, and that is what has to beat a melee minion.
+    expect(NARUTO_Q2_FULL + Q2_MAX_SPLASH_DAMAGE).toBeGreaterThan(MELEE);
   });
 
   it('keeps single-hit numbers inside the band core sets', () => {

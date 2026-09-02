@@ -1,7 +1,13 @@
-import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
+import type {
+  AttackableUnit,
+  CastContext,
+  CastSpec,
+  Rectangle,
+} from '@moba2d/core/content/types';
 import { api } from '../packApi';
-import { RANGE_BAND, chakraTrail, impactBurst } from '../spellVfx';
-import { Naruto_E2_Detonation } from './Naruto_E2_Detonation';
+import { RANGE_BAND, chakraTrail, clamp01, impactBurst } from '../spellVfx';
+import { Naruto_Q_Charge } from './Naruto_Q_Charge';
+import { BOOM_DAMAGE, Naruto_E2_Detonation } from './Naruto_E2_Detonation';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 
@@ -13,10 +19,33 @@ const QRectangle = api.utils.Quadtree.Rectangle;
  * committed shot that ends a fight. It pierces, because a Tailed Beast Bomb
  * stopping at the first minion would be the one thing nobody would believe.
  */
-export const E2_DAMAGE = 55;
+/**
+ * Compressed before it is fired, which is what the anime does with it and
+ * what the base Q already does with a Rasengan.
+ *
+ * The floor is deliberately above a caster minion's 45: a tapped Bijuudama
+ * still clears, so charging is a choice about *how much* rather than a tax on
+ * the ability working at all. `waveclear.test.ts` reads both ends.
+ */
+export const E2_DAMAGE = 48;
+export const E2_MAX_DAMAGE = 78;
+export const E2_MAX_BOOM_DAMAGE = 46;
+export const E2_CHARGE_MS = 1_200;
+/** `E2_RANGE` stays the band slot the range test reads — it is the ceiling. */
+export const E2_MIN_RANGE = RANGE_BAND.UPGRADED;
 export const E2_RANGE = RANGE_BAND.ULTIMATE_LINE;
 export const E2_SPEED = 9;
-export const E2_SIZE = 64;
+export const E2_SIZE = 56;
+export const E2_MAX_SIZE = 72;
+
+export const e2Damage = (ratio: number): number =>
+  E2_DAMAGE + (E2_MAX_DAMAGE - E2_DAMAGE) * clamp01(ratio);
+export const e2Boom = (ratio: number): number =>
+  BOOM_DAMAGE + (E2_MAX_BOOM_DAMAGE - BOOM_DAMAGE) * clamp01(ratio);
+export const e2Size = (ratio: number): number =>
+  E2_SIZE + (E2_MAX_SIZE - E2_SIZE) * clamp01(ratio);
+export const e2Range = (ratio: number): number =>
+  E2_MIN_RANGE + (E2_RANGE - E2_MIN_RANGE) * clamp01(ratio);
 export const E2_COOLDOWN_MS = 9_000;
 export const E2_CHAKRA = 90;
 
@@ -24,6 +53,8 @@ export class Naruto_E2_Object extends api.MissileSpellObject {
   speed = E2_SPEED;
   size = E2_SIZE;
   damage = E2_DAMAGE;
+  /** Written by the spell on release; the floor is what a tap fires. */
+  boomDamage = BOOM_DAMAGE;
   // Pierces everything on the line. Left at the inherited `Infinity` would be
   // the same behaviour, but stating it is what stops a later "sensible
   // default" edit from silently making this a single-target shot.
@@ -48,7 +79,7 @@ export class Naruto_E2_Object extends api.MissileSpellObject {
   }
 
   getDisplayBoundingBox(): Rectangle {
-    const reach = E2_SIZE;
+    const reach = this.size;
     return new QRectangle({
       x: this.position.x - reach,
       y: this.position.y - reach,
@@ -80,6 +111,7 @@ export class Naruto_E2_Object extends api.MissileSpellObject {
     this.landed = true;
     const boom = new Naruto_E2_Detonation(this.owner);
     boom.position.set(this.position.x, this.position.y);
+    boom.damage = this.boomDamage;
     boom.spare = this.pierced;
     this.game.objectManager.addObject(boom);
   }
@@ -109,23 +141,77 @@ export default class Naruto_E2 extends api.Spell {
   name = 'Bijuudama';
   image = api.asset('spell_naruto_e2');
   description =
-    'Nén một quả cầu vĩ thú rồi bắn thẳng, <span class="buff">xuyên qua</span> mọi kẻ địch ' +
-    'trên đường và gây <span class="damage magic">55</span> sát thương. Tới cuối đường quả ' +
-    'cầu <b>phát nổ</b>, gây thêm <span class="damage magic">30</span> cho kẻ địch xung quanh ' +
-    'chưa trúng đòn xuyên.';
+    `Giữ để nén quả cầu vĩ thú, thả ra bắn thẳng. <span class="buff">Xuyên qua</span> mọi kẻ ` +
+    `địch trên đường và gây <span class="damage magic">${E2_DAMAGE}–${E2_MAX_DAMAGE}</span> ` +
+    `sát thương. Tới cuối đường quả cầu <b>phát nổ</b>, gây thêm ` +
+    `<span class="damage magic">${BOOM_DAMAGE}–${E2_MAX_BOOM_DAMAGE}</span> cho kẻ địch xung ` +
+    `quanh chưa trúng đòn xuyên. Nén càng lâu, <span class="buff">càng mạnh và càng xa</span>.`;
   coolDown = E2_COOLDOWN_MS;
   manaCost = E2_CHAKRA;
-  targetingMode = 'DIRECTION' as const;
   range = E2_RANGE;
 
-  onSpellCast(): void {
+  private forming: Naruto_Q_Charge | null = null;
+  private ratio = 0;
+
+  get castSpec(): Readonly<CastSpec> {
+    return {
+      activation: 'HOLD_RELEASE',
+      targeting: 'DIRECTION',
+      castTimeMs: 0,
+      // Fires itself at the top rather than cancelling, which is also what
+      // lets a bot hold to full charge safely — see `Spell.aiChargeReleaseAtMs`.
+      charge: { maxDurationMs: E2_CHARGE_MS, releaseAtMax: true },
+      resource: { commitAt: 'release', refundOn: ['STUN', 'SILENCE', 'DEATH', 'PLAYER_CANCEL'] },
+      cooldown: { startAt: 'release', durationMs: E2_COOLDOWN_MS },
+      interrupts: api.enums.SpellForm.AIMED,
+    };
+  }
+
+  onCastStart(): void {
+    this.ratio = 0;
+    const forming = new Naruto_Q_Charge(this.owner);
+    // Bigger than either Rasengan's: this is the tailed beast's own bomb, and
+    // the thing being compressed should read as the thing that comes out.
+    forming.maxRadius = 40;
+    forming.attachTo(this.owner);
+    this.forming = forming;
+    this.game.objectManager.addObject(forming);
+  }
+
+  onChargeUpdate(_context: CastContext, _elapsedMs: number, ratio: number): void {
+    this.ratio = ratio;
+    if (this.forming) this.forming.ratio = ratio;
+  }
+
+  onRelease(): void {
+    const ratio = this.ratio;
+    this.clearForming();
+
     const bomb = new Naruto_E2_Object(this.owner);
+    bomb.damage = e2Damage(ratio);
+    bomb.boomDamage = e2Boom(ratio);
+    bomb.size = e2Size(ratio);
     bomb.destination = api.utils.VectorUtils.getVectorWithRange(
       this.owner.position,
       this.aimPoint,
-      E2_RANGE
+      e2Range(ratio)
     ).to;
     this.game.objectManager.addObject(bomb);
+  }
+
+  onCancel(): void {
+    this.clearForming();
+  }
+
+  onComplete(): void {
+    this.clearForming();
+  }
+
+  /** Idempotent: a hold can route through release and complete both. */
+  private clearForming(): void {
+    if (!this.forming) return;
+    this.forming.toRemove = true;
+    this.forming = null;
   }
 
   drawPreview(): void {
