@@ -29,6 +29,9 @@ import { R_RANGE as SAKURA_R_RANGE } from '../spells/Sakura_R';
 import { Q_REACH as SHIKA_Q_REACH } from '../spells/Shikamaru_Q';
 import { W_RANGE as SHIKA_W_RANGE } from '../spells/Shikamaru_W';
 import { E_RANGE as SHIKA_E_RANGE } from '../spells/Shikamaru_E';
+import { Q_RANGE as TEMARI_Q_RANGE } from '../spells/Temari_Q';
+import { W_RANGE as TEMARI_W_RANGE } from '../spells/Temari_W';
+import { R_RANGE as TEMARI_R_RANGE } from '../spells/Temari_R';
 
 /** The widest anything in this pack may reach. See the header. */
 const CEILING = RANGE_BAND.ULTIMATE_LINE;
@@ -47,6 +50,9 @@ describe('spell ranges', () => {
       SAKURA_R_RANGE,
       SHIKA_Q_REACH,
       SHIKA_E_RANGE,
+      TEMARI_Q_RANGE,
+      TEMARI_W_RANGE,
+      TEMARI_R_RANGE,
     }).filter(
       ([, range]) => range > CEILING
     );
@@ -70,6 +76,11 @@ describe('spell ranges', () => {
     // A trap is placed, so it takes the placed band — the shortest reach in
     // the pack, for the reason that slot documents.
     expect(SHIKA_W_RANGE).toBe(RANGE_BAND.PLACED);
+    expect(TEMARI_Q_RANGE).toBe(RANGE_BAND.ABILITY);
+    expect(TEMARI_W_RANGE).toBe(RANGE_BAND.ABILITY);
+    // The heaviest ultimate line, and the second ability in the pack to earn
+    // the top of the band — it is the slowest thing anybody throws.
+    expect(TEMARI_R_RANGE).toBe(RANGE_BAND.ULTIMATE_LINE);
   });
 
   it('keeps a melee swing shorter than anything anybody places', () => {

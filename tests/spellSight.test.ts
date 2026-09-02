@@ -53,6 +53,10 @@ import { Shikamaru_Q_Shadow } from '../spells/Shikamaru_Q';
 import { Shikamaru_W_Snare } from '../spells/Shikamaru_W';
 import { Shikamaru_E_Grasp } from '../spells/Shikamaru_E';
 import { Shikamaru_R_Web } from '../spells/Shikamaru_R';
+import { Temari_Q_Gust } from '../spells/Temari_Q';
+import { Temari_W_Vortex } from '../spells/Temari_W';
+import { Temari_E_Wake } from '../spells/Temari_E';
+import { Temari_R_Funnel } from '../spells/Temari_R';
 
 let game: TestGame;
 
@@ -88,6 +92,8 @@ const LIGHTS = [
   ['Ōkashō holds the ground it caved in', Sakura_R_Crater, SIGHT.BLAST],
   ['the shadow hand lights where it closed', Shikamaru_E_Grasp, SIGHT.IMPACT],
   ['the shadow web holds the ground it covers', Shikamaru_R_Web, SIGHT.ZONE],
+  ['the vortex holds the ground it turns on', Temari_W_Vortex, SIGHT.ZONE],
+  ['the walking funnel is a moving hole in the dark', Temari_R_Funnel, SIGHT.BLAST],
 ] as const;
 
 describe('a landed effect lights the ground it landed on', () => {
@@ -146,6 +152,14 @@ describe('what deliberately lights nothing', () => {
     // also does damage, which is two abilities sold as one.
     expect(sightOf(Shikamaru_Q_Shadow as never)).toBe(DARK);
     expect(sightOf(Shikamaru_W_Snare as never)).toBe(DARK);
+  });
+
+  it('leaves the gust and the wake dark, because they only cross ground', () => {
+    // A 430-unit lane lit every seven seconds is a scouting tool on a poke
+    // ability's cooldown, and sight on an escape would make running away a
+    // scouting move. Both land on ground she has just been looking at.
+    expect(sightOf(Temari_Q_Gust as never)).toBe(DARK);
+    expect(sightOf(Temari_E_Wake as never)).toBe(DARK);
   });
 
   it('leaves the wave dark, which is the whole bargain of player-made terrain', () => {

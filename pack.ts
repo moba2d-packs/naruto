@@ -159,6 +159,17 @@ export const data: ContentPackData = {
       attack: { damage: 13, attacksPerSecond: 0.8, range: 320 },
       spells: ['Shikamaru_Q', 'Shikamaru_W', 'Shikamaru_E', 'Shikamaru_R'],
     },
+    {
+      id: 'temari',
+      name: 'Temari',
+      image: 'champ_temari',
+      playable: true,
+      // The longest basic attack in the pack, and the slowest. She is built
+      // to be somewhere else: every ability moves a body, and the swing is
+      // what she does while deciding which one.
+      attack: { damage: 12, attacksPerSecond: 0.75, range: 400 },
+      spells: ['Temari_Q', 'Temari_W', 'Temari_E', 'Temari_R'],
+    },
   ],
   spellDisplay: displayData(),
   maps: [map],

@@ -1,6 +1,58 @@
 {
-  "championName": "Shikamaru Nara",
+  "championName": "Temari",
   "casts": [
+    {
+      "champion": "Temari",
+      "slot": "Q",
+      "aim": [
+        430,
+        0
+      ],
+      "frames": [
+        120,
+        320,
+        600
+      ]
+    },
+    {
+      "champion": "Temari",
+      "slot": "W",
+      "aim": [
+        300,
+        0
+      ],
+      "frames": [
+        220,
+        1200,
+        2400
+      ]
+    },
+    {
+      "champion": "Temari",
+      "slot": "E",
+      "aim": [
+        260,
+        0
+      ],
+      "frames": [
+        150,
+        400,
+        1200
+      ]
+    },
+    {
+      "champion": "Temari",
+      "slot": "R",
+      "aim": [
+        650,
+        0
+      ],
+      "frames": [
+        400,
+        1100,
+        1700
+      ]
+    },
     {
       "champion": "Shikamaru Nara",
       "slotName": "Shikamaru",

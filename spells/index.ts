@@ -39,4 +39,8 @@ export { default as Shikamaru_Q } from './Shikamaru_Q';
 export { default as Shikamaru_W } from './Shikamaru_W';
 export { default as Shikamaru_E } from './Shikamaru_E';
 export { default as Shikamaru_R } from './Shikamaru_R';
+export { default as Temari_Q } from './Temari_Q';
+export { default as Temari_W } from './Temari_W';
+export { default as Temari_E } from './Temari_E';
+export { default as Temari_R } from './Temari_R';
 // moba2d-pack-add spell: new barrel entries go above this line

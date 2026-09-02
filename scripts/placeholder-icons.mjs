@@ -74,6 +74,13 @@ export const PLACEHOLDERS = [
   { id: 'shikamaru_w', label: 'KN', tint: ['#241a45', '#8f6ede'] },
   { id: 'shikamaru_e', label: 'KK', tint: ['#1d1638', '#7a5fd0'] },
   { id: 'shikamaru_r', label: 'KS', tint: ['#3a2470', '#b79bff'] },
+
+  // Wind: pale cyan, all edges and no body — nothing else here is drawn
+  // without a fill, and nothing else here is this cold.
+  { id: 'temari_q', label: 'KM', tint: ['#1c4a5c', '#9fe4f7'] },
+  { id: 'temari_w', label: 'TT', tint: ['#173f52', '#8fd8ef'] },
+  { id: 'temari_e', label: 'RP', tint: ['#123646', '#7fcfe8'] },
+  { id: 'temari_r', label: 'KK', tint: ['#0e2c3c', '#c9f2ff'] },
 ];
 
 /**

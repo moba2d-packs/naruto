@@ -35,110 +35,102 @@
  * portable here, and `<text>` needs a font or the file is refused. Avoid
  * both.
  *
- * What this file currently holds is Shikamaru's shadow: the R web spreading at
- * three moments, and the Q line beside it.
+ * What this file currently holds is Temari's wind: the Q crescent in flight on
+ * the top row, and the R funnel travelling on the bottom.
  */
 import fs from 'node:fs';
 import sharp from 'sharp';
 import { fileURLToPath } from 'node:url';
 
-const WEB_REACH = 300;      // how far the furthest tendril reaches
-const PRIMARIES = 7;        // tendrils leaving him
-const SEGMENTS = 9;
-
-/** Seeded per piece so nothing re-rolls its own wander every frame. */
 const seedOf = (i, salt) => Math.sin(i * 12.9898 + salt * 4.1414) * 0.5 + 0.5;
 
 /**
- * One tendril: a wandering polyline, NOT a straight ray.
+ * The cutting gust: nested crescents, widest at the front, with streamlines
+ * trailing behind them.
  *
- * Straight rays leaving a point are a mace, whatever they were meant to be —
- * the failure that turned an arm into a club, a wave into a hedgehog and a
- * grip into a starburst. A shadow crawls: it wanders, it is thin, and it
- * forks, and those three together are what stop five of them at one origin
- * reading as a star.
+ * Wind is the one motif in this pack with no *body* — it is not sand, stone
+ * or shadow, it is the shape of moving air. So it is all edges: several
+ * curved lines at different radii, all bowing the same way, and the space
+ * between them is the effect.
  */
-function tendril(fromX, fromY, angle, length, seed, grow) {
+function crescent(cx, cy, halfWidth, bow, weight, colour, alpha) {
   const pts = [];
-  let x = fromX, y = fromY;
-  for (let s = 0; s <= SEGMENTS; s++) {
-    const t = s / SEGMENTS;
-    if (t > grow) break;
-    pts.push({ x, y, t });
-    // Wander AROUND the tendril's own heading, never a random walk off it.
-    // A walk accumulates, so seven tendrils that were meant to go seven ways
-    // all drift the same way and pile into one streak — which is what the
-    // first render of this did.
-    const at = angle + Math.sin(t * 5.5 + seedOf(seed, 2) * 6.28) * 0.42;
-    const step = length / SEGMENTS;
-    x += Math.cos(at) * step;
-    y += Math.sin(at) * step;
+  for (let s = 0; s <= 14; s++) {
+    const t = s / 14;
+    const y = -halfWidth + t * halfWidth * 2;
+    const x = bow * (1 - Math.pow((y / halfWidth), 2));
+    pts.push(`${(cx + x).toFixed(1)},${(cy + y).toFixed(1)}`);
   }
-  return { pts, x, y };
+  return `<polyline points="${pts.join(' ')}" fill="none" stroke="${colour}"
+      stroke-opacity="${alpha}" stroke-width="${weight}" stroke-linecap="round"/>`;
 }
 
-function web(cx, cy, grow) {
+function gust(cx, cy, travel) {
   const g = [`<g transform="translate(${cx} ${cy})">`];
-
-  // The reach, drawn whatever the tendrils are doing: the web roots anything
-  // a tendril touches, and the tendrils never leave this circle.
-  g.push(`<circle cx="0" cy="0" r="${WEB_REACH}" fill="#2a1f3d" fill-opacity="0.16"
-      stroke="#8f6ede" stroke-opacity="0.75" stroke-width="3"/>`);
-
-  const strokes = [];
-  for (let p = 0; p < PRIMARIES; p++) {
-    const angle = (p / PRIMARIES) * Math.PI * 2 + seedOf(p, 1) * 0.5;
-    // 0.8, not 0.95: the wander adds arc length, so a tendril written to the
-    // full reach ends up outside the circle that is supposed to bound it —
-    // and the circle is the rim the damage really uses.
-    const main = tendril(0, 0, angle, WEB_REACH * 0.72, p * 7, grow);
-    strokes.push({ pts: main.pts, w: 13 });
-
-    // forks, rooted PART WAY ALONG the parent rather than at the hub
-    for (let f = 0; f < 2; f++) {
-      const at = Math.floor(main.pts.length * (0.35 + f * 0.3));
-      const root = main.pts[at];
-      if (!root) continue;
-      const side = f % 2 === 0 ? 1 : -1;
-      const branch = tendril(
-        root.x, root.y,
-        angle + side * (0.6 + seedOf(p + f, 3) * 0.5),
-        WEB_REACH * 0.34, p * 31 + f * 11,
-        Math.max(0, (grow - root.t) / Math.max(1 - root.t, 0.001))
-      );
-      strokes.push({ pts: branch.pts, w: 8 });
-    }
+  const width = 74;
+  // The blade itself: three crescents, the front one hardest.
+  for (let layer = 0; layer < 3; layer++) {
+    const back = layer * 16;
+    g.push(crescent(-back, 0, width - layer * 6, 34 - layer * 8, 7 - layer * 2,
+      layer === 0 ? '#e9fbff' : '#8fd8ef', (0.95 - layer * 0.28).toFixed(2)));
   }
-
-  for (const { pts, w } of strokes) {
-    if (pts.length < 2) continue;
-    const d = pts.map(q => `${q.x.toFixed(1)},${q.y.toFixed(1)}`).join(' ');
-    // a bright rim UNDER a near-black body: a shadow on a nearly black floor
-    // is invisible without one, which Sakura's R already had to learn twice
-    // The rim is a HAIRLINE around a wide dark body, not the other way round.
-    // First render made the rim nearly as wide as the body and the whole web
-    // read as violet worms — the shadow has to be the thing you see, and the
-    // rim only exists so it is not invisible on a nearly black floor.
-    g.push(`<polyline points="${d}" fill="none" stroke="#a184f0" stroke-opacity="0.95"
-        stroke-width="${w + 5}" stroke-linecap="round" stroke-linejoin="round"/>`);
-    g.push(`<polyline points="${d}" fill="none" stroke="#0b0810"
-        stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`);
+  // Streamlines: the air it has already gone through, all pointing the way
+  // it went. Rooted along the crescent, never fanned from a hub.
+  for (let line = 0; line < 9; line++) {
+    const y = -width + (line / 8) * width * 2;
+    const len = 34 + seedOf(line, 1) * 52;
+    const lag = 20 + seedOf(line, 2) * 26;
+    g.push(`<line x1="${-lag}" y1="${y.toFixed(1)}" x2="${(-lag - len).toFixed(1)}" y2="${(y * 1.06).toFixed(1)}"
+        stroke="#8fd8ef" stroke-opacity="0.5" stroke-width="2.5" stroke-linecap="round"/>`);
   }
+  g.push(`</g>`);
+  // how far it has flown, for scale
+  g.push(`<line x1="${cx - travel}" y1="${cy + 120}" x2="${cx}" y2="${cy + 120}"
+      stroke="#3b4250" stroke-width="2" stroke-dasharray="6 6"/>`);
+  return g.join('\n');
+}
 
-  g.push(`<circle cx="0" cy="0" r="20" fill="none" stroke="#7bd1a0" stroke-width="3"/>`);
+/**
+ * The funnel: concentric ellipses climbing, plus a spiral. Never radial
+ * spokes — spokes from a centre are the mace this repository has drawn three
+ * times by accident.
+ */
+function funnel(cx, cy, radius, spin) {
+  const g = [`<g transform="translate(${cx} ${cy})">`];
+  g.push(`<circle cx="0" cy="0" r="${radius}" fill="#8fd8ef" fill-opacity="0.07"
+      stroke="#8fd8ef" stroke-opacity="0.8" stroke-width="3"/>`);
+  // the spiral, drawn as one long polyline winding inward
+  const pts = [];
+  for (let s = 0; s <= 120; s++) {
+    const t = s / 120;
+    const a = spin + t * Math.PI * 5.5;
+    const r = radius * (1 - t * 0.86);
+    pts.push(`${(Math.cos(a) * r).toFixed(1)},${(Math.sin(a) * r * 0.82).toFixed(1)}`);
+  }
+  g.push(`<polyline points="${pts.join(' ')}" fill="none" stroke="#cdeffb"
+      stroke-opacity="0.85" stroke-width="4" stroke-linecap="round"/>`);
+  // rings at three heights, squashed, so it reads as a column seen from above
+  for (let ring = 0; ring < 3; ring++) {
+    const r = radius * (0.4 + ring * 0.28);
+    g.push(`<ellipse cx="0" cy="${(-ring * 9).toFixed(1)}" rx="${r.toFixed(1)}" ry="${(r * 0.8).toFixed(1)}"
+        fill="none" stroke="#e9fbff" stroke-opacity="${(0.7 - ring * 0.18).toFixed(2)}" stroke-width="2.5"/>`);
+  }
   g.push(`</g>`);
   return g.join('\n');
 }
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="700" viewBox="0 0 1500 700">
-<rect width="1500" height="700" fill="#1b1e24"/>
-${web(330, 350, 0.35)}
-${web(830, 350, 0.7)}
-${web(1330, 350, 1)}
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760">
+<rect width="1500" height="760" fill="#1b1e24"/>
+${gust(330, 190, 120)}
+${gust(830, 190, 300)}
+${gust(1330, 190, 480)}
+${funnel(330, 560, 96, 0)}
+${funnel(830, 560, 96, 1.9)}
+${funnel(1330, 560, 96, 3.8)}
 </svg>`;
 
 const svgPath = new URL('./preview-shape.svg', import.meta.url);
 const pngPath = new URL('./preview-shape.png', import.meta.url);
 fs.writeFileSync(svgPath, svg);
 await sharp(Buffer.from(svg)).png().toFile(fileURLToPath(pngPath));
-console.log('wrote tools/preview-shape.svg + .png — the shadow web at a third, two thirds, full');
+console.log('wrote tools/preview-shape.svg + .png — the gust in flight, and the funnel turning');

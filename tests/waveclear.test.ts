@@ -35,6 +35,8 @@ import { W_BURST_DAMAGE as GAARA_W } from '../spells/Gaara_W';
 import { Q_DAMAGE as SAKURA_Q } from '../spells/Sakura_Q';
 import { E_BLEED_TICK, E_DAMAGE as SAKURA_E, E_TOTAL_DAMAGE as SAKURA_E_TOTAL } from '../spells/Sakura_E';
 import { CRATER_DAMAGE as SAKURA_R } from '../spells/Sakura_R_Crater';
+import { Q_DAMAGE as TEMARI_Q } from '../spells/Temari_Q';
+import { W_TICK_DAMAGE, W_TOTAL_DAMAGE as TEMARI_W_TOTAL } from '../spells/Temari_W';
 
 /** `tuningDefaults.ts` — the bodies a laner actually has to remove. */
 const MELEE = 70;
@@ -133,6 +135,15 @@ describe('waveclear', () => {
     expect(SAKURA_R).toBeLessThan(MELEE);
   });
 
+  it('lets Temari clear a caster with one gust and a vortex', () => {
+    // The piercing gust is the point: one press reaches the whole row, and
+    // what finishes them is standing in the wind afterwards. Same argument
+    // Gaara's clear makes — area and repetition, not one growing number.
+    expect(TEMARI_Q).toBeLessThan(RANGED);
+    expect(TEMARI_Q + TEMARI_W_TOTAL).toBeGreaterThan(RANGED);
+    expect(TEMARI_Q + TEMARI_W_TOTAL).toBeLessThan(MELEE);
+  });
+
   it('keeps single-hit numbers inside the band core sets', () => {
     // 15–35 for an ability, 40–60 for an ultimate (`docs/VFX_STANDARD.md`).
     // The clear above comes from *area and repetition*, not from one number
@@ -152,6 +163,8 @@ describe('waveclear', () => {
       SAKURA_Q,
       SAKURA_E,
       E_BLEED_TICK,
+      TEMARI_Q,
+      W_TICK_DAMAGE,
     ]) {
       expect(single).toBeLessThanOrEqual(35);
     }

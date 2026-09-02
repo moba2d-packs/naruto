@@ -163,6 +163,22 @@ export const SHADOW = Object.freeze({
   BODY: [11, 8, 16] as readonly [number, number, number],
 });
 
+/**
+ * Wind: all edges, and no body at all.
+ *
+ * The one motif in this pack with nothing to fill. Sand is granular, stone is
+ * a slab, shadow is a dark shape inside a rim — wind is nested crescents and
+ * streamlines, and the *gap between them* is the effect. That is what keeps
+ * five champions from sharing a look, and it is also why these two colours
+ * are both light: there is no dark half to sit inside.
+ */
+export const WIND = Object.freeze({
+  /** The leading edge. The hardest, brightest line in the effect. */
+  EDGE: [233, 251, 255] as readonly [number, number, number],
+  /** Everything trailing it: the older air, and the streamlines. */
+  PALE: [143, 216, 239] as readonly [number, number, number],
+});
+
 /** `rgba(...)` from a palette entry, so a trail and an orb quote one source. */
 export const rgba = (colour: readonly [number, number, number], alpha: number): string =>
   `rgba(${colour[0]}, ${colour[1]}, ${colour[2]}, ${alpha})`;

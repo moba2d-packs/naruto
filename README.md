@@ -1,6 +1,6 @@
 # Naruto
 
-A `@moba2d/core` content pack: five champions, twenty-six abilities, and a
+A `@moba2d/core` content pack: six champions, thirty abilities, and a
 build that publishes itself. Naruto and Sasuke transform — the ultimate swaps
 three of their own abilities out for three others — which is what made this
 pack the one that pushed `Champion.enterStance` into core. Gaara and Sakura
@@ -80,6 +80,18 @@ shape nobody can find.
 | W | Kage Nui | The pack's first **trap**, and it is drawn only for his own team — the concealed-object exception `docs/VFX_STANDARD.md` names. Arms in 0.6s, spent by one body. |
 | E | Kage Kubi Shibari | The pack's only **silence**. A hand comes up out of the floor and closes; aimed at ground, not locked onto a body, so it can be walked out of. |
 | R | Kagemane Shūchū | Seven tendrils that crawl and fork, rooting whoever they reach — and **he may walk** the whole time. That freedom, not the damage, is why the ultimate exists. The strands *hunt*: an earlier version fanned them at even angles and whether it caught anybody came down to the seed. |
+
+**Temari** — the longest basic attack here and the slowest swing, because the
+swing is not the point: every one of her four abilities **moves a body**. Wind
+is the one motif in the pack drawn entirely in edges — nested crescents and
+streamlines, with the gap between them doing the work.
+
+| Slot | Ability | What it is |
+|------|---------|-----------|
+| Q | Kamaitachi no Jutsu | A blade of air 150 wide that **pierces** — through the front minion and everybody behind it — and blows each of them further away. The only piercing skillshot in the pack. |
+| W | Fūton: Tatsumaki | The pack's first **pull**. A vortex that drags what is inside it toward the middle and slows it. Without this her own Q would undo her kit. |
+| E | Fūton: Renpū | Her way out, and **zero damage** — an escape that also pokes is one pressed on cooldown for the poke. The air she leaves behind slows whoever follows. |
+| R | Kirikiri Mai | A vortex that *walks*: it crosses 650 slowly, carrying everyone it catches, and bursts at the end to throw them out. A setup, not a kill. |
 
 ## What is not done yet
 
