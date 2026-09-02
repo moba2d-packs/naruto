@@ -42,59 +42,51 @@ Then, by hand:
 
 Everything in it is already in core's `docs/VFX_STANDARD.md`. It is repeated
 here because reading that document is **not** what stops these: every visual
-failure this pack has shipped was a rule its author had read that week. Four
-of them were caught by a player rather than by the build:
-
-> *"đột nhiên xuất hiện rồi đột nhiên biến mất gây damage"*
-> *"instant quá, ko có animation gì bay từ Gaara tới kẻ địch, địch ko né đc"*
-> *"E giống Trundle với Anivia quá"*
-> *"ko render quay theo hướng đang bay"*
-
-`tests/vfxRules.test.ts` now holds the four that a scan can hold, so those are
-settled and you will hear about them in `verify` rather than in a match. What
-is below is the rest — the ones a machine cannot judge, which is exactly why
-they need a human to stop and answer them.
+failure the content packs have shipped was a rule its author had read that
+week. The four a machine can hold are held by `tests/vfxRules.test.ts`, so
+those reach you in `verify` rather than in a match. Below is the rest — the
+ones no scan can judge, which is exactly why they need a person to stop and
+answer them.
 
 **Ask these before you write `draw()`:**
 
-- **Three phases, and the third is the one you will skip.** Anticipation, then
-  the climax, then *dissipation*. Never `toRemove = true` on the frame an
-  effect does its thing — deal the damage, mark it spent, let it leave. If one
-  effect hands over to another, the two must **overlap**, or there is a frame
-  with neither on screen and the hand-off reads as a pop.
+- **Three phases, and the third is the one you will skip.** Anticipation, the
+  climax, then *dissipation*. Never `toRemove = true` on the frame an effect
+  does its thing — deal the damage, mark it spent, let it leave. If one effect
+  hands over to another, the two must **overlap**, or there is a frame with
+  neither on screen and the hand-off reads as a pop.
 - **Does the hit show on the victim?** Not near them — on them. A buff icon is
   not feedback; nobody reads the buff bar mid-fight.
-- **Is this shape this champion's own?** A slab that blocks is Anivia's. A
-  pillar is Trundle's. If the answer is "well, it is a wall", the ability needs
-  a different verb, not a different colour.
+- **Is this shape this champion's own?** A slab that blocks is somebody's
+  wall; a pillar is somebody's pillar. If the answer is "well, it *is* a
+  wall", the ability needs a different verb, not a different colour.
 - **Would a stranger know where it hits?** Draw the real radius. If the front
   of the effect is deliberately ragged, put a thin rim on the true edge, or
   the player reads the longest spike as the reach and is wrong every time.
+
+**One shape rule worth writing down, because it has cost time three times:**
+ridges, fingers, spikes — anything repeated — must be **rooted along a line
+and pointed the same way**. Rooted at a point and fanned outward they read as
+a mace, whatever they were meant to be. That is what turned an arm into a
+club, an advancing wave into a hedgehog, and a grip into a gold starburst.
 
 **Then look at it.** Two tools, and neither is optional for anything with a
 shape in it:
 
 - `node tools/preview-shape.mjs` renders geometry to an SVG in seconds. Use it
-  **before** porting a shape into a spell. Gaara's ultimate took six rounds
-  there and produced, in order: a biscuit, a Pac-Man, a hex nut and a
-  hedgehog. Not one of those was visible from the code.
-- `npm run e2e:vfx` shoots the ability in the **real renderer** and
-  screenshots it at frames straddling the moments it changes. Add your
-  ability to `tests/e2e/vfx-casts.json` — champion, slot, aim, and three
-  frame times derived from the spell's own tuning constants — then open one
-  or two PNGs.
+  **before** porting a shape into a spell. One ultimate took six rounds there
+  and produced, in order, a biscuit, a Pac-Man, a hex nut and a hedgehog —
+  not one of which was visible from the code.
+- `npm run e2e:vfx` runs the ability in the **real renderer** and screenshots
+  it at frames straddling the moments it changes. Add the ability to
+  `tests/e2e/vfx-casts.json` — champion, slot, aim, and three frame times
+  derived from the spell's own tuning constants — then open one or two PNGs.
 
   It needs a linked core checkout and a real Chrome, so it is deliberately
   **not** in `verify`. Run it once per ability with a shape, not per commit.
-  Its first run on Gaara found that his ultimate's grip renders as a gold
-  starburst rather than sand closing on somebody — a legibility failure that
-  typechecked, passed its tests, and was invisible in every other way.
-
-**One shape rule worth writing down, because it has now cost time twice:**
-ridges, fingers, spikes — anything repeated — must be **rooted along a line
-and pointed the same way**. Rooted at a point and fanned outward, they read as
-a mace, whatever they are meant to be. That is what made Kurama Arms a club
-and Gaara's wave a hedgehog.
+  Its first run on a finished, fully tested champion found that his ultimate
+  rendered as a starburst: green build, 37 passing tests, invisible every
+  other way.
 
 ## Change what an ability does
 

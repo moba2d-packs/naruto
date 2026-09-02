@@ -23,7 +23,7 @@
     "art:import": "node scripts/import-art.mjs",
     "art:check": "node scripts/import-art.mjs --check",
     "art:placeholders": "node scripts/placeholder-icons.mjs",
-    "e2e:vfx": "node scripts/shoot-vfx.mjs"
+    "e2e:vfx": "moba2d-shoot-vfx"
   },
   "devDependencies": {
     "@moba2d/core": "github:moba2d-game/core#main",
