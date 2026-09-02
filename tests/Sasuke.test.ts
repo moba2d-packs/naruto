@@ -26,6 +26,7 @@ import {
 import Sasuke_E, { E_REVEAL_RADIUS, REVEAL_STACK_ID } from '../spells/Sasuke_E';
 import { E2_SPEED, Sasuke_E2_Object } from '../spells/Sasuke_E2';
 import { Sasuke_E2_Trace } from '../spells/Sasuke_E2_Trace';
+import { Sasuke_E_Sweep } from '../spells/Sasuke_E_Sweep';
 import { Q_SPEED as NARUTO_Q_SPEED } from '../spells/Naruto_Q';
 import { Q2_SPEED as NARUTO_Q2_SPEED } from '../spells/Naruto_Q2';
 import { E2_SPEED as NARUTO_E2_SPEED } from '../spells/Naruto_E2';
@@ -281,6 +282,55 @@ describe('who Sharingan actually reveals', () => {
     const { enemy } = cast();
     const lit = enemy.buffs.find(buff => buff.name === 'Lộ Diện');
     expect(lit?.stackId).toBe(REVEAL_STACK_ID);
+  });
+});
+
+describe('Sharingan shows how far it looked', () => {
+  /**
+   * The ability's headline is a radius and it drew nothing at that radius: a
+   * spinning eye on his body, and enemies somewhere off screen quietly
+   * gaining a buff icon. The one number the whole ability is about was
+   * invisible to the person who pressed it — so no cast ever taught them
+   * where the edge was, because every cast looked the same whether it caught
+   * three champions or none.
+   */
+  it('draws a ring at the radius the query actually used', () => {
+    // Read off the same constant, never a second copy — a picture that
+    // disagrees with the rule is worse than no picture, because the player
+    // *does* trust it.
+    const caster = sasuke();
+    indexObjects(game, [caster]);
+
+    pressSpell(caster.spells[SLOT.E]);
+
+    const sweeps = inWorld(Sasuke_E_Sweep);
+    expect(sweeps).toHaveLength(1);
+    expect(sweeps[0].reach).toBe(E_REVEAL_RADIUS);
+  });
+
+  it('stands it where he was when he looked, not on his body', () => {
+    // The reveal takes whatever was inside the circle *at cast time*, so a
+    // ring that followed him would draw a promise the ability never made.
+    const caster = sasuke();
+    indexObjects(game, [caster]);
+    pressSpell(caster.spells[SLOT.E]);
+    const sweep = inWorld(Sasuke_E_Sweep)[0];
+    const castAt = { x: caster.position.x, y: caster.position.y };
+
+    caster.position.set(castAt.x + 400, castAt.y);
+    sweep.update();
+
+    expect(Math.round(sweep.position.x)).toBe(Math.round(castAt.x));
+  });
+
+  it('inherits his fog, so a hidden Sasuke does not announce himself', () => {
+    // A 760px ring drawn through a wall would be the loudest tell in the
+    // pack — and exactly the bug `GameObject.visionAnchor` was added for.
+    const caster = sasuke();
+    indexObjects(game, [caster]);
+    pressSpell(caster.spells[SLOT.E]);
+
+    expect(inWorld(Sasuke_E_Sweep)[0].visionAnchor).toBe(caster);
   });
 });
 

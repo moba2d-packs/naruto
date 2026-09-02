@@ -1,6 +1,7 @@
 import type { AttackableUnit, Champion } from '@moba2d/core/content/types';
 import { api } from '../packApi';
 import { SharinganEye } from './Sasuke_E_Eye';
+import { Sasuke_E_Sweep } from './Sasuke_E_Sweep';
 
 /**
  * Sharingan — he reads the fight before it happens.
@@ -65,9 +66,21 @@ export default class Sasuke_E extends api.Spell {
 
   name = 'Sharingan';
   image = api.asset('spell_sasuke_e');
+  /**
+   * Worded as a **scan**, because that is what it is.
+   *
+   * The old line — "Mở Sharingan trong 5 giây: lộ mọi tướng địch trong vùng
+   * rộng" — put the duration in front and let the reveal read as something
+   * that keeps happening for those five seconds. It does not: `onSpellCast`
+   * runs the query **once**, at the position he cast from, and the five
+   * seconds are how long whoever was caught stays lit. An enemy who walks in
+   * on the second second is not revealed, and a tooltip that implies
+   * otherwise is a tooltip the player will act on and be wrong.
+   */
   description =
-    `Mở Sharingan trong <span class="time">${E_DURATION_MS / 1_000} giây</span>: <span class="buff">lộ mọi tướng địch</span> ` +
-    'trong vùng rộng, <span class="buff">+0.4 tốc đánh</span> và <span class="buff">+20% tốc chạy</span>.';
+    `Quét một vòng rộng quanh mình: <span class="buff">mọi tướng địch đang đứng trong đó</span> ` +
+    `bị lộ diện <span class="time">${E_DURATION_MS / 1_000} giây</span>. Trong cùng khoảng đó ` +
+    `Sasuke được <span class="buff">+0.4 tốc đánh</span> và <span class="buff">+20% tốc chạy</span>.`;
   coolDown = E_COOLDOWN_MS;
   manaCost = E_CHAKRA;
   targetingMode = 'SELF' as const;
@@ -79,6 +92,16 @@ export default class Sasuke_E extends api.Spell {
     rush.percent = E_SPEED_PERCENT;
     rush.image = this.image;
     this.owner.addBuff(rush);
+
+    // The circle the player is actually buying, drawn at the point the query
+    // below runs from — see `Sasuke_E_Sweep` for why it stands here rather
+    // than riding his body.
+    const sweep = new Sasuke_E_Sweep(this.owner);
+    sweep.position.set(this.owner.position.x, this.owner.position.y);
+    // Read off the same constant the query uses, never typed twice.
+    sweep.reach = E_REVEAL_RADIUS;
+    sweep.attachTo(this.owner);
+    this.game.objectManager.addObject(sweep);
 
     // Revealed one by one rather than by lighting the map: the ability is
     // "he sees *them*", and a `TrueSight` on each champion is also what makes
