@@ -36,6 +36,7 @@ import { W2_SPEED as NARUTO_W2_SPEED } from '../spells/Naruto_W2';
 import { W2_SPEED as SASUKE_W2_SPEED } from '../spells/Sasuke_W2';
 import { Q2_SPEED as SASUKE_Q2_SPEED } from '../spells/Sasuke_Q2';
 import Sasuke_R, { R_CHAKRA_PER_SECOND, R_SHIELD, SUSANOO_STANCE } from '../spells/Sasuke_R';
+import { SusanooArmour } from '../spells/Sasuke_R_Armour';
 import { basicAttackStub, champion, indexObjects, unit } from './_units';
 
 const SLOT = buildTestApi().enums.SpellSlot;
@@ -457,6 +458,86 @@ describe('Susanoo', () => {
     pressSpell(caster.spells[SLOT.R]);
 
     expect(caster.stance).toBe(null);
+  });
+
+  /**
+   * A shield is a flat number the engine amplifies, exactly as a hit is, and
+   * this ultimate's shell is also its clock — so ability power buys both the
+   * pool and the form's uptime. Reported as "ghi tạo 260 khiên, nhưng khi bấm
+   * thì khiên nhiều hơn, khi có mũ phù thuỷ thì tận 700 khiên": the engine was
+   * right and the tooltip was a `class="buff"` span, which core never rescales.
+   */
+  describe('under ability power', () => {
+    /** Mũ Phù Thủy Rabadon: `abilityPower: 1.5` flat, its own passive +25%. */
+    const HAT = 1.5 * 1.25;
+
+    const susanooOn = (caster: ReturnType<typeof sasuke>) => {
+      caster.stats.abilityPower.baseValue = HAT;
+      pressSpell(caster.spells[SLOT.R]);
+    };
+
+    it('leaves the shell at the number this file wrote', () => {
+      // The shell is the form's clock, not a defensive stat, so this ability
+      // declines the scaling rule — see `Sasuke_R.damageScalesWithAbilityPower`.
+      // Amplified, one item put it at 747.5 against a 100-health champion:
+      // unbreakable, so the form ran to its cap every time and the ending the
+      // other side is meant to cause stopped existing.
+      const caster = sasuke();
+      indexObjects(game, [caster]);
+
+      susanooOn(caster);
+
+      expect(caster.shieldAmount).toBe(R_SHIELD);
+    });
+
+    it('and the tooltip quotes the same flat number the pool is', () => {
+      const caster = sasuke();
+      indexObjects(game, [caster]);
+      caster.stats.abilityPower.baseValue = HAT;
+
+      // No `(+487.5)`: the text and the pool agree because both read the same
+      // flag, rather than agreeing by accident.
+      expect(caster.spells[SLOT.R].effectiveDescription).toContain(
+        `khiên <span class="heal">${R_SHIELD}</span>`
+      );
+    });
+
+    it('but still scales what Susanoo actually casts', () => {
+      // The three form abilities are their own spells with their own
+      // attribution. Ability power buys damage, it just no longer buys uptime.
+      const caster = sasuke();
+      indexObjects(game, [caster]);
+      susanooOn(caster);
+
+      for (const slot of [SLOT.Q, SLOT.W, SLOT.E]) {
+        expect(caster.spells[slot].damageScalesWithAbilityPower).toBe(true);
+      }
+    });
+
+    it('and the cage comes apart against the pool it was actually given', () => {
+      // The integrity divided by `R_SHIELD` — what this file *asked* for —
+      // rather than by the pool core actually granted, and the two are not the
+      // same number. A Rạn Khiên halves a shield as it is built, so the shell
+      // came up at 130 and the ribcage was painted at 0.5 integrity while it
+      // was still completely intact: an ability whose whole point is that the
+      // other side can watch themselves breaking it, showing them a cage that
+      // was already half gone before anybody hit it.
+      const caster = sasuke();
+      indexObjects(game, [caster]);
+      const ShieldCut = buildTestApi().buffs.ShieldCut;
+      caster.addBuff(new ShieldCut(3_000, caster, caster));
+
+      pressSpell(caster.spells[SLOT.R]);
+      const armour = inWorld(SusanooArmour)[0];
+      advance(caster, 16);
+
+      expect(caster.shieldAmount).toBe(R_SHIELD / 2);
+      expect(armour.integrity).toBe(1);
+
+      caster.takeDamage(caster.shieldAmount / 2, caster);
+      advance(caster, 16);
+      expect(armour.integrity).toBeCloseTo(0.5, 2);
+    });
   });
 
   it('takes its shell and its slow down with it', () => {

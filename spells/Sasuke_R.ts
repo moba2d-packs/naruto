@@ -91,7 +91,10 @@ export class SusanooForm extends api.buffs.Buff {
 
     const shell = new api.buffs.Shield(0, sasuke, sasuke);
     shell.amount = R_SHIELD;
-    shell._initialAmount = R_SHIELD;
+    // `_initialAmount` is not set here: `Shield.onCreate` amplifies `amount`
+    // by ability power and then writes the field itself, so anything put in it
+    // now is overwritten a frame later by a *different* number. Writing it
+    // anyway is what made the line below look correct.
     shell.image = api.asset('spell_sasuke_r');
     shell.color = [190, 150, 255];
     sasuke.addBuff(shell);
@@ -110,7 +113,15 @@ export class SusanooForm extends api.buffs.Buff {
     if (!shell) return;
     // The armour reads the pool rather than keeping a count of its own: one
     // number, and the picture cannot disagree with the health bar.
-    if (this.armour) this.armour.integrity = shell.shieldAmount / R_SHIELD;
+    //
+    // Against `_initialAmount` — the pool core actually granted — and not
+    // against `R_SHIELD`, which is only what this file asked for. Ability
+    // power multiplies the shell, so a Sasuke holding one item started at
+    // `747.5 / 260` = 2.87, which `clamp01` painted as a full cage until the
+    // shell was already two thirds gone. The whole point of this ultimate is
+    // that the other side can watch themselves breaking it.
+    const full = shell._initialAmount;
+    if (this.armour) this.armour.integrity = full > 0 ? shell.shieldAmount / full : 0;
   }
 
   onDeactivate(): void {
@@ -155,10 +166,55 @@ export default class Sasuke_R extends api.Spell {
    */
   static aiRecastAfterMs = Infinity;
 
+  /**
+   * **The shell does not scale, and it is the only ability here that doesn't.**
+   *
+   * `buffs/Shield` amplifies a pool by the caster's ability power, which is
+   * right for every other shield in the game and wrong for this one — because
+   * this shell is not a defensive stat, it is the form's *clock*. Susanoo ends
+   * when the shell breaks, so amplifying it means a mage build buys uptime on
+   * the very form its damage items are for: one Mũ Phù Thủy took the shell to
+   * 747.5 against a 100-health champion, which nobody breaks, so the form
+   * always ran to its 18-second cap and the ending the other side is supposed
+   * to be able to *cause* stopped existing.
+   *
+   * `damageScalesWithAbilityPower` is core's own lever for "these are not
+   * ability-power numbers" and it reaches the shell through the attribution
+   * the form inherits from this cast — the same route `economy/ItemShop` uses
+   * to keep an item's active off the stat it already pays from. It also turns
+   * off the tooltip's rescale, so the text and the pool stay the same number
+   * without either being told about the other.
+   *
+   * **Only the shell.** Yasaka Magatama, Amaterasu and Indra's Arrow are
+   * `Sasuke_Q2/W2/E2`, separate spells with their own attribution, and they
+   * scale exactly as they always did. Building ability power still makes
+   * Susanoo hit far harder; it no longer makes Susanoo last longer.
+   */
+  damageScalesWithAbilityPower = false;
+
   name = 'Susanoo';
   image = api.asset('spell_sasuke_r');
+  /**
+   * `heal` and not `buff` on the shell, and the number leads its own span.
+   *
+   * `buffs/Shield` amplifies the pool it is given by the caster's ability
+   * power, exactly as `takeDamage` amplifies a hit — so `260` is a flat number
+   * the engine multiplies, which is precisely what a `damage`/`heal` span
+   * claims and what a `buff` span promises it is *not*. Tagged `buff`, the
+   * tooltip read 260 for the whole match while one Mũ Phù Thủy put up 747.5:
+   * "ghi tạo 260 khiên, nhưng khi bấm thì khiên nhiều hơn ... tận 700 khiên".
+   *
+   * The number is pulled out in front of the word for the same reason. Core's
+   * rescaler only moves the *leading* figure of a span, so `khiên 260` would
+   * have gone on printing 260 even wearing the right class.
+   *
+   * It prints a flat 260 today anyway, because `damageScalesWithAbilityPower`
+   * above switches the whole ability off the stat — and that is the point of
+   * fixing both halves rather than either: the text and the pool now agree
+   * whichever way that flag is set, instead of agreeing by accident.
+   */
   description =
-    'Dựng bộ giáp Susanoo: <span class="buff">khiên 260</span>, to ra và chậm hơn <b>12%</b>. ' +
+    `Dựng bộ giáp Susanoo: khiên <span class="heal">${R_SHIELD}</span>, to ra và chậm hơn <b>12%</b>. ` +
     "Q/W/E đổi thành <b>Yasaka Magatama</b>, <b>Amaterasu</b>, <b>Indra's Arrow</b>. " +
     `Giáp <b>vỡ là tan</b>, hoặc <b>bấm lại để hạ xuống</b>, và ngốn ` +
     `<span class="buff">${R_CHAKRA_PER_SECOND} năng lượng mỗi giây</span>. Tối đa ` +

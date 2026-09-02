@@ -135,7 +135,11 @@ export class Gaara_W_Shell extends api.SpellObject {
       // ANTICIPATION, worn on the body. Plates orbiting at a stroke rather
       // than a fill, so he stays visible inside his own shield — a champion
       // hidden by his own buff is a champion nobody can aim at.
-      const integrity = clamp01((this.shield?.amount ?? 0) / W_SHIELD);
+      // Against the pool core granted, not against `W_SHIELD` — ability power
+      // multiplies a shield, so the plates stayed at full thickness until it
+      // was down to 45 whatever it started at. See `Sasuke_R`.
+      const full = this.shield?._initialAmount ?? 0;
+      const integrity = clamp01(full > 0 ? (this.shield?.amount ?? 0) / full : 0);
       const orbit = this.ageMs / 900;
       noFill();
       for (const plate of this.plates) {
@@ -202,8 +206,9 @@ export default class Gaara_W extends api.Spell {
 
   name = 'Suna no Tate';
   image = api.asset('spell_gaara_w');
+  /** `heal`, not `buff`: `buffs/Shield` amplifies this pool — see `Sasuke_R`. */
   description =
-    'Cát bọc quanh người, chắn <span class="buff">45</span> sát thương trong ' +
+    `Cát bọc quanh người, chắn <span class="heal">${W_SHIELD}</span> sát thương trong ` +
     '<span class="time">4 giây</span>. Khi lớp cát <b>vỡ hoặc hết giờ</b>, nó nổ tung ra: ' +
     '<span class="damage magic">20</span> sát thương và <span class="buff">hất tung</span> ' +
     'kẻ địch xung quanh trong <span class="time">0.45 giây</span>.';
@@ -216,7 +221,8 @@ export default class Gaara_W extends api.Spell {
 
     const shield = new api.buffs.Shield(W_DURATION_MS, gaara, gaara);
     shield.amount = W_SHIELD;
-    shield._initialAmount = W_SHIELD;
+    // Not `_initialAmount`: `Shield.onCreate` amplifies `amount` and writes
+    // that field itself. See `Sasuke_R`.
     // The HUD row says which ability put it there. Three shields drawn as
     // `buff_shield` tell a player nothing about which to play around.
     shield.image = api.asset('spell_gaara_w');

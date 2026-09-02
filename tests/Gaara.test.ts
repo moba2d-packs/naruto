@@ -203,6 +203,24 @@ describe('Suna no Tate (W) — the shield that always goes off', () => {
     expect((shields[0] as unknown as { amount: number }).amount).toBe(W_SHIELD);
   });
 
+  it('scales the sand with ability power, and prints what it scaled to', () => {
+    // The same defect `Sasuke_R` carried: `buffs/Shield` amplifies the pool it
+    // is handed, so a `class="buff"` span quoted the first-frame 45 for the
+    // whole match. `heal` is the class that means "a flat number the engine
+    // multiplies", and it is what the shell actually is.
+    const HAT = 1.5 * 1.25;
+    const caster = champion(game, 0, 'blue');
+    indexObjects(game, [caster]);
+    caster.stats.abilityPower.baseValue = HAT;
+
+    const spell = new Gaara_W(caster);
+    pressSpell(spell, { caster });
+
+    expect(caster.shieldAmount).toBe(W_SHIELD * (1 + HAT));
+    // `84.4` and not `84.375`: core prints a bonus to at most one decimal.
+    expect(spell.effectiveDescription).toContain('<span class="heal">45 (+84.4)</span>');
+  });
+
   it('bursts when the shield is broken early', () => {
     const caster = champion(game, 0, 'blue');
     const victim = unit(game, 80, 'red');
