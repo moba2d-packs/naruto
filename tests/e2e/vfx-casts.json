@@ -1,6 +1,62 @@
 {
-  "championName": "Temari",
+  "championName": "Kakashi Hatake",
   "casts": [
+    {
+      "champion": "Kakashi Hatake",
+      "slotName": "Kakashi",
+      "slot": "Q",
+      "aim": [
+        0,
+        0
+      ],
+      "frames": [
+        120,
+        240,
+        450
+      ]
+    },
+    {
+      "champion": "Kakashi Hatake",
+      "slotName": "Kakashi",
+      "slot": "W",
+      "aim": [
+        0,
+        0
+      ],
+      "frames": [
+        90,
+        400,
+        700
+      ]
+    },
+    {
+      "champion": "Kakashi Hatake",
+      "slotName": "Kakashi",
+      "slot": "E",
+      "aim": [
+        200,
+        0
+      ],
+      "frames": [
+        120,
+        300,
+        560
+      ]
+    },
+    {
+      "champion": "Kakashi Hatake",
+      "slotName": "Kakashi",
+      "slot": "R",
+      "aim": [
+        430,
+        0
+      ],
+      "frames": [
+        400,
+        860,
+        1000
+      ]
+    },
     {
       "champion": "Temari",
       "slot": "Q",

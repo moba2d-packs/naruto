@@ -81,6 +81,14 @@ export const PLACEHOLDERS = [
   { id: 'temari_w', label: 'TT', tint: ['#173f52', '#8fd8ef'] },
   { id: 'temari_e', label: 'RP', tint: ['#123646', '#7fcfe8'] },
   { id: 'temari_r', label: 'KK', tint: ['#0e2c3c', '#c9f2ff'] },
+
+  // Kamui: crimson over near-black, deliberately not Shikamaru's violet —
+  // two champions whose signature is "a dark shape with a bright edge" would
+  // be one champion twice.
+  { id: 'kakashi_q', label: 'CN', tint: ['#3a1420', '#ffd9e2'] },
+  { id: 'kakashi_w', label: 'KA', tint: ['#2a0e18', '#e88aa0'] },
+  { id: 'kakashi_e', label: 'SZ', tint: ['#241018', '#d07186'] },
+  { id: 'kakashi_r', label: 'RK', tint: ['#4a1626', '#fff0f4'] },
 ];
 
 /**

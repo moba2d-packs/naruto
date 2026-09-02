@@ -170,6 +170,17 @@ export const data: ContentPackData = {
       attack: { damage: 12, attacksPerSecond: 0.75, range: 400 },
       spells: ['Temari_Q', 'Temari_W', 'Temari_E', 'Temari_R'],
     },
+    {
+      id: 'kakashi',
+      name: 'Kakashi Hatake',
+      image: 'champ_kakashi',
+      playable: true,
+      // A skirmisher: he swings quickly and reaches a little further than the
+      // other melee champions here, because his whole kit is about being
+      // beside somebody for a moment and then not being there.
+      attack: { damage: 15, attacksPerSecond: 0.95, range: 160 },
+      spells: ['Kakashi_Q', 'Kakashi_W', 'Kakashi_E', 'Kakashi_R'],
+    },
   ],
   spellDisplay: displayData(),
   maps: [map],

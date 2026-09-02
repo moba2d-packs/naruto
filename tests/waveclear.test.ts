@@ -37,6 +37,9 @@ import { E_BLEED_TICK, E_DAMAGE as SAKURA_E, E_TOTAL_DAMAGE as SAKURA_E_TOTAL } 
 import { CRATER_DAMAGE as SAKURA_R } from '../spells/Sakura_R_Crater';
 import { Q_DAMAGE as TEMARI_Q } from '../spells/Temari_Q';
 import { W_TICK_DAMAGE, W_TOTAL_DAMAGE as TEMARI_W_TOTAL } from '../spells/Temari_W';
+import { Q_DAMAGE as KAKASHI_Q } from '../spells/Kakashi_Q';
+import { E_DAMAGE as KAKASHI_E } from '../spells/Kakashi_E';
+import { R_DAMAGE as KAKASHI_R } from '../spells/Kakashi_R';
 
 /** `tuningDefaults.ts` — the bodies a laner actually has to remove. */
 const MELEE = 70;
@@ -144,6 +147,21 @@ describe('waveclear', () => {
     expect(TEMARI_Q + TEMARI_W_TOTAL).toBeLessThan(MELEE);
   });
 
+  it('makes Kakashi clear by standing in the wave, which is where he lives', () => {
+    // His discharge is self-centred, so clearing costs him position — the
+    // trade every one of his abilities asks for. Q and E together remove a
+    // caster; a melee body needs a swing on top.
+    expect(KAKASHI_Q + KAKASHI_E).toBeGreaterThan(RANGED);
+    expect(KAKASHI_Q + KAKASHI_E).toBeLessThan(MELEE);
+  });
+
+  it('keeps his ultimate a single-target answer, not a clear', () => {
+    // 55 true damage on one body. It removes a caster and leaves the wave —
+    // which is right for the only ability in the pack a build cannot answer.
+    expect(KAKASHI_R).toBeGreaterThan(RANGED);
+    expect(KAKASHI_R).toBeLessThan(MELEE);
+  });
+
   it('keeps single-hit numbers inside the band core sets', () => {
     // 15–35 for an ability, 40–60 for an ultimate (`docs/VFX_STANDARD.md`).
     // The clear above comes from *area and repetition*, not from one number
@@ -165,6 +183,8 @@ describe('waveclear', () => {
       E_BLEED_TICK,
       TEMARI_Q,
       W_TICK_DAMAGE,
+      KAKASHI_Q,
+      KAKASHI_E,
     ]) {
       expect(single).toBeLessThanOrEqual(35);
     }

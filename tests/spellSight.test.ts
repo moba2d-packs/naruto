@@ -57,6 +57,10 @@ import { Temari_Q_Gust } from '../spells/Temari_Q';
 import { Temari_W_Vortex } from '../spells/Temari_W';
 import { Temari_E_Wake } from '../spells/Temari_E';
 import { Temari_R_Funnel } from '../spells/Temari_R';
+import { Kakashi_Q_Discharge } from '../spells/Kakashi_Q';
+import { Kakashi_W_Phase } from '../spells/Kakashi_W';
+import { Kakashi_E_Burrow } from '../spells/Kakashi_E';
+import { Kakashi_R_Lance } from '../spells/Kakashi_R';
 
 let game: TestGame;
 
@@ -94,6 +98,7 @@ const LIGHTS = [
   ['the shadow web holds the ground it covers', Shikamaru_R_Web, SIGHT.ZONE],
   ['the vortex holds the ground it turns on', Temari_W_Vortex, SIGHT.ZONE],
   ['the walking funnel is a moving hole in the dark', Temari_R_Funnel, SIGHT.BLAST],
+  ['Raikiri lights the body it went through', Kakashi_R_Lance, SIGHT.IMPACT],
 ] as const;
 
 describe('a landed effect lights the ground it landed on', () => {
@@ -160,6 +165,16 @@ describe('what deliberately lights nothing', () => {
     // scouting move. Both land on ground she has just been looking at.
     expect(sightOf(Temari_Q_Gust as never)).toBe(DARK);
     expect(sightOf(Temari_E_Wake as never)).toBe(DARK);
+  });
+
+  it("leaves Kakashi's three short-range effects dark", () => {
+    // The discharge happens at his own feet, the phase is worn rather than
+    // landed, and both ends of the burrow are inside 300 of ground he was
+    // standing on a quarter of a second ago. A champion who sees further for
+    // having dodged is not what any of them says.
+    expect(sightOf(Kakashi_Q_Discharge as never)).toBe(DARK);
+    expect(sightOf(Kakashi_W_Phase as never)).toBe(DARK);
+    expect(sightOf(Kakashi_E_Burrow as never)).toBe(DARK);
   });
 
   it('leaves the wave dark, which is the whole bargain of player-made terrain', () => {

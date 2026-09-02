@@ -1,6 +1,6 @@
 # Naruto
 
-A `@moba2d/core` content pack: six champions, thirty abilities, and a
+A `@moba2d/core` content pack: seven champions, thirty-four abilities, and a
 build that publishes itself. Naruto and Sasuke transform — the ultimate swaps
 three of their own abilities out for three others — which is what made this
 pack the one that pushed `Champion.enterStance` into core. Gaara and Sakura
@@ -92,6 +92,17 @@ streamlines, with the gap between them doing the work.
 | W | Fūton: Tatsumaki | The pack's first **pull**. A vortex that drags what is inside it toward the middle and slows it. Without this her own Q would undo her kit. |
 | E | Fūton: Renpū | Her way out, and **zero damage** — an escape that also pokes is one pressed on cooldown for the poke. The air she leaves behind slows whoever follows. |
 | R | Kirikiri Mai | A vortex that *walks*: it crosses 650 slowly, carrying everyone it catches, and bursts at the end to throw them out. A setup, not a kill. |
+
+**Kakashi Hatake** — a skirmisher, and the champion who exists to add the
+mechanics nobody else had. Two motifs that belong to one another: the crimson
+Kamui void, and the lightning the phasing arm carries.
+
+| Slot | Ability | What it is |
+|------|---------|-----------|
+| Q | Chidori Nagashi | The pack's **only stun**. It earths off him in every direction, so using it costs standing in the middle of people. |
+| W | Kamui | The pack's **only invulnerability** — untargetable and immune for 0.7s, and still walking. The first button here pressed on somebody else's timing. |
+| E | Shinjū Zanshu no Jutsu | The pack's first cast aimed at an **enemy** body. He sinks, surfaces behind them, and buries them to the neck. |
+| R | Raikiri | The pack's **only true damage**, and its only self-root: nearly a second planted in plain sight with the corridor drawn on the floor, then 55 through the first body in it. |
 
 ## What is not done yet
 

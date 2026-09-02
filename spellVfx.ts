@@ -179,6 +179,29 @@ export const WIND = Object.freeze({
   PALE: [143, 216, 239] as readonly [number, number, number],
 });
 
+/**
+ * Kamui, and the lightning that comes with it.
+ *
+ * A hole in the world rather than a shape standing in it: nearly black at the
+ * centre, a crimson body, and a hard pale rim. Deliberately **not** the violet
+ * `SHADOW` — two champions whose signature effect is "a dark shape with a
+ * bright edge" would be one champion twice, and the standard's first rule is
+ * about exactly that. Shadow crawls along the floor and is violet; Kamui
+ * spirals into a point and is red.
+ *
+ * `SPARK` is the lightning half. Kept in the same palette on purpose: the
+ * arm that carries the lightning is the arm that phases, and a kit whose two
+ * motifs never touch is two half-champions.
+ */
+export const KAMUI = Object.freeze({
+  /** The rim, and the hottest part of a bolt. Nearly white. */
+  SPARK: [232, 238, 255] as readonly [number, number, number],
+  /** The body of the void, and the glow around a bolt. */
+  EDGE: [176, 58, 84] as readonly [number, number, number],
+  /** The centre, which is not a colour so much as an absence. */
+  VOID: [14, 8, 14] as readonly [number, number, number],
+});
+
 /** `rgba(...)` from a palette entry, so a trail and an orb quote one source. */
 export const rgba = (colour: readonly [number, number, number], alpha: number): string =>
   `rgba(${colour[0]}, ${colour[1]}, ${colour[2]}, ${alpha})`;

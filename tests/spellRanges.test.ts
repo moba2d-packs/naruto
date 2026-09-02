@@ -32,6 +32,8 @@ import { E_RANGE as SHIKA_E_RANGE } from '../spells/Shikamaru_E';
 import { Q_RANGE as TEMARI_Q_RANGE } from '../spells/Temari_Q';
 import { W_RANGE as TEMARI_W_RANGE } from '../spells/Temari_W';
 import { R_RANGE as TEMARI_R_RANGE } from '../spells/Temari_R';
+import { E_RANGE as KAKASHI_E_RANGE } from '../spells/Kakashi_E';
+import { R_RANGE as KAKASHI_R_RANGE } from '../spells/Kakashi_R';
 
 /** The widest anything in this pack may reach. See the header. */
 const CEILING = RANGE_BAND.ULTIMATE_LINE;
@@ -53,6 +55,7 @@ describe('spell ranges', () => {
       TEMARI_Q_RANGE,
       TEMARI_W_RANGE,
       TEMARI_R_RANGE,
+      KAKASHI_R_RANGE,
     }).filter(
       ([, range]) => range > CEILING
     );
@@ -81,6 +84,7 @@ describe('spell ranges', () => {
     // The heaviest ultimate line, and the second ability in the pack to earn
     // the top of the band — it is the slowest thing anybody throws.
     expect(TEMARI_R_RANGE).toBe(RANGE_BAND.ULTIMATE_LINE);
+    expect(KAKASHI_R_RANGE).toBe(RANGE_BAND.ABILITY);
   });
 
   it('keeps a melee swing shorter than anything anybody places', () => {
@@ -91,6 +95,9 @@ describe('spell ranges', () => {
     // drops, which is the shortest *placed* thing there is.
     expect(SAKURA_Q_LENGTH).toBeLessThan(RANGE_BAND.PLACED);
     expect(SAKURA_E_REACH).toBeLessThan(RANGE_BAND.PLACED);
+    // And a reach that puts him *behind* somebody is shorter still: it is
+    // arm's length plus a step, not a skillshot at all.
+    expect(KAKASHI_E_RANGE).toBeLessThan(RANGE_BAND.PLACED);
   });
 
   it('orders the band the way the abilities are meant to feel', () => {
