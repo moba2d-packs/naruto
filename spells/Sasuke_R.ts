@@ -153,7 +153,7 @@ export default class Sasuke_R extends api.Spell {
    * bot's automatic follow-through must not spend it — see `Naruto_R`'s own
    * note for the frame-long transform that produced this.
    */
-  static aiRecastEndsEarly = true;
+  static aiRecastAfterMs = Infinity;
 
   name = 'Susanoo';
   image = api.asset('spell_sasuke_r');

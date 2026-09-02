@@ -122,8 +122,8 @@ describe('what the tags say', () => {
     // or a detonation never detonates. This line pins that these two
     // abilities are the ones that opt out, because nothing else in the pack
     // says so.
-    expect(Naruto_R.aiRecastEndsEarly).toBe(true);
-    expect(Sasuke_R.aiRecastEndsEarly).toBe(true);
+    expect(Naruto_R.aiRecastAfterMs).toBe(Infinity);
+    expect(Sasuke_R.aiRecastAfterMs).toBe(Infinity);
   });
 
   it('leaves the abilities inference already reads correctly untagged', () => {
@@ -134,6 +134,6 @@ describe('what the tags say', () => {
     expect(Sasuke_W.aiRoles).toBeUndefined();
     // Kage Bunshin's recast commands the clones somewhere, which *is* a
     // follow-through — a bot pressing it is the bot using the ability.
-    expect(Naruto_W.aiRecastEndsEarly).toBeUndefined();
+    expect(Naruto_W.aiRecastAfterMs).toBeUndefined();
   });
 });

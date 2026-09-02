@@ -171,7 +171,7 @@ export default class Naruto_R extends api.Spell {
    * is what finally separated the two causes. Scoring the ability higher
    * cannot fix an ability that ends the instant it starts.
    */
-  static aiRecastEndsEarly = true;
+  static aiRecastAfterMs = Infinity;
 
   name = 'Kurama Mode';
   image = api.asset('spell_naruto_r');
