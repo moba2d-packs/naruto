@@ -49,7 +49,25 @@ export class Gaara_R_Grip extends api.SpellObject {
   private ageMs = 0;
   private sinceTickMs = 0;
   private crushed = false;
-  private jaws: { angle: number; length: number; lean: number }[] = [];
+  /**
+   * The ridges on each bank, rooted along its spine.
+   *
+   * `along` is the position down the bank, −1 to 1 — a *line*, not an angle
+   * around a hub. The first cut spaced nine jaws evenly around the victim and
+   * pointed each one inward, which renders as a gold starburst: the same
+   * "rooted at a point and fanned out is a mace" failure as Kurama Arms and
+   * as this ultimate's own wave. Found by `npm run e2e:vfx`, which is the
+   * only thing that could have found it.
+   */
+  private ridges: { along: number; height: number; lean: number; width: number }[] = [];
+
+  /**
+   * The axis the jaws close along, written by the surge.
+   *
+   * Set to the direction the wave arrived from, so the grip continues the
+   * motion that made it rather than snapping to a fixed world axis.
+   */
+  axis: { x: number; y: number } = { x: 1, y: 0 };
 
   private burst = api.helpers.PredefinedParticleSystems.randomMovingParticlesDecreaseSize(
     'rgba(206, 174, 116, 0.92)',
@@ -57,11 +75,15 @@ export class Gaara_R_Grip extends api.SpellObject {
   );
 
   onAdded(): void {
-    for (let jaw = 0; jaw < 9; jaw++) {
-      this.jaws.push({
-        angle: (jaw / 9) * Math.PI * 2 + Math.random() * 0.3,
-        length: 0.7 + Math.random() * 0.55,
-        lean: (Math.random() - 0.5) * 0.4,
+    for (let ridge = 0; ridge < 6; ridge++) {
+      const along = -1 + (2 * (ridge + 0.5)) / 6;
+      this.ridges.push({
+        along,
+        // Longest at the middle of the bank, so the two jaws meet nose-first
+        // rather than closing as two flat plates.
+        height: (0.55 + 0.45 * Math.cos(along * 1.1)) * (0.7 + Math.random() * 0.5),
+        lean: (Math.random() - 0.5) * 0.25,
+        width: 0.1 + Math.random() * 0.05,
       });
     }
     this.useParticles(this.burst);
@@ -131,33 +153,58 @@ export class Gaara_R_Grip extends api.SpellObject {
       fill(150, 116, 66, (120 + 70 * closing) * risen);
       circle(centre.x, centre.y, GRIP_RADIUS * 2 * (0.6 + 0.25 * closing) * (0.35 + 0.65 * risen));
 
-      for (const jaw of this.jaws) {
-        // Motion agreeing with the effect: everything travels inward,
-        // because the ability is closing on them.
-        // Still buried while `risen` is low: the jaws come *up* through the
-        // floor before they close, so there is no frame where they pop in.
-        const reach = GRIP_RADIUS * (1.55 - 0.62 * closing) * jaw.length;
-        const emerged = risen;
-        const baseX = centre.x + Math.cos(jaw.angle) * reach;
-        const baseY = centre.y + Math.sin(jaw.angle) * reach;
-        const tipX = centre.x + Math.cos(jaw.angle + jaw.lean) * reach * 0.42;
-        const tipY = centre.y + Math.sin(jaw.angle + jaw.lean) * reach * 0.42;
-        const width = (8 + jaw.length * 5) * (0.4 + 0.6 * emerged);
-        const nx = -Math.sin(jaw.angle) * width;
-        const ny = Math.cos(jaw.angle) * width;
+      // Two banks, closing. Each one's ridges are rooted along its own spine
+      // and all point at the other bank — which is what makes this read as a
+      // grip instead of as a sun.
+      const axis = Math.atan2(this.axis.y, this.axis.x);
+      for (const side of [1, -1]) {
+        const standoff = GRIP_RADIUS * (1.45 - 0.75 * closing);
 
-        fill(74, 52, 26, 225 * emerged);
-        triangle(baseX - nx, baseY - ny, baseX + nx, baseY + ny, tipX, tipY);
-        fill(206, 174, 116, 235 * emerged);
-        triangle(
-          baseX - nx * 0.55,
-          baseY - ny * 0.55,
-          baseX + nx * 0.55,
-          baseY + ny * 0.55,
-          tipX,
-          tipY
-        );
+        push();
+        translate(centre.x, centre.y);
+        rotate(axis);
+
+        fill(122, 92, 46, 235 * risen);
+        beginShape();
+        for (let i = 0; i <= 10; i++) {
+          const a = -1.05 + (i / 10) * 2.1;
+          vertex(side * standoff * Math.cos(a * 0.55), Math.sin(a) * GRIP_RADIUS * 1.05);
+        }
+        for (let i = 10; i >= 0; i--) {
+          const a = -1.05 + (i / 10) * 2.1;
+          vertex(
+            side * (standoff + GRIP_RADIUS * 0.42) * Math.cos(a * 0.55),
+            Math.sin(a) * GRIP_RADIUS
+          );
+        }
+        endShape(CLOSE);
+
+        for (const ridge of this.ridges) {
+          const a = ridge.along * 0.95;
+          const rootX = side * standoff * Math.cos(a * 0.55);
+          const rootY = Math.sin(a) * GRIP_RADIUS;
+          const length = GRIP_RADIUS * 0.62 * ridge.height * (0.4 + 0.6 * closing) * risen;
+          const width = GRIP_RADIUS * ridge.width;
+          const tipX = rootX - side * length;
+          const tipY = rootY + ridge.lean * length;
+
+          // A dark rim under each ridge, not around the bank, or the teeth
+          // merge into one slab at a glance.
+          fill(61, 43, 18, 235 * risen);
+          triangle(rootX, rootY - width, rootX, rootY + width, tipX, tipY);
+          fill(214, 184, 128, 240 * risen);
+          triangle(
+            rootX,
+            rootY - width * 0.55,
+            rootX,
+            rootY + width * 0.55,
+            tipX + side * length * 0.15,
+            tipY
+          );
+        }
+        pop();
       }
+
       pop();
       return;
     }
@@ -169,16 +216,18 @@ export class Gaara_R_Grip extends api.SpellObject {
     fill(150, 116, 66, 200 * alpha);
     circle(centre.x, centre.y, GRIP_RADIUS * 2 * (1 - 0.35 * shut));
 
-    for (const jaw of this.jaws) {
+    for (const ridge of this.ridges) {
       // Falling, not flying out: the crush pulled inward, so the aftermath
       // settles rather than scattering.
-      const drop = GRIP_RADIUS * 0.5 * (1 - shut) + falling * 16;
-      fill(206, 174, 116, 230 * alpha);
-      circle(
-        centre.x + Math.cos(jaw.angle) * drop,
-        centre.y + Math.sin(jaw.angle) * drop + falling * 12,
-        7 + jaw.length * 5
-      );
+      for (const side of [1, -1]) {
+        const drop = GRIP_RADIUS * 0.42 * (1 - shut) + falling * 16;
+        fill(206, 174, 116, 230 * alpha);
+        circle(
+          centre.x + side * drop * Math.cos(ridge.along * 0.5),
+          centre.y + Math.sin(ridge.along) * drop + falling * 12,
+          7 + ridge.height * 5
+        );
+      }
     }
 
     noFill();

@@ -166,6 +166,10 @@ export class Gaara_R_Surge extends api.MissileSpellObject {
     // damage, the root and the crush all belong to the thing that holds them.
     const grip = new Gaara_R_Grip(this.owner);
     grip.position.set(target.position.x, target.position.y);
+    // The jaws close along the line the wave was travelling, so the grip
+    // continues that motion instead of snapping to a fixed world axis.
+    const heading = this.heading();
+    grip.axis = { x: Math.cos(heading), y: Math.sin(heading) };
     grip.attachTo(target);
     this.game.objectManager.addObject(grip);
 
