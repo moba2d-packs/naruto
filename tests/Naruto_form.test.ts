@@ -126,9 +126,12 @@ describe('Bijuudama', () => {
     const boom = new Naruto_E2_Detonation(caster);
     boom.position.set(0, 0);
     boom.spare = [victim];
-    boom.onAdded();
+    // Read before `onAdded`, which is where the bite lands now: snapshotting
+    // after it would capture an already-reduced pool and pass whether the
+    // spare worked or not.
     const before = victim.stats.health.baseValue;
 
+    boom.onAdded();
     tick(boom, BOOM_GROW_MS + 20);
 
     expect(victim.stats.health.baseValue).toBe(before);
@@ -144,12 +147,24 @@ describe('Bijuudama', () => {
     boom.onAdded();
     const before = bystander.stats.health.baseValue;
 
-    tick(boom, BOOM_GROW_MS + 20);
+    tick(boom, 16);
 
     expect(bystander.stats.health.baseValue).toBeLessThan(before);
   });
 
-  it('does not bite before it has drawn its radius', () => {
+  it('lands the crater in the frame the sphere did, not after the grow', () => {
+    // This object is the far end of a shot already fired — the tell was the
+    // sphere travelling the line, which is the thing it exists to give an
+    // ending to. Waiting out `BOOM_GROW_MS` put 200ms between the detonation a
+    // player watched and the number it dealt, the same gap `Naruto_Q_Vortex`
+    // carried and the same one `Naruto_Q2.detonate` never had. The abilities
+    // that genuinely telegraph say so in their own names — `Q_TELL_MS`,
+    // `R_WINDUP_MS`.
+    //
+    // The first `update()` and not `onAdded`: `ObjectManager` wraps only the
+    // former in the caster's attribution, and a bite outside it silently loses
+    // the whole ability-power build. `Naruto_Q.test.ts` pins that with a
+    // number; here one frame is simply where the damage is.
     const caster = champion(game, 0, 'blue');
     const bystander = unit(game, 0, 'red');
     indexObjects(game, [caster, bystander]);
@@ -157,11 +172,14 @@ describe('Bijuudama', () => {
     const boom = new Naruto_E2_Detonation(caster);
     boom.position.set(0, 0);
     boom.onAdded();
-    const before = bystander.stats.health.baseValue;
+    tick(boom, 16);
+    const afterBite = bystander.stats.health.baseValue;
 
-    tick(boom, BOOM_GROW_MS - 30);
+    // The picture still runs its full grow, over a hit already paid.
+    tick(boom, BOOM_GROW_MS + 30);
 
-    expect(bystander.stats.health.baseValue).toBe(before);
+    expect(bystander.stats.health.baseValue).toBe(afterBite);
+    expect(boom.toRemove).toBe(false);
   });
 });
 

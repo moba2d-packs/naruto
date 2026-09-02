@@ -31,6 +31,16 @@ export const BOOM_DAMAGE = 30;
  * The blast deliberately spares whoever the sphere already pierced — being
  * hit by the shot and then by the crater it makes is one ability charging
  * twice for one dodge, and the tooltip does not say that.
+ *
+ * ## The bite lands on contact
+ *
+ * Same correction as `Naruto_Q_Vortex`, and for the same reason: this is the
+ * far end of a shot that has already been fired, not a telegraph. The tell was
+ * the sphere travelling the line — the thing this whole object exists to give
+ * an ending to. Waiting out `BOOM_GROW_MS` put 200ms between the detonation a
+ * player watched and the number it dealt; `Naruto_Q2.detonate` never did, and
+ * the abilities that *should* wait say so in their own names (`Q_TELL_MS`,
+ * `R_WINDUP_MS`). The grow still runs and still eases — over a hit already paid.
  */
 export class Naruto_E2_Detonation extends api.SpellObject {
   /**
@@ -71,15 +81,21 @@ export class Naruto_E2_Detonation extends api.SpellObject {
   }
 
   update(): void {
+    // First tick, not `onAdded` — `ObjectManager` only wraps `update()` in the
+    // attribution, and without it `takeDamage` drops the caster's ability
+    // power on the floor. See `Naruto_Q_Vortex.update` for the number that
+    // shipped.
+    this.biteOnce();
+
     this.ageMs += deltaTime;
-    // Damage lands when the sphere has finished expanding, not on spawn: an
-    // area that hurts before it has drawn itself is an area nobody could have
-    // read.
-    if (!this.bitten && this.ageMs >= BOOM_GROW_MS) {
-      this.bitten = true;
-      this.bite();
-    }
     if (this.ageMs >= this.totalMs) this.toRemove = true;
+  }
+
+  /** Idempotent: the clock is gone, so this is the only thing keeping it once. */
+  private biteOnce(): void {
+    if (this.bitten) return;
+    this.bitten = true;
+    this.bite();
   }
 
   private bite(): void {

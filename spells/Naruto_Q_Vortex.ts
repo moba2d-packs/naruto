@@ -35,9 +35,31 @@ export const VORTEX_PULL_PER_FRAME = 0.9;
  * damage teaches nothing, and the floating number is the only evidence it
  * ever existed.
  *
- * So: grow (180ms), bite (the damage and the slow land once, at the start of
- * the hold), fade (520ms, rim last). Total just over a second, which is long
- * enough to read and short enough not to sit on top of the next trade.
+ * So: grow (180ms), hold, fade (520ms, rim last). Total just over a second,
+ * which is long enough to read and short enough not to sit on top of the next
+ * trade.
+ *
+ * ## The bite lands on contact, not at the end of the grow
+ *
+ * It used to wait out `VORTEX_GROW_MS` on the rule that "a blast that damages
+ * before it has drawn its own radius is a blast the victim could not have
+ * read". That rule is right, and it is about a *telegraph* — `Gaara_Q` and
+ * `Kakashi_Q` both name theirs `Q_TELL_MS`, and `Naruto_E2_Detonation` is a
+ * bomb somebody planted. This is not one of those. The warning for a Rasengan
+ * is the sphere crossing the lane, which the victim watched for its whole
+ * flight and could walk out of; by the time this object exists the throw has
+ * already connected.
+ *
+ * So the wait bought nothing and cost the hit: "chiêu nổ rồi mà khoảng
+ * 100-200ms sau mới thấy apply damage" — 180 of them, exactly. It also made
+ * the ability's own Kurama form contradict it. `Naruto_Q2.detonate` deals its
+ * splash and spawns `Naruto_Q2_Scorch` in the same frame, and that scorch says
+ * outright what this object should also have been: "purely a reading, no
+ * damage, no slow, nothing to balance". Two versions of one ability, opposite
+ * shapes, and the delayed one is the outlier.
+ *
+ * The grow is still 180ms and still eases — it just animates a hit that has
+ * already happened, which is what every other dissipation in this pack does.
  */
 export class Naruto_Q_Vortex extends api.SpellObject {
   /**
@@ -73,20 +95,21 @@ export class Naruto_Q_Vortex extends api.SpellObject {
   }
 
   update(): void {
+    // **First tick, not `onAdded`.** `ObjectManager` wraps `update()` in
+    // `beginAttribution(attributedTo)` and does *not* wrap `onAdded` — so a
+    // bite from there runs with no attribution, `abilityPowerScales()` answers
+    // false, and `takeDamage` skips the caster's ability power entirely. That
+    // shipped for one commit: six Mũ Phù Thủy, a tooltip promising 48 (+835),
+    // and 31 damage on the floor, which is the base number with the build
+    // thrown away. One frame is 16ms and the delay this was fixing was 180.
+    this.biteOnce();
+
     this.ageMs += deltaTime;
 
     // The drag runs the whole time the spiral is turning, and stops when it
     // starts to fade — an effect that is visibly dying must not still be
     // moving people, or the picture and the physics disagree.
     if (this.ageMs < VORTEX_GROW_MS + VORTEX_HOLD_MS) this.drag();
-
-    // The bite lands once, when the spiral reaches full width — not on spawn.
-    // A blast that damages before it has drawn its own radius is a blast the
-    // victim could not have read.
-    if (!this.bitten && this.ageMs >= VORTEX_GROW_MS) {
-      this.bitten = true;
-      this.bite();
-    }
 
     if (this.ageMs >= this.totalMs) this.toRemove = true;
   }
@@ -129,6 +152,13 @@ export class Naruto_Q_Vortex extends api.SpellObject {
       );
       unit.markDisplaced?.();
     }
+  }
+
+  /** Idempotent: the clock is gone, so this is the only thing keeping it once. */
+  private biteOnce(): void {
+    if (this.bitten) return;
+    this.bitten = true;
+    this.bite();
   }
 
   private bite(): void {

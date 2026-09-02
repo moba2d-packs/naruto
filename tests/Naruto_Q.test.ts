@@ -191,20 +191,79 @@ describe('the vortex', () => {
     return vortex;
   };
 
-  it('does not bite before it has drawn the radius it bites in', () => {
-    // Damage on spawn would be damage the victim could not have read — the
-    // area has to exist on screen before it means anything.
+  /**
+   * The number, not just "health went down" — and driven through the real
+   * `ObjectManager`, because the thing that broke lives in the difference
+   * between its two call sites.
+   *
+   * `ObjectManager.update` wraps `o.update()` in
+   * `beginAttribution(o.attributedTo)` and wraps `o.onAdded()` in nothing. So
+   * a bite moved into `onAdded` — which is where this one briefly went, to
+   * land damage in the frame the sphere burst — ran with no attribution,
+   * `abilityPowerScales()` answered false, and `takeDamage` dropped the
+   * caster's whole build: six Mũ Phù Thủy, a tooltip reading 48 (+835), and 31
+   * damage dealt. Every test in this file passed, because all of them asked
+   * whether the victim lost health rather than how much.
+   */
+  it('pays the caster’s ability power, which only the attributed path does', () => {
+    // A real cast, and the *number* — the two things this file was missing.
+    const HAT = 1.5 * 1.25;
+    const caster = naruto();
+    caster.stats.abilityPower.baseValue = HAT;
+    const victim = unit(game, 120, 'red');
+    victim.stats.healthRegen.baseValue = 0;
+    indexObjects(game, [caster, victim]);
+
+    pressSpell(caster.spells[0], { at: { x: 400, y: 0 } });
+    releaseSpell(caster.spells[0], { at: { x: 400, y: 0 } });
+
+    const before = victim.stats.health.baseValue;
+    for (let frame = 0; frame < 40; frame++) game.objectManager.update();
+
+    expect(before - victim.stats.health.baseValue).toBe(Math.round(Q_MIN_DAMAGE * (1 + HAT)));
+  });
+
+  it('bites in the frame it is planted, not a fifth of a second later', () => {
+    // It used to wait out `VORTEX_GROW_MS` so the area was on screen before it
+    // meant anything — the right rule for a telegraph (`Gaara_Q` and
+    // `Kakashi_Q` both call theirs `Q_TELL_MS`) and the wrong one here. A
+    // Rasengan's warning is the sphere crossing the lane; by the time this
+    // object exists the throw has connected, so the wait bought no reading and
+    // put 180ms between the burst a player saw and the number they took:
+    // "chiêu nổ rồi mà khoảng 100-200ms sau mới thấy apply damage".
+    //
+    // `Naruto_Q2.detonate` — the same ability in Kurama form — has always paid
+    // in the frame it lands, and leaves a scorch that says of itself "purely a
+    // reading, no damage, no slow, nothing to balance". That is what this
+    // object is too, now, plus one bite at the start.
     const caster = naruto();
     const victim = unit(game, 0, 'red');
     indexObjects(game, [caster, victim]);
     const vortex = plant(caster, victim);
     const before = victim.stats.health.baseValue;
 
-    tick([vortex], VORTEX_GROW_MS - 20);
-    expect(victim.stats.health.baseValue).toBe(before);
+    // One frame. `ObjectManager` is what wraps `update()` in the caster's
+    // attribution and wraps `onAdded` in nothing, so the bite has to live on
+    // the first tick rather than on arrival — see the case above for the
+    // number that went missing when it did not.
+    tick([vortex], 16);
 
-    tick([vortex], 40);
     expect(victim.stats.health.baseValue).toBeLessThan(before);
+  });
+
+  it('and the grow is still 180ms of picture over a hit already paid', () => {
+    // The animation did not go anywhere — only the damage moved off its clock.
+    const caster = naruto();
+    const victim = unit(game, 0, 'red');
+    indexObjects(game, [caster, victim]);
+    const vortex = plant(caster, victim);
+    tick([vortex], 16);
+    const afterBite = victim.stats.health.baseValue;
+
+    tick([vortex], VORTEX_GROW_MS + 40);
+
+    expect(victim.stats.health.baseValue).toBe(afterBite);
+    expect(vortex.toRemove).toBe(false);
   });
 
   it('bites exactly once however long it lingers', () => {
