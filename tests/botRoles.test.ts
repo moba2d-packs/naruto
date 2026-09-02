@@ -108,11 +108,32 @@ describe('what the tags say', () => {
     expect(Naruto_E.aiRoles).toBe(Role.Buff);
   });
 
+  it('tells the bot not to spend the recast that ends a transform', () => {
+    // The second cause of "bot never uses R", and the one tagging the roles
+    // did nothing for. `BotBrain.cast` presses a `RECAST` ability again as a
+    // follow-through — right for every other recast in the game, and exactly
+    // backwards here, where the second press is how the form comes *down*.
+    // With `recastDelayMs` defaulting to 0 the bot toggled the form off on
+    // the next think tick: 100 chakra for one frame.
+    //
+    // What actually guards the behaviour is core's own
+    // `BotBrain.recastToggle.test.ts`, which drives a real brain and checks
+    // both branches — an untagged recast must still get its follow-through,
+    // or a detonation never detonates. This line pins that these two
+    // abilities are the ones that opt out, because nothing else in the pack
+    // says so.
+    expect(Naruto_R.aiRecastEndsEarly).toBe(true);
+    expect(Sasuke_R.aiRecastEndsEarly).toBe(true);
+  });
+
   it('leaves the abilities inference already reads correctly untagged', () => {
     // Tagging is an improvement to opt into, not a checklist. A ranged
     // DIRECTION skillshot is already read as Damage | Poke | Burst, and
     // restating that by hand is a second copy that can drift.
     expect(Naruto_Q.aiRoles).toBeUndefined();
     expect(Sasuke_W.aiRoles).toBeUndefined();
+    // Kage Bunshin's recast commands the clones somewhere, which *is* a
+    // follow-through — a bot pressing it is the bot using the ability.
+    expect(Naruto_W.aiRecastEndsEarly).toBeUndefined();
   });
 });

@@ -155,6 +155,24 @@ export default class Naruto_R extends api.Spell {
    */
   static aiRoles = api.enums.SpellRole.Buff | api.enums.SpellRole.Burst;
 
+  /**
+   * The second half of "the bot never uses R", and the half tagging the roles
+   * did not touch.
+   *
+   * `BotBrain.cast` schedules a follow-through press for every `RECAST`
+   * activation, because for every other recast ability in the game that is
+   * what a recast is: the payload. Here it is the opposite — pressing again
+   * is how the player puts the form *down* — and `recastDelayMs` defaults to
+   * 0, so the bot entered Kurama Mode and toggled it off on the next think
+   * tick. It paid 100 chakra for one frame of form, every time, and from
+   * outside nothing happened at all.
+   *
+   * Reported twice: once before the roles were tagged and once after, which
+   * is what finally separated the two causes. Scoring the ability higher
+   * cannot fix an ability that ends the instant it starts.
+   */
+  static aiRecastEndsEarly = true;
+
   name = 'Kurama Mode';
   image = api.asset('spell_naruto_r');
   // "Năng lượng", not "chakra": there is no chakra bar on screen. The blue

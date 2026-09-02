@@ -148,6 +148,13 @@ export default class Sasuke_R extends api.Spell {
    */
   static aiRoles = api.enums.SpellRole.Buff | api.enums.SpellRole.Burst;
 
+  /**
+   * Pressing again lowers the shell rather than finishing the ability, so the
+   * bot's automatic follow-through must not spend it — see `Naruto_R`'s own
+   * note for the frame-long transform that produced this.
+   */
+  static aiRecastEndsEarly = true;
+
   name = 'Susanoo';
   image = api.asset('spell_sasuke_r');
   description =
