@@ -5,11 +5,19 @@ import { Gaara_R_Grip } from './Gaara_R_Grip';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 
-export const SURGE_SPEED = 7.5;
-export const SURGE_WIDTH = 74;
-
 /** p5's `HALF_PI` only exists inside a running sketch. The value is not in doubt. */
 const QUARTER_TURN = Math.PI / 2;
+
+export const SURGE_SPEED = 7.5;
+/**
+ * The wave's width, which is also its hitbox: `MissileSpellObject` collides on
+ * a circle of `size / 2`. Widened from 74 for the same reason the art was
+ * redrawn — at 74 this was the size of an ordinary fireball, and an ultimate
+ * that looks like a Q is one nobody respects. It is affordable because the
+ * ability is slow and dodgeable: the counterplay is stepping aside, and a
+ * wider wave asks for a slightly earlier step, not a different answer.
+ */
+export const SURGE_WIDTH = 110;
 
 /**
  * The sand crossing the ground on its way to somebody.
@@ -48,16 +56,49 @@ export class Gaara_R_Surge extends api.MissileSpellObject {
   visionRadius = SIGHT.IMPACT;
 
   private ageMs = 0;
-  private ridge: { along: number; height: number; phase: number }[] = [];
+
+  /**
+   * The ridges, rooted along the crest and seeded once.
+   *
+   * `across` is the position along the wave front, −1 to 1. That is the whole
+   * point: ridges grow from a *line* and all point forward, so they read as a
+   * wave front. Rooted at a point and fanned out instead, they read as a mace
+   * — which is exactly what the first cut of this looked like, and the same
+   * mistake Kurama Arms' fingers made before them.
+   */
+  private ridges: { across: number; height: number; lean: number; phase: number; width: number }[] =
+    [];
+
+  /** Loose sand, in the mass and streaming behind it. Sand is granular. */
+  private grains: { back: number; side: number; size: number; phase: number }[] = [];
+
+  /** Speed lines. Motion reads as streaks far better than as a dark cone. */
+  private streaks: { side: number; length: number }[] = [];
 
   onAdded(): void {
     super.onAdded();
-    for (let grain = 0; grain < 18; grain++) {
-      this.ridge.push({
-        along: Math.random() * 2 - 1,
-        height: 0.5 + Math.random() * 0.7,
+    for (let i = 0; i < 13; i++) {
+      const across = -1 + (2 * (i + 0.5)) / 13;
+      this.ridges.push({
+        across,
+        // Tallest in the middle, so the front bows forward where the wave is
+        // deepest rather than being a comb of equal teeth.
+        height: (0.45 + 0.55 * (1 - across * across)) * (0.75 + Math.random() * 0.5),
+        lean: (Math.random() - 0.5) * 0.3,
+        phase: Math.random() * Math.PI * 2,
+        width: 0.075 + Math.random() * 0.045,
+      });
+    }
+    for (let i = 0; i < 22; i++) {
+      this.grains.push({
+        back: Math.pow(Math.random(), 0.6),
+        side: Math.random() * 2 - 1,
+        size: 1.5 + Math.random() * 3.2,
         phase: Math.random() * Math.PI * 2,
       });
+    }
+    for (let i = 0; i < 8; i++) {
+      this.streaks.push({ side: (i - 3.5) / 4, length: 1.3 + Math.random() * 2 });
     }
   }
 
@@ -83,8 +124,14 @@ export class Gaara_R_Surge extends api.MissileSpellObject {
   rootMs = 0;
   rootImage: ReturnType<typeof api.asset> | undefined = undefined;
 
+  /** Ground art: the wave runs along the floor, under the feet it is chasing. */
+  zIndex = api.layers.GROUND_Z_INDEX;
+
   getDisplayBoundingBox(): Rectangle {
-    const reach = this.size + 40;
+    // The streaks reach about three radii *behind* the head, in whatever
+    // direction it happens to be going — so the box is a square wide enough
+    // to hold the tail at any heading, not one sized to the missile.
+    const reach = this.size * 2;
     return new QRectangle({
       x: this.position.x - reach,
       y: this.position.y - reach,
@@ -94,47 +141,113 @@ export class Gaara_R_Surge extends api.MissileSpellObject {
     });
   }
 
-  /** Ground art: the wave runs along the floor, under the feet it is chasing. */
-  zIndex = api.layers.GROUND_Z_INDEX;
+  /**
+   * Where the wave is pointed.
+   *
+   * `MissileSpellObject` has **no `direction` field** — it carries `position`
+   * and `destination`, and its own `draw()` derives the angle from the two.
+   * The first cut of this reached for `this.direction`, got `undefined`, fell
+   * through to `atan2(0, 1)` and drew every wave pointing due east however it
+   * was aimed. Reported as "ko render quay theo hướng đang bay", and invisible
+   * from the file: the fallback made it look deliberate.
+   */
+  private heading(): number {
+    return Math.atan2(
+      this.destination.y - this.position.y,
+      this.destination.x - this.position.x
+    );
+  }
+
+  /** The crest line: a shallow bow across the travel direction. */
+  private crest(across: number): { x: number; y: number } {
+    const half = this.size / 2;
+    return { x: half * 0.3 * (1 - across * across), y: across * half * 0.98 };
+  }
 
   draw(): void {
-    const head = this.position;
-    const heading = Math.atan2(this.direction?.y ?? 0, this.direction?.x ?? 1);
     const half = this.size / 2;
-    // A crest that rolls rather than a disc that slides. A shape travelling
-    // at a constant size with no internal motion reads as a decal being
-    // dragged, which is exactly what the first cut of this looked like.
-    const roll = this.ageMs / 90;
+    const roll = this.ageMs / 95;
 
     push();
-    translate(head.x, head.y);
-    rotate(heading);
+    translate(this.position.x, this.position.y);
+    rotate(this.heading());
 
+    // Speed lines, behind. One layer, low alpha: they say "fast" and nothing
+    // else, so they must not compete with the crest for attention.
     noStroke();
-    // The trailing skirt: sand that has not caught up yet. It is what makes
-    // the direction of travel legible from a single frame.
-    fill(150, 116, 66, 120);
-    ellipse(-half * 0.8, 0, this.size * 1.5, this.size * 1.15);
-
-    fill(178, 142, 86, 210);
-    ellipse(0, 0, this.size * 0.95, this.size * 1.05);
-
-    for (const grain of this.ridge) {
-      const y = grain.along * half * 0.85;
-      const lift = Math.sin(roll + grain.phase) * 0.5 + 0.5;
-      const tall = half * 0.5 * grain.height * (0.55 + 0.45 * lift);
-      fill(74, 52, 26, 215);
-      triangle(half * 0.1 - 4, y - 4, half * 0.1 + 4, y + 4, half * 0.1 + tall, y);
-      fill(214, 184, 128, 235);
-      triangle(half * 0.1 - 3, y - 3, half * 0.1 + 3, y + 3, half * 0.1 + tall * 0.8, y);
+    fill(165, 129, 63, 55);
+    for (const streak of this.streaks) {
+      const length = half * streak.length;
+      rect(-half * 0.5 - length, streak.side * half * 0.6 - 2, length, 4, 2);
     }
 
-    // A hard leading edge on the width the collision really uses, so the
-    // player can read what the wave will and will not catch.
+    // The bank: a lens, thick at the middle and thinning at the wings. Drawn
+    // as one filled shape twice rather than as nested circles, because a
+    // circle is a ball and this is a wall of sand being pushed.
+    for (const [scale, colour] of [
+      [1, [107, 80, 39]],
+      [0.82, [165, 129, 63]],
+    ] as const) {
+      fill(colour[0], colour[1], colour[2], 235);
+      beginShape();
+      for (let i = 0; i <= 24; i++) {
+        const across = -1 + (2 * i) / 24;
+        const point = this.crest(across);
+        vertex(point.x * scale, point.y * scale);
+      }
+      for (let i = 24; i >= 0; i--) {
+        const across = -1 + (2 * i) / 24;
+        const point = this.crest(across);
+        vertex((-half * 0.62 * (1 - across * across) - half * 0.12) * scale, point.y * 0.92 * scale);
+      }
+      endShape(CLOSE);
+    }
+
+    // Loose grains, drifting backward on their own phase.
+    for (const grain of this.grains) {
+      const drift = (grain.back + ((roll * 0.12 + grain.phase) % 1) * 0.35) % 1;
+      const x = half * 0.2 - drift * half * 2.6;
+      const y = grain.side * half * 1.7 * (1 - drift * 0.4);
+      fill(216, 188, 134, 205 * (1 - drift * 0.65));
+      circle(x, y, grain.size * (1 - drift * 0.45) * 2);
+    }
+
+    // The ridges. Rooted along the crest, all pointing forward, each churning
+    // on its own phase — one shared wobble would read as a blinking decal.
+    for (const ridge of this.ridges) {
+      const root = this.crest(ridge.across);
+      const churn = 0.78 + 0.22 * Math.sin(roll + ridge.phase);
+      const length = half * 0.68 * ridge.height * churn;
+      const width = half * ridge.width;
+      const tipX = root.x + length;
+      const tipY = root.y + ridge.lean * length;
+
+      // A dark rim under *each* ridge rather than around the group, or the
+      // whole front merges into one blob at a glance.
+      fill(61, 43, 18, 235);
+      triangle(root.x - width * 0.2, root.y - width, root.x - width * 0.2, root.y + width, tipX, tipY);
+      fill(205, 170, 112, 240);
+      triangle(
+        root.x - width * 0.2,
+        root.y - width * 0.58,
+        root.x - width * 0.2,
+        root.y + width * 0.58,
+        tipX - length * 0.16,
+        tipY
+      );
+    }
+
+    // The hitbox, stated. `MissileSpellObject` collides on a circle of
+    // `size / 2`, and the churning front is deliberately irregular — so
+    // without this the player would be reading the *ridges* as the edge and
+    // guessing wrong every time the tallest one happened to be short.
+    // Thin, so it says where the edge is without competing with the crest.
     noFill();
-    stroke(64, 44, 22, 235);
-    strokeWeight(3);
-    arc(0, 0, this.size, this.size * 1.05, -QUARTER_TURN, QUARTER_TURN);
+    stroke(58, 42, 18, 150);
+    strokeWeight(2);
+    arc(0, 0, this.size, this.size, -QUARTER_TURN * 1.15, QUARTER_TURN * 1.15);
+    noStroke();
+
     pop();
   }
 }
