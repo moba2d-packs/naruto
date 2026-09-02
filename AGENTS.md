@@ -35,7 +35,57 @@ Then, by hand:
    A **playable** champion needs exactly four, in `Q W E R` order.
 2. Write the ability. Start from the generated file; it extends
    `api.MissileSpellObject` and shows the shape.
-3. `npm run verify`.
+3. Walk the VFX checklist below.
+4. `npm run verify`.
+
+### The VFX checklist, and why it is a checklist
+
+Everything in it is already in core's `docs/VFX_STANDARD.md`. It is repeated
+here because reading that document is **not** what stops these: every visual
+failure this pack has shipped was a rule its author had read that week. Four
+of them were caught by a player rather than by the build:
+
+> *"đột nhiên xuất hiện rồi đột nhiên biến mất gây damage"*
+> *"instant quá, ko có animation gì bay từ Gaara tới kẻ địch, địch ko né đc"*
+> *"E giống Trundle với Anivia quá"*
+> *"ko render quay theo hướng đang bay"*
+
+`tests/vfxRules.test.ts` now holds the four that a scan can hold, so those are
+settled and you will hear about them in `verify` rather than in a match. What
+is below is the rest — the ones a machine cannot judge, which is exactly why
+they need a human to stop and answer them.
+
+**Ask these before you write `draw()`:**
+
+- **Three phases, and the third is the one you will skip.** Anticipation, then
+  the climax, then *dissipation*. Never `toRemove = true` on the frame an
+  effect does its thing — deal the damage, mark it spent, let it leave. If one
+  effect hands over to another, the two must **overlap**, or there is a frame
+  with neither on screen and the hand-off reads as a pop.
+- **Does the hit show on the victim?** Not near them — on them. A buff icon is
+  not feedback; nobody reads the buff bar mid-fight.
+- **Is this shape this champion's own?** A slab that blocks is Anivia's. A
+  pillar is Trundle's. If the answer is "well, it is a wall", the ability needs
+  a different verb, not a different colour.
+- **Would a stranger know where it hits?** Draw the real radius. If the front
+  of the effect is deliberately ragged, put a thin rim on the true edge, or
+  the player reads the longest spike as the reach and is wrong every time.
+
+**Then look at it.** Two tools, and neither is optional for anything with a
+shape in it:
+
+- `node tools/preview-shape.mjs` renders geometry to an SVG in seconds. Use it
+  **before** porting a shape into a spell. Gaara's ultimate took six rounds
+  there and produced, in order: a biscuit, a Pac-Man, a hex nut and a
+  hedgehog. Not one of those was visible from the code.
+- A real match. `verify` cannot see whether an effect is legible and no unit
+  test ever will.
+
+**One shape rule worth writing down, because it has now cost time twice:**
+ridges, fingers, spikes — anything repeated — must be **rooted along a line
+and pointed the same way**. Rooted at a point and fanned outward, they read as
+a mace, whatever they are meant to be. That is what made Kurama Arms a club
+and Gaara's wave a hedgehog.
 
 ## Change what an ability does
 
