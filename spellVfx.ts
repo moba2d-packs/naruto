@@ -37,6 +37,38 @@ export const RANGE_BAND = Object.freeze({
   ULTIMATE_LINE: 650,
 });
 
+/**
+ * How far a landed effect lights the fog for its team.
+ *
+ * Core already does the work: `FogOfWar` reads `visionRadius` off *any*
+ * object, not only units (`fogRevealOf`), and casts the same wall-aware
+ * polygon it casts for a champion. So a spell object grants sight by carrying
+ * a number, and nothing else has to happen — no ward, no buff, no timer. The
+ * effect's **own lifetime is the window**, which is why none of these come
+ * with a duration: a bolt that fades in half a second shows you half a
+ * second, and a fire that burns for three shows you three.
+ *
+ * Stated here rather than per spell for `RANGE_BAND`'s reason — the numbers
+ * have to be comparable across a roster, and the second author to want one
+ * should find the band instead of inventing a 900.
+ *
+ * The rule behind the four: **you see about as far as you hit, plus enough to
+ * read the answer.** Vision is the strongest thing a spell can quietly hand
+ * out — a ranged ability that lights a jungle is a scouting tool whatever its
+ * damage says — so an ability that lands *on* someone sees less than one that
+ * puts a burning circle on the ground and stands it there.
+ */
+export const SIGHT = Object.freeze({
+  /** A hit landed: look at what you hit, and whether to follow it. */
+  IMPACT: 250,
+  /** An ultimate-scale detonation, which is a bigger hole in the dark. */
+  BLAST: 320,
+  /** A placed effect that stays: it holds the ground it is burning. */
+  ZONE: 300,
+  /** A victim marked well enough to give their own position away. */
+  MARK: 200,
+});
+
 /** A missile's trail. Length and fade scale with the missile, not with taste. */
 export const chakraTrail = (
   owner: { game: unknown; position: p5.Vector; teamId: string },

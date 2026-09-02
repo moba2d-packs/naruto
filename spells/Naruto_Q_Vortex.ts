@@ -1,5 +1,6 @@
 import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
+import { SIGHT } from '../spellVfx';
 import { clamp01, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
@@ -39,6 +40,16 @@ export const VORTEX_PULL_PER_FRAME = 0.9;
  * enough to read and short enough not to sit on top of the next trade.
  */
 export class Naruto_Q_Vortex extends api.SpellObject {
+  /**
+   * The Rasengan bursts where it lands — see who it caught, and whether to follow it in.
+   *
+   * `FogOfWar` reads `visionRadius` off any object and casts the same
+   * wall-aware polygon it casts for a champion, so this one number is the
+   * whole feature — and the effect's own lifetime is the window. See
+   * `SIGHT` in `spellVfx.ts` for why the bands differ.
+   */
+  visionRadius = SIGHT.IMPACT;
+
   /** Set by the missile from its own charge ratio. */
   radius = 130;
   damage = 0;

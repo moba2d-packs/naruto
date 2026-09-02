@@ -1,5 +1,6 @@
 import type { Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
+import { SIGHT } from '../spellVfx';
 import { clamp01, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
@@ -25,6 +26,16 @@ export const BOLT_FADE_MS = 320;
  * share geometry. Lightning forks; nothing else here does.
  */
 export class Sasuke_Q_Bolt extends api.SpellObject {
+  /**
+   * Chidori arriving: half a second, which is exactly enough to read where he just landed.
+   *
+   * `FogOfWar` reads `visionRadius` off any object and casts the same
+   * wall-aware polygon it casts for a champion, so this one number is the
+   * whole feature — and the effect's own lifetime is the window. See
+   * `SIGHT` in `spellVfx.ts` for why the bands differ.
+   */
+  visionRadius = SIGHT.IMPACT;
+
   radius = 120;
 
   private ageMs = 0;

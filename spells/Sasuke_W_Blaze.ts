@@ -1,5 +1,6 @@
 import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
+import { SIGHT } from '../spellVfx';
 import { clamp01, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
@@ -30,6 +31,16 @@ export const BLAZE_TICK_DAMAGE = 10;
  * is the kind of bug that only shows up on somebody else's phone.
  */
 export class Sasuke_W_Blaze extends api.SpellObject {
+  /**
+   * The fire stays on the ground, so it holds the sight there for as long as it burns.
+   *
+   * `FogOfWar` reads `visionRadius` off any object and casts the same
+   * wall-aware polygon it casts for a champion, so this one number is the
+   * whole feature — and the effect's own lifetime is the window. See
+   * `SIGHT` in `spellVfx.ts` for why the bands differ.
+   */
+  visionRadius = SIGHT.ZONE;
+
   radius = 150;
 
   private ageMs = 0;

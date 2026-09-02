@@ -1,5 +1,6 @@
 import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
+import { SIGHT } from '../spellVfx';
 import { clamp01, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
@@ -32,6 +33,16 @@ export const BOOM_DAMAGE = 30;
  * twice for one dodge, and the tooltip does not say that.
  */
 export class Naruto_E2_Detonation extends api.SpellObject {
+  /**
+   * Bijuudama detonates at the end of its line, and a tailed-beast bomb opens a larger hole in the dark than an ordinary hit.
+   *
+   * `FogOfWar` reads `visionRadius` off any object and casts the same
+   * wall-aware polygon it casts for a champion, so this one number is the
+   * whole feature — and the effect's own lifetime is the window. See
+   * `SIGHT` in `spellVfx.ts` for why the bands differ.
+   */
+  visionRadius = SIGHT.BLAST;
+
   radius = BOOM_RADIUS;
   damage = BOOM_DAMAGE;
   /** Units the sphere already caught on the way here. */

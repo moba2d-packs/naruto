@@ -1,5 +1,6 @@
 import type { Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
+import { SIGHT } from '../spellVfx';
 import { clamp01, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
@@ -23,6 +24,16 @@ export const SCORCH_FADE_MS = 760;
  * vortex already makes.
  */
 export class Naruto_Q2_Scorch extends api.SpellObject {
+  /**
+   * The scorch Bijuu Rasengan leaves: the same question, in the transformed kit.
+   *
+   * `FogOfWar` reads `visionRadius` off any object and casts the same
+   * wall-aware polygon it casts for a champion, so this one number is the
+   * whole feature — and the effect's own lifetime is the window. See
+   * `SIGHT` in `spellVfx.ts` for why the bands differ.
+   */
+  visionRadius = SIGHT.IMPACT;
+
   radius = 150;
 
   private ageMs = 0;

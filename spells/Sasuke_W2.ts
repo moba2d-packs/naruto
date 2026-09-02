@@ -1,6 +1,6 @@
 import type { AttackableUnit, Rectangle } from '@moba2d/core/content/types';
 import { api } from '../packApi';
-import { RANGE_BAND, clamp01, snapOut } from '../spellVfx';
+import { RANGE_BAND, SIGHT, clamp01, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 
@@ -110,6 +110,22 @@ export class Sasuke_W2_Object extends api.MissileSpellObject {
 
 /** Black flames standing on whoever caught them. */
 export class AmaterasuFlame extends api.SpellObject {
+  /**
+   * The black flame gives its victim away.
+   *
+   * It rides the body (`attachTo`) but belongs to **Sasuke's** team — built
+   * from `this.owner`, not from the victim — so the sight it grants is his.
+   * That is the whole character: Amaterasu does not go out, and standing in a
+   * bush with it on you is not hiding.
+   *
+   * It also resolves the one interaction worth stating. An attached effect is
+   * now drawn only while its anchor is visible (`GameObject.visionAnchor`), so
+   * on its own this flame would be invisible on an enemy in the dark — but the
+   * sight it grants is what lights that enemy, and the fog pass runs before
+   * the draw. The victim is revealed, and the flame with them.
+   */
+  visionRadius = SIGHT.MARK;
+
   private ageMs = 0;
   private tongues: { angle: number; height: number; phase: number }[] = [];
 
