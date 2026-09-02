@@ -11,15 +11,18 @@ import { spellModules } from './generated/spellModules';
 import { map } from './map';
 
 /**
- * Naruto — one champion, one map, four abilities: the smallest thing
- * that is actually a pack, not the smallest thing that would compile.
+ * Naruto — two champions, fourteen abilities, one map.
  *
- * Four abilities and not one because core validates a pack before installing
- * it, and a `playable` champion there means exactly this: a portrait, and a
- * kit of four. A pack that ships three is not a pack with a gap in it, it is
- * a pack that fails to install, in a browser, after it is already published.
- * The four here are deliberately the same bolt four times — your job is to
- * make them different, and the shape is already in place for it.
+ * Four abilities per champion and not three, because core validates a pack
+ * before installing it, and a `playable` champion there means exactly this: a
+ * portrait, and a kit of four. A pack that ships three is not a pack with a
+ * gap in it, it is a pack that fails to install, in a browser, after it is
+ * already published.
+ *
+ * Fourteen and not eight because both ultimates are *forms*: they swap the
+ * champion's own Q/W/E out for three others while they hold, through
+ * `Champion.enterStance`. Those seven extra abilities are declared here like
+ * any other, and then deliberately kept out of `spellDisplay` — see below.
  *
  * ## The two halves, and why the data one imports no spell
  *
@@ -77,10 +80,12 @@ export const data: ContentPackData = {
   // unsatisfiable, so `^1` is not a loose range, it is a pack that refuses to
   // install. `scripts/write-manifest.mjs` states the same floor for the
   // published manifest; raise both together.
-  // 1.20 is where `Champion.enterStance` and `TerrainZone` landed, and this
-  // pack is built on both: Naruto and Sasuke transform, and the map's
-  // elemental groves are zones. Anything older installs and then fails in a
-  // match, which is the failure this floor exists to turn into a refusal.
+  // 1.21 is where `Champion.enterStance` and the slot-keyed `SpellSlot`
+  // landed, and both ultimates here are built on them. Anything older
+  // installs and then fails in a match, which is the failure this floor
+  // exists to turn into a refusal — and note that a *dev-linked* checkout
+  // typechecks against the core beside it, so this floor is the only thing
+  // standing between an unpublished core symbol and a red CI run.
   manifest: { id: 'naruto', version: '1.0.0', coreRange: '>=1.21.0' },
   champions: [
     {

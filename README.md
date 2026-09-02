@@ -1,8 +1,52 @@
 # Naruto
 
-A `@moba2d/core` content pack: one champion (Hero) with a full kit,
-one map, its own art path, and the build that publishes it — enough to
-install into the game today and start growing from.
+A `@moba2d/core` content pack: two champions, fourteen abilities, and a
+build that publishes itself. Both champions transform — the ultimate swaps
+three of their own abilities out for three others — which is what makes this
+pack the one that pushed `Champion.enterStance` into core.
+
+Install it into a running game by pasting this into **Tìm pack**:
+
+```
+https://moba2d-packs.github.io/naruto/manifest.json
+```
+
+## The roster
+
+**Naruto Uzumaki** — a melee bruiser who wants to be in the middle of it.
+
+| Slot | Ability | What it is |
+|------|---------|-----------|
+| Q | Rasengan | Charged. Hold to gather chakra, release to throw; the sphere and its vortex both grow with the hold. |
+| W | Kage Bunshin | Three clones at 55% attack damage and triple damage taken. Recast to order them to the cursor. |
+| E | Sennin Mōdo | Self buff: attack speed, attack range and move speed for 5s. |
+| R | Kurama Mode | 15s form. Costs 22 energy per second, so it can end by running dry as well as by timer. Recast to drop it early. |
+
+While Kurama Mode holds, Q/W/E become **Bijuu Rasengan**, **Kurama Arms**
+and **Bijuudama** — a charged piercing sphere that detonates at the end of
+its line.
+
+**Sasuke Uchiha** — a melee assassin: hits harder, takes it worse, and every
+ability is about arriving on one person.
+
+| Slot | Ability | What it is |
+|------|---------|-----------|
+| Q | Chidori | The dash-and-stab. |
+| W | Gōkakyū no Jutsu | The fireball. |
+| E | Sharingan | A sweep that grants sight — **one way only**, which `tests/sharinganDirection.test.ts` pins. |
+| R | Susanoo | 15s form, priced in chakra rather than in a long cooldown. |
+
+Susanoo swaps in **Yasaka Magatama**, **Amaterasu** and **Indra's Arrow**.
+
+## What is not done yet
+
+`map.ts` / `geometry.ts` still ship the **scaffold arena** — one wall band,
+one 200px gap, no turrets and no camps. It loads and it is playable, and it
+is not a map anyone designed. That is the largest open piece of work in this
+repository.
+
+There are also no items, no monsters, and ten champions' worth of room on a
+roster that currently holds two.
 
 ## Run this next
 
@@ -11,13 +55,28 @@ npm install
 npm run verify
 ```
 
-`verify` is typecheck + `check-seams` + tests + the published build, in that
-order. It is **this pack's own gate**: `npm install` never runs it for you,
-and core's own `verify` never reaches into a pack it does not own.
+`verify` is the core-link check + art check + generated-file checks +
+typecheck + `check-unused` + `check-seams` + the published build + tests, in
+that order. It is **this pack's own gate**: `npm install` never runs it for
+you, and core's own `verify` never reaches into a pack it does not own.
+`npm run hooks:install` points git at `scripts/git-hooks/`, and from then on
+every `git push` runs `verify` first — `git push --no-verify` skips it once,
+on purpose.
 
-Once this pack is a git repository, `npm run hooks:install` points git at
-`scripts/git-hooks/`, and from then on every `git push` runs `verify` first —
-`git push --no-verify` skips it once, on purpose.
+### The trap that verify cannot catch for you
+
+`npm run verify` passing locally does **not** mean CI will pass, and the
+reason is structural. If this checkout is dev-linked to a core beside it
+(`npm run pack:link -- ../naruto`, run from core), then
+`node_modules/@moba2d/core` is a symlink to that working copy — so the pack
+typechecks against a core that may have unpushed commits in it. CI installs
+`github:moba2d-game/core#main` fresh, every run.
+
+So a pack that reaches for a core symbol that is not on core's `main` yet is
+green at home and red in CI, with a `Property 'X' does not exist` that reads
+like the pack's fault. **Push core before pushing the pack that needs it.**
+This pack's `coreRange` is `>=1.21.0` because `Champion.enterStance` and
+`api.enums.SpellSlot` landed there, and both transforms are built on them.
 
 ## Play it before you publish it
 
@@ -39,101 +98,83 @@ Firefox, or put a tunnel in front of the port. `docs/PACK_AUTHORING.md` in
 
 ## Publish it
 
-`npm run build` writes `dist/`, and `dist/manifest.json` is the whole pack
-behind one URL. `.github/workflows/publish.yml` does that on every push to
-`main` and puts the result on GitHub Pages — turn Pages on once, by hand, at
-**Settings → Pages → Source: GitHub Actions**, or every run fails at the
-deploy step.
+`.github/workflows/publish.yml` builds and deploys `dist/` to GitHub Pages on
+every push to `main`. Pages must be turned on once, by hand, at **Settings →
+Pages → Source: GitHub Actions**, or every run fails at the deploy step with
+a permissions error that reads like a broken token; nothing is broken.
 
-Players then install from:
-
-```
-https://<owner>.github.io/<repo>/manifest.json
-```
-
-pasted into the game's **Tìm pack** field. Any static host that serves
-`access-control-allow-origin: *` and a JavaScript MIME type for `.js` works
-the same way; Pages does both.
+Any static host that serves `access-control-allow-origin: *` and a JavaScript
+MIME type for `.js` works exactly as well — core `fetch`es the manifest and
+`import()`s the entry cross-origin, and that is the whole of what it needs.
 
 ## Where things live
 
 - `pack.ts` — the whole pack's declaration, in two halves. `data` is inert
   (roster, map, display strings) and must be readable without an engine;
-  `code` hands this pack its `api` and then a loader per spell.
-- `spells/` — one file per ability, four to a champion, each an ordinary
-  class: `export default class Hero_Q extends api.Spell { ... }`.
-  Read `Hero_Q.ts` before writing a second one.
+  `code` hands this pack its `api` and then a loader per spell. `data` also
+  filters the form abilities out of `spellDisplay`, on the id's own shape
+  (`_[QWER]\d+$`), so a loadout screen cannot hand anyone Bijuudama as a
+  free pick.
+- `spells/` — one file per ability plus the `SpellObject`s each one spawns,
+  which is why thirty files back fourteen abilities. A charged ability is
+  typically three (charge, projectile, aftermath) because the phases outlive
+  each other.
 - `spells/index.ts` — the barrel. Adding a spell means adding one line here
   and one id to the champion's kit; everything else is generated.
+- `spellVfx.ts` — the pack's shared drawing helpers, `RANGE_BAND` and
+  `SIGHT`. Two abilities that are meant to reach the same distance should
+  read the same constant, not the same number typed twice.
 - `AGENTS.md` — **read this before changing anything.** Recipes for adding,
   editing and removing an ability, a champion or a piece of art, each as a
   literal sequence of commands, plus the traps that cost real time and are
-  invisible from the file you are editing. Written for a person or an agent
-  with no prior context.
-- `packApi.ts` — where the engine arrives. Its header is the one page worth
-  reading twice: it says why a pack cannot `import { Spell }` at all, and
-  which three callers set the api before any spell module evaluates.
-- `assets/` — this pack's art. Drop a file in, run `npm run assets:generate`,
-  and its key exists as a type. Ships one placeholder tile
-  (`assets/champ_hero.png`) so the art path works before you have drawn
-  anything; replace it.
-- `tests/` — one per ability, plus `packInstallable` (core's own validator
-  says yes to this pack) and `build` (what `dist/` actually emitted).
-  **`npm run check-seams` scans `./spells`, and that is not an oversight**:
-  the pack-core boundary is checked across the whole package either way — the
-  run reports "scanned N file(s) of @moba2d/content-naruto" — while the
-  per-tree rules it adds for `./tests` are about production code. `mana-spend`
-  bans touching `stats.mana` outside `Spell.spendMana()`, which is exactly
-  what a fixture building a champion has to do. Pointing it at `./tests` buys
-  nothing and costs a debt file.
+  invisible from the file you are editing.
+- `packApi.ts` — where the engine arrives. Its header says why a pack cannot
+  `import { Spell }` at all, and which three callers set the api before any
+  spell module evaluates.
+- `assets/` — this pack's art. Champion portraits come from
+  `naruto.fandom.com` through `npm run art:import`, which records a hash per
+  file in `assets/source-manifest.json`; `npm run art:check` (part of
+  `verify`) fails if a file was edited without going through it. The ability
+  icons are drawn separately and are not fetched — jutsu screenshots are
+  1920x1080 cinematic frames and a 128px centre crop of one is a smudge.
+- `tools/preview-shape.mjs` — renders a shape to SVG/PNG without launching
+  the game. Use it before porting any hand-drawn geometry into a spell: a
+  shape cannot be reviewed by reading it.
+- `tests/` — one file per ability, plus the cross-cutting ones that are
+  easy to forget exist: `packInstallable` (core's own validator says yes),
+  `build` (what `dist/` actually emitted), `spellIcons` (an ability with no
+  icon is missing from the spell bar entirely, not just ugly),
+  `spellDescriptions` (the damage-colour vocabulary), `waveclear`,
+  `tempo`, `botRoles` and `spellSight`.
 - `generated/` — gitignored, rebuilt by `prepare` after every install:
-  `assetManifest.ts` (every file under `assets/`, keyed and typed),
-  `spellCatalog.ts` (every spell's name, cooldown and mana as plain values,
-  read off the class at build time) and `spellModules.ts` (the lazy
-  `id -> import()` map). This is why the data half restates no number and
-  imports no spell. **Never edit a file in here** — the next generate
-  overwrites it, and `verify` fails when the two disagree.
-- `tests/` — one test per ability, driven through `pressSpell`, never
-  through a lifecycle hook like `onSpellCast()` directly: a hook-calling
-  test cannot see activation, cooldown, resource cost or targeting
-  rejection, and stays green against an ability that does not work at all.
-  `packInstallable.test.ts` is the other kind — it runs core's own
-  validator over this pack, so a change that would make the pack refuse to
-  install fails here instead of in a player's browser.
+  `assetManifest.ts`, `spellCatalog.ts` and `spellModules.ts`. This is why
+  the data half restates no number and imports no spell. **Never edit a file
+  in here** — the next generate overwrites it, and `verify` fails when the
+  two disagree.
 - `map.ts` / `geometry.ts` — the world this pack ships. `geometry.ts` is
   fetched lazily, so a pregame picker never downloads the walls and lanes
   just to list this map's name.
 - `catalog.config.mjs` — this pack's layout, as the catalogue generator
   needs it. `apiSetter` is the line that matters: it is how the generator
   hands this pack its engine before loading the barrel.
-- `runtime-entry.ts` / `vite.config.ts` / `scripts/write-manifest.mjs` —
-  the published build. Each carries its own header; `vite.config.ts`'s
-  four settings are load-bearing and every one of them is a failure that
-  has actually happened.
+- `runtime-entry.ts` / `vite.config.ts` — the published build. Each carries
+  its own header; `vite.config.ts`'s four settings are load-bearing and every
+  one of them is a failure that has actually happened.
 
-## Add a champion
+## Before you write an ability
 
-By hand, in `pack.ts`, using Hero as the model — `moba2d-pack-add
-champion` is not implemented and says so rather than pretending. Then fill
-its four slots:
+Three documents in `@moba2d/core`, in this order, and all three were learned
+the expensive way on this pack:
 
-```
-moba2d-pack-add spell <Name> --champion <NewChampion> --slot Q
-```
+- `docs/ADDING_SPELLS.md` — write the script first, one line per
+  interaction; those lines become the test names. Also: `castSpec` is read
+  once on the first cast and frozen, and `onRecast` is handed the context of
+  the **opening** press, so aim repeats with `this.aimPoint`.
+- `docs/VFX_STANDARD.md` — anticipation → climax → **dissipation**, and
+  dissipation is the one everyone skips. Skillshots want a missile speed
+  around 9–11, not 19–24; impacts spawn particles on the victim, not at the
+  missile's last position; a lingering area's fill dies before its rim.
+- `AGENTS.md`, here — the pack-specific half of the same job.
 
-which writes the spell file and its test, exports it from `spells/index.ts`
-and adds its id to that champion's kit. There is no `spellDisplay` entry to
-write: `npm run catalog:generate` reads the name, description, icon,
-cooldown and mana off the class itself.
-A **playable** champion needs a portrait and exactly four abilities — core
-refuses to install anything else, and `tests/packInstallable.test.ts` is
-what tells you before a player would.
-
-## Next steps
-
-- Make the four abilities different from each other. They ship as the same
-  bolt four times on purpose: the shape is in place, the content is yours.
-- Write real `description`s and artwork. Core's own `docs/VFX_STANDARD.md`
-  is the whole bar in one page: a real windup, damage scaled to a ~100
-  health pool, and as few layers as it takes to say what the ability does.
-- Replace `geometry.ts` with a map worth playing on.
+Minion health is 70 / 45 / 150 (melee / ranged / cannon). Size waveclear
+against those numbers, not against other abilities.
