@@ -23,16 +23,23 @@
  * therefore half of its asset key — `assets/images/champions/naruto.png` is
  * `champ_naruto`, which is the string `pack.ts` writes.
  *
- * ## Why the ability icons are not here
+ * ## Why most ability icons are not here
  *
  * They cannot come from this wiki. Its jutsu images are 1920x1080 cinematic
  * frames, and an ability icon is a 128px square: centre-cropping one gives
  * you whatever was in the middle of that shot, which was measured as a black
  * smudge for Amaterasu and an orange smudge for Susanoo — three of four
- * unusable. The icons are generated instead, from the prompt sheet at the
+ * unusable. Most icons are generated instead, from the prompt sheet at the
  * repository root, and dropped into `assets/images/spells/` by hand. They
- * still get a `source-manifest.json` row, with no `sourceUrl`, exactly as the
- * Dota pack records its locally-supplied shelf logo.
+ * still get a `source-manifest.json` row, with no `sourceUrl`.
+ *
+ * `ICON_SOURCES` is the exception: an icon whose art the project owner picked
+ * out at a specific URL. Those are fetched here rather than saved by hand for
+ * one reason — a file that came from somewhere should say where, and a hand-
+ * saved file's origin lives only in whoever saved it. A row with a real
+ * `sourceUrl` and `sourceHash` is the difference between a ledger and a list
+ * of hashes. `localSpellIcons` skips whatever this table claims, so an icon
+ * is recorded once, by the half that knows the most about it.
  *
  * `--check` re-hashes what is on disk against the manifest and touches the
  * network for nothing. That is what `verify` runs, so a build on a machine
@@ -82,6 +89,60 @@ export const ROSTER = [
   // takes a narrower slice so the avatar reads as a face.
   { slug: "Naruto's Kurama Mode.png", local: 'naruto_kurama', zoom: 0.55 },
 ];
+
+/** Ability-icon edge, in pixels. What the HUD draws a spell slot at. */
+const ICON = 128;
+
+/**
+ * Ability icons fetched from a URL the project owner chose, rather than drawn
+ * from the prompt sheet. Overwrites the generated icon of the same name.
+ *
+ * Every one of these is a centred square crop and nothing else — no plate, no
+ * recolour, no compositing. Two of the three sources are already square, and
+ * the third is a wide frame whose subject sits dead centre, so "take the
+ * middle square" is the whole transform and there is no judgement in it to
+ * get wrong later.
+ */
+const ICON_SOURCES = [
+  {
+    local: 'naruto_q',
+    url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSv3Lu3nMLDbd6KRPcqmskp4oWtxSbBobncsvjMwzkxu5fEDfSIZvVXa4EO',
+    note: 'Rasengan ability icon, source chosen by the project owner.',
+  },
+  {
+    local: 'naruto_w',
+    url: 'https://images.teepublic.com/derived/production/designs/12650574_0/1596122668/i_m:pid_2834,c_s_auto,bc_ffffff,s_630,q_90.jpg',
+    note: 'Kage Bunshin ability icon, source chosen by the project owner.',
+  },
+  {
+    local: 'naruto_r',
+    url: 'https://cdn-www.bluestacks.com/bs-images/9f002e0c8e738e26c387f9c1dc57e3e7.png',
+    note: 'Kurama Mode ability icon, source chosen by the project owner.',
+  },
+];
+
+/**
+ * The shelf tile, and why it is the one file that lands outside `assets/`.
+ *
+ * Core's packs screen **hot-links** this off the pack's published root —
+ * `https://<owner>.github.io/<repo>/icon.png` — so it must survive the build
+ * byte for byte at a predictable name. `public/` is the one directory Vite
+ * copies verbatim; anything under `assets/` is hashed into a filename nobody
+ * outside the build can spell, and re-encoded to WebP besides.
+ *
+ * It is therefore not an `AssetManager` key either (`localAssetKey: null`) —
+ * no code in this pack ever reads it. It exists for a screen in a different
+ * repository, which is exactly why it needs a row here: nothing else in
+ * `verify` would notice it going missing.
+ */
+const LOGO = {
+  localPath: 'public/icon.png',
+  url: 'https://assets.turbologo.com/blog/en/2021/11/14061241/Konoha-symbol.png',
+  note: 'Konoha emblem, source chosen by the project owner. Property of Masashi Kishimoto and Shueisha.',
+};
+
+/** Shelf-tile edge, in pixels. Matches the Dota pack's. */
+const LOGO_SIZE = 256;
 
 const sha256 = buffer => createHash('sha256').update(buffer).digest('hex');
 
@@ -156,7 +217,36 @@ const square = async (buffer, zoom) => {
 };
 
 /**
- * Icons are dropped in by hand (see this file's header). Whatever is sitting
+ * The largest centred square, resized to `size`.
+ *
+ * Deliberately *not* `square()` above: that one takes its crop off the **top**
+ * of anything taller than it is wide, which is right for a standing figure
+ * whose head is what matters and wrong for everything else. An icon's subject
+ * is its middle by construction — it was chosen for being an icon — so the
+ * rule here is the plain one, and the two do not share a code path because
+ * the day they do, someone changes the portrait rule and silently re-crops
+ * every icon.
+ */
+const centreSquare = async (buffer, size) => {
+  const { width = 1, height = 1 } = await sharp(buffer).metadata();
+  const side = Math.min(width, height);
+  return sharp(buffer)
+    .extract({
+      left: Math.round((width - side) / 2),
+      top: Math.round((height - side) / 2),
+      width: side,
+      height: side,
+    })
+    .resize(size, size, { fit: 'cover', position: 'centre' })
+    .png({ compressionLevel: 9, palette: true })
+    .toBuffer();
+};
+
+/** The icon names `ICON_SOURCES` owns, so `localSpellIcons` does not double-record them. */
+const fetchedIconFiles = new Set(ICON_SOURCES.map(icon => `${icon.local}.png`));
+
+/**
+ * Icons dropped in by hand (see this file's header). Whatever is sitting
  * in the folder is hashed and recorded, so `art:check` covers them exactly as
  * it covers a fetched portrait — the ledger's job is "this file is what it
  * says it is", and a locally-supplied file needs that as much as a fetched
@@ -166,7 +256,7 @@ function localSpellIcons() {
   const dir = join(root, 'assets/images/spells');
   if (!existsSync(dir)) return [];
   return readdirSync(dir)
-    .filter(name => name.endsWith('.png'))
+    .filter(name => name.endsWith('.png') && !fetchedIconFiles.has(name))
     .sort()
     .map(name => ({
       localPath: `assets/images/spells/${name}`,
@@ -234,6 +324,43 @@ async function main() {
       sourceUrl,
     });
     console.log(`  ${entry.local.padEnd(12)} <- ${entry.slug}`);
+  }
+
+  for (const icon of ICON_SOURCES) {
+    const raw = await download(icon.url);
+    const png = await centreSquare(raw, ICON);
+    const localPath = `assets/images/spells/${icon.local}.png`;
+    writeFileSync(join(root, localPath), png);
+    records.push({
+      contentHash: sha256(png),
+      fetchedAt: new Date().toISOString(),
+      localAssetKey: `spell_${icon.local}`,
+      localPath,
+      note: icon.note,
+      sourceHash: sha256(raw),
+      sourceUrl: icon.url,
+    });
+    console.log(`  ${icon.local.padEnd(12)} <- ${new URL(icon.url).host}`);
+  }
+
+  {
+    const raw = await download(LOGO.url);
+    const png = await centreSquare(raw, LOGO_SIZE);
+    mkdirSync(join(root, 'public'), { recursive: true });
+    writeFileSync(join(root, LOGO.localPath), png);
+    records.push({
+      contentHash: sha256(png),
+      fetchedAt: new Date().toISOString(),
+      // Not an `AssetManager` key: core's packs screen hot-links this file off
+      // the pack's published root, which is why it lands in `public/` — the
+      // one directory Vite copies verbatim — and never under `assets/`.
+      localAssetKey: null,
+      localPath: LOGO.localPath,
+      note: LOGO.note,
+      sourceHash: sha256(raw),
+      sourceUrl: LOGO.url,
+    });
+    console.log(`  ${'icon.png'.padEnd(12)} <- ${new URL(LOGO.url).host}`);
   }
 
   for (const icon of localSpellIcons()) {

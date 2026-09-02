@@ -134,9 +134,16 @@ MIME type for `.js` works exactly as well — core `fetch`es the manifest and
 - `assets/` — this pack's art. Champion portraits come from
   `naruto.fandom.com` through `npm run art:import`, which records a hash per
   file in `assets/source-manifest.json`; `npm run art:check` (part of
-  `verify`) fails if a file was edited without going through it. The ability
-  icons are drawn separately and are not fetched — jutsu screenshots are
-  1920x1080 cinematic frames and a 128px centre crop of one is a smudge.
+  `verify`) fails if a file was edited without going through it. Three
+  ability icons are fetched the same way, from URLs named in `ICON_SOURCES`;
+  the rest are still the lettered placeholders `npm run art:placeholders`
+  draws, which never overwrites a real icon. They are not taken off the wiki
+  because its jutsu images are 1920x1080 cinematic frames and a 128px centre
+  crop of one is a smudge.
+- `public/` — the one directory Vite copies verbatim, and therefore where the
+  shelf tile lives. Core's packs screen hot-links `icon.png` off this pack's
+  published root, so it cannot be an `assets/` file: those are content-hashed
+  into filenames nothing outside the build can spell, and re-encoded besides.
 - `tools/preview-shape.mjs` — renders a shape to SVG/PNG without launching
   the game. Use it before porting any hand-drawn geometry into a spell: a
   shape cannot be reviewed by reading it.
