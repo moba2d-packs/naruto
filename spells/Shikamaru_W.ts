@@ -5,7 +5,6 @@ import { RANGE_BAND, SHADOW, clamp01, impactSpray, snapOut, windIn } from '../sp
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
 const dmg = api.text.dmg;
-const dmgValue = api.text.dmgValue;
 
 /**
  * Kage Nui — he leaves a piece of his shadow lying on the floor and walks

@@ -5,7 +5,6 @@ import { RANGE_BAND, clamp01, impactBurst, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const dmgRange = api.text.dmgRange;
-const dmgRangeValue = api.text.dmgRangeValue;
 
 /**
  * Indra's Arrow — drawn on the Susanoo's bow, then loosed.

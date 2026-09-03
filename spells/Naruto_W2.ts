@@ -5,7 +5,6 @@ import { RANGE_BAND, clamp01, impactBurst, snapOut, windIn } from '../spellVfx';
 const Dash = api.buffs.Dash;
 const QRectangle = api.utils.Quadtree.Rectangle;
 const dmg = api.text.dmg;
-const dmgValue = api.text.dmgValue;
 
 /**
  * Kurama Arms — an arm of chakra thrown out to drag someone back.

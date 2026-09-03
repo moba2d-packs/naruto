@@ -5,7 +5,6 @@ import { clamp01, impactSpray, snapOut, windIn } from '../spellVfx';
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
 const dmg = api.text.dmg;
-const dmgValue = api.text.dmgValue;
 
 /**
  * Shannarō — she plants her feet and puts a fist through the floor.

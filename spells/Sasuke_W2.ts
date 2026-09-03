@@ -3,7 +3,6 @@ import { api } from '../packApi';
 import { RANGE_BAND, SIGHT, clamp01, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
-const dmg = api.text.dmg;
 const dmgValue = api.text.dmgValue;
 
 /**

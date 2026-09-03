@@ -5,7 +5,6 @@ import { RANGE_BAND, SHADOW, SIGHT, clamp01, impactSpray, windIn } from '../spel
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
 const dmg = api.text.dmg;
-const dmgValue = api.text.dmgValue;
 
 /**
  * Kage Kubi Shibari — a hand comes up out of somebody's own shadow and takes

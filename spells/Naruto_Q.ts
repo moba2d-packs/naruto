@@ -6,7 +6,6 @@ import { Naruto_Q_Vortex } from './Naruto_Q_Vortex';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const dmgRange = api.text.dmgRange;
-const dmgRangeValue = api.text.dmgRangeValue;
 
 /**
  * Rasengan — held to gather, released to throw.

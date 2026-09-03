@@ -6,7 +6,6 @@ import { Sasuke_Q2_Ring } from './Sasuke_Q2_Ring';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const dmg = api.text.dmg;
-const dmgValue = api.text.dmgValue;
 
 /**
  * Yasaka Magatama — Susanoo fires the Sharingan itself.

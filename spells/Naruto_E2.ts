@@ -17,7 +17,6 @@ import { Naruto_Q_Charge } from './Naruto_Q_Charge';
 import { BOOM_DAMAGE, Naruto_E2_Detonation } from './Naruto_E2_Detonation';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
-const dmgRange = api.text.dmgRange;
 const dmgRangeValue = api.text.dmgRangeValue;
 
 /**

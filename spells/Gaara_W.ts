@@ -6,7 +6,6 @@ const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
 const dmg = api.text.dmg;
 const heal = api.text.heal;
-const dmgValue = api.text.dmgValue;
 
 /**
  * Suna no Tate — the sand comes up around him, and then it goes off.

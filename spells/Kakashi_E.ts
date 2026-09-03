@@ -10,7 +10,6 @@ import { KAMUI, clamp01, impactSpray, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const dmg = api.text.dmg;
-const dmgValue = api.text.dmgValue;
 
 /**
  * Shinjū Zanshu no Jutsu — he goes into the ground and comes up behind you.

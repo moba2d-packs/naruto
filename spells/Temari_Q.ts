@@ -5,7 +5,6 @@ import { RANGE_BAND, WIND, clamp01, impactSpray } from '../spellVfx';
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
 const dmg = api.text.dmg;
-const dmgValue = api.text.dmgValue;
 
 /**
  * Kamaitachi no Jutsu — one swing of the fan, and the air goes with it.

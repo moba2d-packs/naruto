@@ -5,7 +5,6 @@ import { dragToward } from './Temari_W';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
-const dmg = api.text.dmg;
 const dmgValue = api.text.dmgValue;
 
 /**

@@ -5,7 +5,6 @@ import { clamp01, impactBurst, snapOut, windIn } from '../spellVfx';
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
 const dmg = api.text.dmg;
-const dmgValue = api.text.dmgValue;
 
 /**
  * Chakra no Mesu — the same hands, used the other way.

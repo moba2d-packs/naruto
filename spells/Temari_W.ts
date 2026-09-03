@@ -4,7 +4,6 @@ import { RANGE_BAND, SIGHT, WIND, clamp01, snapOut, windIn } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
-const dmg = api.text.dmg;
 const dmgValue = api.text.dmgValue;
 
 /**

@@ -3,7 +3,6 @@ import { RANGE_BAND } from '../spellVfx';
 import { GRIP_CRUSH_DAMAGE, GRIP_ROOT_MS, GRIP_TICK_DAMAGE, GRIP_TICK_MS } from './Gaara_R_Grip';
 import { Gaara_R_Surge, SURGE_SPEED } from './Gaara_R_Surge';
 
-const dmg = api.text.dmg;
 const dmgValue = api.text.dmgValue;
 
 /**
