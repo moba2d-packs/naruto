@@ -4,6 +4,8 @@ import { clamp01, impactSpray, snapOut, windIn } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Shannarō — she plants her feet and puts a fist through the floor.
@@ -361,7 +363,7 @@ export default class Sakura_Q extends api.Spell {
   image = api.asset('spell_sakura_q');
   description =
     'Sakura nện nắm đấm xuống đất. Sau <span class="time">0.22 giây</span>, cả mảng nền ' +
-    'trước mặt <b>vỡ tung</b>: <span class="damage physical">22</span> sát thương và ' +
+    `trước mặt <b>vỡ tung</b>: ${dmg(22, 'PHYSICAL')} và ` +
     '<span class="buff">hất văng</span> kẻ địch ra xa. Vết nứt hiện ra trước — đứng yên là dính.';
   coolDown = Q_COOLDOWN_MS;
   manaCost = Q_CHAKRA;

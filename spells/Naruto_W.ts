@@ -7,6 +7,8 @@ import type {
 import { api } from '../packApi';
 import { Naruto_W_Smoke } from './Naruto_W_Smoke';
 
+const pct = api.text.pct;
+
 /**
  * Kage Bunshin no Jutsu — vanish into smoke, come out as three of him.
  *
@@ -157,7 +159,7 @@ export default class Naruto_W extends api.Spell {
   image = api.asset('spell_naruto_w');
   description =
     'Biến vào làn khói và hiện ra thành <span class="buff">ba bản giống hệt nhau</span>. ' +
-    'Phân thân mang đúng thanh máu của Naruto, đánh <span class="damage magic">55%</span> ' +
+    `Phân thân mang đúng thanh máu của Naruto, đánh ${pct(55, 'MAGIC')} ` +
     `sát thương đòn thường và tồn tại <span class="time">${W_LIFETIME_MS / 1_000} giây</span>, nhưng chịu sát thương ` +
     'gấp <b>3</b> lần. <b>Bấm lại</b> để ra lệnh cho phân thân tới vị trí con trỏ.';
   coolDown = W_COOLDOWN_MS;

@@ -4,6 +4,8 @@ import { RANGE_BAND, clamp01, impactBurst, snapOut, windIn } from '../spellVfx';
 
 const Dash = api.buffs.Dash;
 const QRectangle = api.utils.Quadtree.Rectangle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Kurama Arms — an arm of chakra thrown out to drag someone back.
@@ -297,7 +299,7 @@ export default class Naruto_W2 extends api.Spell {
   name = 'Kurama Arms';
   image = api.asset('spell_naruto_w2');
   description =
-    'Vươn một cánh tay chakra, gây <span class="damage magic">20</span> sát thương và ' +
+    `Vươn một cánh tay chakra, gây ${dmg(20, 'MAGIC')} và ` +
     '<span class="buff">kéo</span> mục tiêu trúng đầu tiên về phía mình.';
   coolDown = W2_COOLDOWN_MS;
   manaCost = W2_CHAKRA;

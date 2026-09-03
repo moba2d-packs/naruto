@@ -16,3 +16,6 @@ package-lock.json
 # ported — the file worth committing is the script that draws it.
 tools/preview-shape.svg
 tools/preview-shape.png
+
+# CodeGraph index — a local search cache, rebuilt by `codegraph init`.
+.codegraph/

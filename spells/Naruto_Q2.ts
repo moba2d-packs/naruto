@@ -19,6 +19,8 @@ import { Naruto_Q2_Scorch } from './Naruto_Q2_Scorch';
 
 const Circle = api.utils.Quadtree.Circle;
 const QRectangle = api.utils.Quadtree.Rectangle;
+const dmgRange = api.text.dmgRange;
+const dmgRangeValue = api.text.dmgRangeValue;
 
 /**
  * Bijuu Rasengan — the form's Q, and the reason the form is worth entering.
@@ -215,8 +217,8 @@ export default class Naruto_Q2 extends api.Spell {
   image = api.asset('spell_naruto_q2');
   description =
     `Giữ để nén khối chakra vĩ thú, thả ra ném đi. Gây ` +
-    `<span class="damage magic">${Q2_DAMAGE}–${Q2_MAX_DAMAGE}</span> sát thương lên mục ` +
-    `tiêu trúng và <span class="damage magic">${Q2_SPLASH_DAMAGE}–${Q2_MAX_SPLASH_DAMAGE}</span> ` +
+    `${dmgRange(Q2_DAMAGE, Q2_MAX_DAMAGE, 'MAGIC')} lên mục ` +
+    `tiêu trúng và ${dmgRangeValue(Q2_SPLASH_DAMAGE, Q2_MAX_SPLASH_DAMAGE, 'MAGIC')} ` +
     `cho kẻ địch xung quanh. Nén càng lâu, <span class="buff">càng mạnh và càng xa</span>.`;
   coolDown = Q2_COOLDOWN_MS;
   manaCost = Q2_CHAKRA;

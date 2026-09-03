@@ -4,6 +4,9 @@ import { clamp01, impactBurst, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
+const dmg = api.text.dmg;
+const heal = api.text.heal;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Suna no Tate — the sand comes up around him, and then it goes off.
@@ -208,9 +211,9 @@ export default class Gaara_W extends api.Spell {
   image = api.asset('spell_gaara_w');
   /** `heal`, not `buff`: `buffs/Shield` amplifies this pool — see `Sasuke_R`. */
   description =
-    `Cát bọc quanh người, chắn <span class="heal">${W_SHIELD}</span> sát thương trong ` +
+    `Cát bọc quanh người, chắn ${heal(W_SHIELD)} sát thương trong ` +
     '<span class="time">4 giây</span>. Khi lớp cát <b>vỡ hoặc hết giờ</b>, nó nổ tung ra: ' +
-    '<span class="damage magic">20</span> sát thương và <span class="buff">hất tung</span> ' +
+    `${dmg(20, 'MAGIC')} và <span class="buff">hất tung</span> ` +
     'kẻ địch xung quanh trong <span class="time">0.45 giây</span>.';
   coolDown = W_COOLDOWN_MS;
   manaCost = W_CHAKRA;

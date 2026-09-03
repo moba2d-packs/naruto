@@ -4,6 +4,8 @@ import { KAMUI, clamp01, impactSpray, snapOut, windIn } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Chidori Nagashi — the lightning does not go anywhere. It comes off him.
@@ -187,7 +189,7 @@ export default class Kakashi_Q extends api.Spell {
   image = api.asset('spell_kakashi_q');
   description =
     'Sét chạy khắp người rồi <b>phóng ra mọi hướng</b> sau <span class="time">0.2 giây</span>: ' +
-    '<span class="damage magic">26</span> sát thương và <span class="buff">choáng</span> ' +
+    `${dmg(26, 'MAGIC')} và <span class="buff">choáng</span> ` +
     '<span class="time">0.55 giây</span> mọi kẻ địch đứng quanh. Sét nổ ra từ chính anh, nên ' +
     'phải đứng sát mới trúng.';
   coolDown = Q_COOLDOWN_MS;

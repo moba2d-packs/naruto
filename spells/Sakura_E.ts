@@ -4,6 +4,8 @@ import { clamp01, impactBurst, snapOut, windIn } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Chakra no Mesu — the same hands, used the other way.
@@ -376,8 +378,8 @@ export default class Sakura_E extends api.Spell {
   name = 'Chakra no Mesu';
   image = api.asset('spell_sakura_e');
   description =
-    'Lưỡi dao chakra quét một đường ngắn trước mặt: <span class="damage magic">10</span> sát ' +
-    'thương, chảy máu <span class="damage magic">5</span> mỗi <span class="time">0.5 giây</span> ' +
+    `Lưỡi dao chakra quét một đường ngắn trước mặt: ${dmg(10, 'MAGIC')}, ` +
+    `chảy máu ${dmg(5, 'MAGIC', ' mỗi')} <span class="time">0.5 giây</span> ` +
     'trong <span class="time">1.5 giây</span>, <span class="buff">tước vũ khí</span> ' +
     '<span class="time">0.9 giây</span> và <span class="buff">giảm 40% hồi máu</span> nhận được ' +
     'trong <span class="time">3 giây</span>.';

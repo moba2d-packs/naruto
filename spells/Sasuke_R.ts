@@ -5,6 +5,8 @@ import Sasuke_W2 from './Sasuke_W2';
 import Sasuke_E2 from './Sasuke_E2';
 import { SusanooArmour } from './Sasuke_R_Armour';
 
+const heal = api.text.heal;
+
 /**
  * Susanoo — the pack's second transform, and deliberately not the first.
  *
@@ -214,7 +216,7 @@ export default class Sasuke_R extends api.Spell {
    * whichever way that flag is set, instead of agreeing by accident.
    */
   description =
-    `Dựng bộ giáp Susanoo: khiên <span class="heal">${R_SHIELD}</span>, to ra và chậm hơn <b>12%</b>. ` +
+    `Dựng bộ giáp Susanoo: khiên ${heal(R_SHIELD)}, to ra và chậm hơn <b>12%</b>. ` +
     "Q/W/E đổi thành <b>Yasaka Magatama</b>, <b>Amaterasu</b>, <b>Indra's Arrow</b>. " +
     `Giáp <b>vỡ là tan</b>, hoặc <b>bấm lại để hạ xuống</b>, và ngốn ` +
     `<span class="buff">${R_CHAKRA_PER_SECOND} năng lượng mỗi giây</span>. Tối đa ` +

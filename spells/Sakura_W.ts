@@ -9,6 +9,7 @@ import { api } from '../packApi';
 import { RANGE_BAND, clamp01, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
+const heal = api.text.heal;
 
 /**
  * Shōsen Jutsu — she puts a hand out and mends somebody.
@@ -247,10 +248,10 @@ export default class Sakura_W extends api.Spell {
   image = api.asset('spell_sakura_w');
   description =
     'Truyền chakra chữa thương cho một <b>đồng minh</b> (hoặc chính mình): hồi ngay ' +
-    '<span class="heal">22 máu</span>, rồi <span class="heal">4 máu</span> mỗi ' +
+    `${heal(22, ' máu')}, rồi ${heal(4, ' máu')} mỗi ` +
     '<span class="time">0.5 giây</span> trong <span class="time">2 giây</span>. Nếu mục tiêu ' +
     'đang dưới <span class="buff">50% máu</span>, phần hồi ngay tăng lên ' +
-    '<span class="heal">33</span>.';
+    `${heal(33)}.`;
   coolDown = W_COOLDOWN_MS;
   manaCost = W_CHAKRA;
   range = W_RANGE;

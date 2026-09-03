@@ -496,10 +496,12 @@ describe('Susanoo', () => {
       caster.stats.abilityPower.baseValue = HAT;
 
       // No `(+487.5)`: the text and the pool agree because both read the same
-      // flag, rather than agreeing by accident.
-      expect(caster.spells[SLOT.R].effectiveDescription).toContain(
-        `khiên <span class="heal">${R_SHIELD}</span>`
-      );
+      // flag, rather than agreeing by accident. Compared as text rather than
+      // as markup — the span carries `data-base` now so core never has to
+      // parse the sentence, and pinning the tag would pin core's internals.
+      expect(
+        caster.spells[SLOT.R].effectiveDescription.replace(/<[^>]*>/g, '')
+      ).toContain(`khiên ${R_SHIELD}`);
     });
 
     it('but still scales what Susanoo actually casts', () => {

@@ -218,7 +218,10 @@ describe('Suna no Tate (W) — the shield that always goes off', () => {
 
     expect(caster.shieldAmount).toBe(W_SHIELD * (1 + HAT));
     // `84.4` and not `84.375`: core prints a bonus to at most one decimal.
-    expect(spell.effectiveDescription).toContain('<span class="heal">45 (+84.4)</span>');
+    // Read as text, not as markup: the span now carries `data-base` so core
+    // can find the figure without parsing the sentence, and an assertion on
+    // the exact tag is an assertion about core's internals.
+    expect(spell.effectiveDescription.replace(/<[^>]*>/g, '')).toContain('45 (+84.4)');
   });
 
   it('bursts when the shield is broken early', () => {

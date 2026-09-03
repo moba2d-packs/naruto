@@ -4,6 +4,8 @@ import { RANGE_BAND, SHADOW, clamp01, impactSpray, snapOut, windIn } from '../sp
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Kage Nui — he leaves a piece of his shadow lying on the floor and walks
@@ -234,7 +236,7 @@ export default class Shikamaru_W extends api.Spell {
   description =
     'Đặt một mảng bóng nằm im dưới đất — <b>chỉ đồng đội nhìn thấy</b>. Sau ' +
     '<span class="time">0.6 giây</span> nó lên nòng; kẻ địch đầu tiên bước vào bị kim bóng ' +
-    'đâm lên: <span class="damage magic">25</span> sát thương và ' +
+    `đâm lên: ${dmg(25, 'MAGIC')} và ` +
     '<span class="buff">làm chậm 50%</span> trong <span class="time">1.8 giây</span>. Không ai ' +
     'giẫm phải thì nó tan sau <span class="time">4.5 giây</span>.';
   coolDown = W_COOLDOWN_MS;

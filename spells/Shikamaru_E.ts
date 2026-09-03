@@ -4,6 +4,8 @@ import { RANGE_BAND, SHADOW, SIGHT, clamp01, impactSpray, windIn } from '../spel
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Kage Kubi Shibari — a hand comes up out of somebody's own shadow and takes
@@ -203,7 +205,7 @@ export default class Shikamaru_E extends api.Spell {
   image = api.asset('spell_shikamaru_e');
   description =
     'Một bàn tay bóng trồi lên tại điểm chỉ định. Sau <span class="time">0.35 giây</span> nó ' +
-    'siết lại: <span class="damage magic">18</span> sát thương và ' +
+    `siết lại: ${dmg(18, 'MAGIC')} và ` +
     '<span class="buff">câm lặng</span> trong <span class="time">1.4 giây</span> — không dùng ' +
     'được chiêu nào. Nhắm xuống đất chứ không khoá vào người, nên né được.';
   coolDown = E_COOLDOWN_MS;

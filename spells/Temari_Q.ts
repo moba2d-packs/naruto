@@ -4,6 +4,8 @@ import { RANGE_BAND, WIND, clamp01, impactSpray } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Kamaitachi no Jutsu — one swing of the fan, and the air goes with it.
@@ -241,7 +243,7 @@ export default class Temari_Q extends api.Spell {
   image = api.asset('spell_temari_q');
   description =
     'Một lưỡi gió rộng bay thẳng, <b>xuyên qua tất cả</b> chứ không dừng ở người đầu tiên: ' +
-    '<span class="damage magic">24</span> sát thương và <span class="buff">thổi bay</span> mỗi ' +
+    `${dmg(24, 'MAGIC')} và <span class="buff">thổi bay</span> mỗi ` +
     'người trúng ra xa theo hướng gió.';
   coolDown = Q_COOLDOWN_MS;
   manaCost = Q_CHAKRA;

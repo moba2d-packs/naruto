@@ -5,6 +5,8 @@ import { dragToward } from './Temari_W';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Kirikiri Mai — the column of wind does not stand still. It walks.
@@ -247,8 +249,8 @@ export default class Temari_R extends api.Spell {
   image = api.asset('spell_temari_r');
   description =
     'Một cột gió xoáy <b>chạy dọc</b> theo hướng chỉ định. Ai bị nó chạm tới nhận ' +
-    '<span class="damage magic">30</span> và bị <b>cuốn theo</b>. Tới cuối đường nó vỡ ra: ' +
-    'thêm <span class="damage magic">15</span> và <span class="buff">thổi bay</span> tất cả ra ' +
+    `${dmgValue(30, 'MAGIC')} và bị <b>cuốn theo</b>. Tới cuối đường nó vỡ ra: ` +
+    `thêm ${dmgValue(15, 'MAGIC')} và <span class="buff">thổi bay</span> tất cả ra ` +
     'ngoài. Nó đi <b>chậm</b> — bước sang bên là thoát.';
   coolDown = R_COOLDOWN_MS;
   manaCost = R_CHAKRA;

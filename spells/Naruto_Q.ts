@@ -5,6 +5,8 @@ import { Naruto_Q_Charge } from './Naruto_Q_Charge';
 import { Naruto_Q_Vortex } from './Naruto_Q_Vortex';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
+const dmgRange = api.text.dmgRange;
+const dmgRangeValue = api.text.dmgRangeValue;
 
 /**
  * Rasengan — held to gather, released to throw.
@@ -153,7 +155,7 @@ export default class Naruto_Q extends api.Spell {
   image = api.asset('spell_naruto_q');
   description =
     'Giữ để tụ chakra bên tay. Thả ra ném quả cầu đi, nổ thành xoáy gây ' +
-    '<span class="damage magic">18–48</span> sát thương và ' +
+    `${dmgRange(18, 48, 'MAGIC')} và ` +
     '<span class="buff">làm chậm 40%</span> trong <span class="time">1.4 giây</span>. ' +
     'Tụ càng lâu, quả cầu và vùng nổ càng lớn.';
   manaCost = Q_CHAKRA;

@@ -17,6 +17,8 @@ import { Naruto_Q_Charge } from './Naruto_Q_Charge';
 import { BOOM_DAMAGE, Naruto_E2_Detonation } from './Naruto_E2_Detonation';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
+const dmgRange = api.text.dmgRange;
+const dmgRangeValue = api.text.dmgRangeValue;
 
 /**
  * Bijuudama — the heaviest single line of damage in this pack.
@@ -149,9 +151,9 @@ export default class Naruto_E2 extends api.Spell {
   image = api.asset('spell_naruto_e2');
   description =
     `Giữ để nén quả cầu vĩ thú, thả ra bắn thẳng. <span class="buff">Xuyên qua</span> mọi kẻ ` +
-    `địch trên đường và gây <span class="damage magic">${E2_DAMAGE}–${E2_MAX_DAMAGE}</span> ` +
+    `địch trên đường và gây ${dmgRangeValue(E2_DAMAGE, E2_MAX_DAMAGE, 'MAGIC')} ` +
     `sát thương. Tới cuối đường quả cầu <b>phát nổ</b>, gây thêm ` +
-    `<span class="damage magic">${BOOM_DAMAGE}–${E2_MAX_BOOM_DAMAGE}</span> cho kẻ địch xung ` +
+    `${dmgRangeValue(BOOM_DAMAGE, E2_MAX_BOOM_DAMAGE, 'MAGIC')} cho kẻ địch xung ` +
     `quanh chưa trúng đòn xuyên. Nén càng lâu, <span class="buff">càng mạnh và càng xa</span>.`;
   coolDown = E2_COOLDOWN_MS;
   manaCost = E2_CHAKRA;

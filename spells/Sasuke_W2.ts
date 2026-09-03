@@ -3,6 +3,8 @@ import { api } from '../packApi';
 import { RANGE_BAND, SIGHT, clamp01, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Amaterasu — black fire that will not go out.
@@ -184,7 +186,7 @@ export default class Sasuke_W2 extends api.Spell {
   image = api.asset('spell_sasuke_w2');
   description =
     'Đốt kẻ địch đầu tiên trúng bằng lửa đen, <span class="buff">lan sang mọi kẻ địch ' +
-    'đứng gần</span>: <span class="damage magic">11</span> mỗi nửa giây trong ' +
+    `đứng gần</span>: ${dmgValue(11, 'MAGIC')} mỗi nửa giây trong ` +
     '<span class="time">4 giây</span>, và <span class="buff">giảm 60% hiệu quả hồi máu</span>.';
   coolDown = W2_COOLDOWN_MS;
   manaCost = W2_CHAKRA;

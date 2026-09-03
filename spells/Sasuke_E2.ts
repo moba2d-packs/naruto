@@ -4,6 +4,8 @@ import { Sasuke_E2_Trace } from './Sasuke_E2_Trace';
 import { RANGE_BAND, clamp01, impactBurst, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
+const dmgRange = api.text.dmgRange;
+const dmgRangeValue = api.text.dmgRangeValue;
 
 /**
  * Indra's Arrow — drawn on the Susanoo's bow, then loosed.
@@ -208,7 +210,7 @@ export default class Sasuke_E2 extends api.Spell {
   image = api.asset('spell_sasuke_e2');
   description =
     'Giương cung Susanoo. Thả ra bắn một mũi tên sét <span class="buff">xuyên qua</span> mọi ' +
-    'kẻ địch trên đường, gây <span class="damage magic">45–75</span> sát thương tuỳ thời gian giương.';
+    `kẻ địch trên đường, gây ${dmgRange(45, 75, 'MAGIC')} tuỳ thời gian giương.`;
   manaCost = E2_CHAKRA;
   coolDown = E2_COOLDOWN_MS;
   range = E2_RANGE;

@@ -3,6 +3,9 @@ import { RANGE_BAND } from '../spellVfx';
 import { GRIP_CRUSH_DAMAGE, GRIP_ROOT_MS, GRIP_TICK_DAMAGE, GRIP_TICK_MS } from './Gaara_R_Grip';
 import { Gaara_R_Surge, SURGE_SPEED } from './Gaara_R_Surge';
 
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
+
 /**
  * Sabaku Sōsō — the sand runs along the ground and closes on the first person
  * it reaches.
@@ -78,8 +81,8 @@ export default class Gaara_R extends api.Spell {
   description =
     'Một luồng cát <b>bò dọc mặt đất</b> theo hướng chỉ định. Kẻ địch <b>đầu tiên</b> nó chạm ' +
     'tới bị nuốt trọn: <span class="buff">trói chân</span> trong ' +
-    '<span class="time">1.4 giây</span>, siết <span class="damage magic">8</span> mỗi 0.4 ' +
-    'giây, rồi cát <b>ép lại</b> gây thêm <span class="damage magic">24</span>. ' +
+    `<span class="time">1.4 giây</span>, siết ${dmgValue(8, 'MAGIC')} mỗi 0.4 ` +
+    `giây, rồi cát <b>ép lại</b> gây thêm ${dmgValue(24, 'MAGIC')}. ` +
     'Luồng cát đi <b>chậm</b> — né sang bên là thoát.';
   coolDown = R_COOLDOWN_MS;
   manaCost = R_CHAKRA;

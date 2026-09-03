@@ -5,6 +5,8 @@ import { Gaara_Q_Sand, SAND_SLOW, SAND_SLOW_MS } from './Gaara_Q_Sand';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Suna Shigure — sand gathers at a spot, then erupts out of the ground.
@@ -221,8 +223,8 @@ export default class Gaara_Q extends api.Spell {
   image = api.asset('spell_gaara_q');
   description =
     'Cát tụ lại tại một điểm rồi <b>trồi lên</b> sau <span class="time">0.4 giây</span>, gây ' +
-    '<span class="damage magic">22</span> sát thương và <span class="buff">làm chậm 35%</span>. ' +
-    'Bãi cát ở lại <span class="time">2.2 giây</span>, gây <span class="damage magic">8</span> ' +
+    `${dmg(22, 'MAGIC')} và <span class="buff">làm chậm 35%</span>. ` +
+    `Bãi cát ở lại <span class="time">2.2 giây</span>, gây ${dmgValue(8, 'MAGIC')} ` +
     'mỗi 0.5 giây và giữ nguyên hiệu ứng làm chậm cho ai còn đứng trong đó.';
   coolDown = Q_COOLDOWN_MS;
   manaCost = Q_CHAKRA;

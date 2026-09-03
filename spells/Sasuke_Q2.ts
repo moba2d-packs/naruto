@@ -5,6 +5,8 @@ import { Sasuke_Q2_Ember } from './Sasuke_Q2_Ember';
 import { Sasuke_Q2_Ring } from './Sasuke_Q2_Ring';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Yasaka Magatama — Susanoo fires the Sharingan itself.
@@ -180,7 +182,7 @@ export default class Sasuke_Q2 extends api.Spell {
   description =
     `Mở <b>con mắt Sharingan</b> trước mặt, rồi bắn <b>ba tomoe</b> xé ra khỏi vòng mắt ` +
     `theo hình chữ thập. Mỗi tomoe <span class="buff">xuyên qua</span> mọi thứ trên đường ` +
-    `và gây <span class="damage magic">${Q2_DAMAGE}</span> sát thương.`;
+    `và gây ${dmg(Q2_DAMAGE, 'MAGIC')}.`;
   coolDown = Q2_COOLDOWN_MS;
   manaCost = Q2_CHAKRA;
   targetingMode = 'DIRECTION' as const;

@@ -10,6 +10,8 @@ import {
 } from './Sakura_R_Crater';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Ōkashō — she jumps, and the floor loses.
@@ -231,7 +233,7 @@ export default class Sakura_R extends api.Spell {
   image = api.asset('spell_sakura_r');
   description =
     'Sakura nhảy tới điểm chỉ định và giáng nắm đấm xuống đất: ' +
-    '<span class="damage physical">48</span> sát thương trong vòng tròn, và ' +
+    `${dmg(48, 'PHYSICAL')} trong vòng tròn, và ` +
     '<span class="buff">làm chậm 35%</span> kẻ địch đứng trên đống đổ nát trong ' +
     '<span class="time">3.5 giây</span>. Vòng tròn hiện ra ngay lúc cô rời mặt đất — ' +
     'có nửa giây để bước ra.';

@@ -4,6 +4,8 @@ import { SHADOW, SIGHT, clamp01, impactSpray, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Kagemane Shūchū — his shadow stops being a line and becomes a network.
@@ -326,7 +328,7 @@ export default class Shikamaru_R extends api.Spell {
   description =
     'Bóng của anh toả ra <b>bảy hướng</b> và rẽ nhánh khắp mặt đất trong ' +
     '<span class="time">0.7 giây</span>. Kẻ địch bị một nhánh chạm tới nhận ' +
-    '<span class="damage magic">42</span> sát thương và bị <span class="buff">trói chân</span> ' +
+    `${dmg(42, 'MAGIC')} và bị <span class="buff">trói chân</span> ` +
     '<span class="time">1.1 giây</span>, mỗi người một lần. <b>Anh vẫn đi lại được</b> suốt ' +
     'thời gian đó.';
   coolDown = R_COOLDOWN_MS;

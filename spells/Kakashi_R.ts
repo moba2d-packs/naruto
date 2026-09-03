@@ -4,6 +4,7 @@ import { KAMUI, RANGE_BAND, SIGHT, clamp01, impactSpray, snapOut, windIn } from 
 
 const QRectangle = api.utils.Quadtree.Rectangle;
 const Circle = api.utils.Quadtree.Circle;
+const dmg = api.text.dmg;
 
 /**
  * Raikiri — he phases the arm out of the world and puts it through somebody.
@@ -243,8 +244,8 @@ export default class Kakashi_R extends api.Spell {
   image = api.asset('spell_kakashi_r');
   description =
     'Kakashi <b>đứng yên tại chỗ</b> tích sét trong <span class="time">0.9 giây</span>, vệt đánh ' +
-    'hiện rõ dưới đất, rồi lao xuyên qua người đầu tiên trong vệt: <span class="damage true">55 ' +
-    'sát thương chuẩn</span> — giáp và kháng phép không giảm được.';
+    `hiện rõ dưới đất, rồi lao xuyên qua người đầu tiên trong vệt: ` +
+    `${dmg(55, 'TRUE')} — giáp và kháng phép không giảm được.`;
   coolDown = R_COOLDOWN_MS;
   manaCost = R_CHAKRA;
   targetingMode = 'DIRECTION' as const;

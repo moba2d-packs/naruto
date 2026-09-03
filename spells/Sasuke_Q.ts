@@ -4,6 +4,8 @@ import { RANGE_BAND, impactBurst } from '../spellVfx';
 import { Sasuke_Q_Bolt } from './Sasuke_Q_Bolt';
 
 const Dash = api.buffs.Dash;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Chidori — he runs the lightning into someone rather than throwing it.
@@ -55,9 +57,9 @@ export default class Sasuke_Q extends api.Spell {
   name = 'Chidori';
   image = api.asset('spell_sasuke_q');
   description =
-    'Lao tới trong luồng sét, gây <span class="damage magic">34</span> sát thương cho kẻ địch ' +
+    `Lao tới trong luồng sét, gây ${dmg(34, 'MAGIC')} cho kẻ địch ` +
     'đầu tiên chạm phải và <span class="buff">choáng</span> <span class="time">0.7 giây</span>. ' +
-    'Sét phóng ra gây <span class="damage magic">15</span> cho kẻ địch xung quanh. ' +
+    `Sét phóng ra gây ${dmgValue(15, 'MAGIC')} cho kẻ địch xung quanh. ` +
     'Sasuke dừng lại ngay tại mục tiêu.';
   coolDown = Q_COOLDOWN_MS;
   manaCost = Q_CHAKRA;

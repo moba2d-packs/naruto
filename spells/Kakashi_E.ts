@@ -9,6 +9,8 @@ import { api } from '../packApi';
 import { KAMUI, clamp01, impactSpray, snapOut } from '../spellVfx';
 
 const QRectangle = api.utils.Quadtree.Rectangle;
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
 
 /**
  * Shinjū Zanshu no Jutsu — he goes into the ground and comes up behind you.
@@ -142,7 +144,7 @@ export default class Kakashi_E extends api.Spell {
   image = api.asset('spell_kakashi_e');
   description =
     'Kakashi lặn xuống đất và trồi lên <b>sau lưng</b> mục tiêu: ' +
-    '<span class="damage magic">20</span> sát thương và <span class="buff">trói chân</span> ' +
+    `${dmg(20, 'MAGIC')} và <span class="buff">trói chân</span> ` +
     '<span class="time">1 giây</span> vì bị chôn tới cổ.';
   coolDown = E_COOLDOWN_MS;
   manaCost = E_CHAKRA;

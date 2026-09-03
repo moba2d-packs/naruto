@@ -88,7 +88,7 @@ export const data: ContentPackData = {
   // exists to turn into a refusal — and note that a *dev-linked* checkout
   // typechecks against the core beside it, so this floor is the only thing
   // standing between an unpublished core symbol and a red CI run.
-  manifest: { id: 'naruto', version: '1.0.0', coreRange: '>=1.21.0' },
+  manifest: { id: 'naruto', version: '1.0.0', coreRange: '>=1.22.0' },
   champions: [
     {
       id: 'naruto',

@@ -3,6 +3,9 @@ import { api } from '../packApi';
 import { RANGE_BAND, chakraTrail, impactBurst } from '../spellVfx';
 import { Sasuke_W_Blaze } from './Sasuke_W_Blaze';
 
+const dmg = api.text.dmg;
+const dmgValue = api.text.dmgValue;
+
 /**
  * Gōkakyū no Jutsu — he breathes a ball of fire down the lane.
  *
@@ -113,9 +116,9 @@ export default class Sasuke_W extends api.Spell {
   image = api.asset('spell_sasuke_w');
   description =
     'Phun một quả cầu lửa <span class="buff">xuyên qua</span> mọi kẻ địch trên đường, gây ' +
-    '<span class="damage magic">26</span> sát thương và <span class="damage magic">16</span> ' +
+    `${dmg(26, 'MAGIC')} và ${dmgValue(16, 'MAGIC')} ` +
     'cho kẻ địch xung quanh. Nơi nó dừng lại bốc cháy trong <span class="time">2.4 giây</span>, ' +
-    'thiêu <span class="damage magic">10</span> mỗi 0.4 giây.';
+    `thiêu ${dmgValue(10, 'MAGIC')} mỗi 0.4 giây.`;
   coolDown = W_COOLDOWN_MS;
   manaCost = W_CHAKRA;
   targetingMode = 'DIRECTION' as const;
